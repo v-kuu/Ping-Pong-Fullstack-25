@@ -11,3 +11,7 @@ build:
 
 dev: build
 	pnpm dev
+
+clean:
+	pnpm docker:down
+	pnpm clean:all

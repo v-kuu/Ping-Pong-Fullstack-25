@@ -17,7 +17,7 @@ export default defineConfig({
   },
 
   plugins: [react(), nxViteTsPaths()],
-
+  assetsInclude: ['**/*.html'],
   test: {
     globals: true,
     cache: {

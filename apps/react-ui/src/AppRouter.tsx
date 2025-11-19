@@ -2,6 +2,7 @@ import { Outlet, createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { AppLayout } from './layout/AppLayout'
 import { HomePage } from './pages/HomePage'
 import { PostPage } from './pages/PostPage'
+import { BabylonPage } from './pages/BabylonPage'
 import { Login } from './pages/Login'
 
 const publicRoutes: RouteObject[] = [
@@ -21,6 +22,10 @@ const publicRoutes: RouteObject[] = [
       {
         path: 'login/',
         element: <Login />,
+      },
+      {
+        path: 'babylon/',
+        element: <BabylonPage />,
       },
     ],
   },

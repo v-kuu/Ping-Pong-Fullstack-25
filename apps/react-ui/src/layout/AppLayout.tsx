@@ -34,6 +34,9 @@ export function AppLayout(): JSX.Element {
           <Link to="/" aria-label="Logo Home Link">
             <Logo />
           </Link>
+          <Link to="/babylon" className="block py-2 px-3 font-medium no-underline hover:underline">
+            BabylonJS
+          </Link>
           {/*
           // more links here...
           */}

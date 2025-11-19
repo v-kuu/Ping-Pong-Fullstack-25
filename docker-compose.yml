@@ -8,13 +8,3 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
-
-  react:
-    image: rfx-nx-ts-rest-react:latest
-    build:
-      context: .
-      dockerfile: apps/react-ui/Dockerfile
-    ports:
-      - '3000:80'
-    environment:
-      - NODE_ENV=production
