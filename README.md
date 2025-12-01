@@ -1,2 +1,4 @@
-# Ping-Pong-Fullstack-25
-Final project for 42 core curriculum: ft_transcendence
+# Usage
+Install `npm` and `deno`.
+Goto `site` and run `deno task dev`
+Open browser and open address printed to stdout.
