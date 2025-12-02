@@ -1,0 +1,70 @@
+{
+  "nodeModulesDir": "manual",
+  "tasks": {
+    "check": "deno fmt --check . && deno lint . && deno check",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "deno serve -A _fresh/server.js",
+    "update": "deno run -A -r jsr:@fresh/update ."
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "fresh",
+        "recommended"
+      ]
+    }
+  },
+  "exclude": [
+    "**/_fresh/*"
+  ],
+  "imports": {
+    "@/": "./",
+    "@fastify/env": "npm:@fastify/env@^5.0.3",
+    "@fastify/vite": "npm:@fastify/vite@^8.2.1",
+    "@prisma/client": "npm:@prisma/client@^7.0.1",
+    "daisyui": "npm:daisyui@^5.5.5",
+    "dotenv": "npm:dotenv@^17.2.3",
+    "fastify": "npm:fastify@^5.6.2",
+    "fastify-cors": "npm:fastify-cors@^6.1.0",
+    "fresh": "jsr:@fresh/core@^2.2.0",
+    "pino-pretty": "npm:pino-pretty@^13.1.2",
+    "preact": "npm:preact@^10.27.2",
+    "@preact/signals": "npm:@preact/signals@^2.5.1",
+    "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.8",
+    "prisma": "npm:prisma@^7.0.1",
+    "uuid": "npm:uuid@^13.0.0",
+    "vite": "npm:vite@^7.2.4",
+    "tailwindcss": "npm:tailwindcss@^4.1.17",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.17"
+  },
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.asynciterable",
+      "dom.iterable",
+      "deno.ns"
+    ],
+    "jsx": "precompile",
+    "jsxImportSource": "preact",
+    "jsxPrecompileSkipElements": [
+      "a",
+      "img",
+      "source",
+      "body",
+      "html",
+      "head",
+      "title",
+      "meta",
+      "script",
+      "link",
+      "style",
+      "base",
+      "noscript",
+      "template"
+    ],
+    "types": [
+      "vite/client"
+    ]
+  }
+}
