@@ -7,6 +7,7 @@
     "test": "test"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.39.2",
     "daisyui": "^5.5.5",
     "dotenv": "^17.2.3",
     "esbuild": "^0.25.12",
