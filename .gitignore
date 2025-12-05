@@ -2,3 +2,4 @@ site/deno.lock
 site/node_modules/
 site/_fresh/
 site/dist/
+site/vite.config.json

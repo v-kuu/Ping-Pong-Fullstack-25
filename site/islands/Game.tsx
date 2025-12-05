@@ -1,42 +1,66 @@
-import * as BABYLON from "@babylonjs/core";
+import {
+	Scene,
+	ArcRotateCamera,
+	Engine,
+	Vector3,
+	DirectionalLight,
+	MeshBuilder,
+	CascadedShadowGenerator
+} from "@babylonjs/core"
 import { useEffect } from "preact/hooks"
 
 export function Game() {
 	useEffect(() => {
 	const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
-	const engine = new BABYLON.Engine(canvas, true);
+	const engine = new Engine(canvas, true);
 
-	function createScene(): BABYLON.Scene
+	//debug info
+	const gl = engine._gl;
+	if (gl)
 	{
-		var scene = new BABYLON.Scene(engine);
+		const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+		if (debugInfo)
+		{
+			const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+			const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+			console.log("GPU Vendor: ", vendor);
+			console.log("GPU Renderer: ", renderer);
+		}
+		else
+			console.log("WEBGL_debug_renderer_info not supported by this browser");
+	}
+
+	function createScene(): Scene
+	{
+		var scene = new Scene(engine);
 
 		//camera setup
-		var camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 20, new BABYLON.Vector3(0, 0, 0), scene);
+		var camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 20, new Vector3(0, 0, 0), scene);
 		camera.attachControl(canvas, true);
 		camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;
 		camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;
-		camera.panningAxis = new BABYLON.Vector3(1, 1, 0);
+		camera.panningAxis = new Vector3(1, 1, 0);
 		camera.panningSensibility = 1e3;
 
 		//light setup
-		const light = new BABYLON.DirectionalLight("light", new BABYLON.Vector3(-0.7, -1, -0.5), scene);
+		const light = new DirectionalLight("light", new Vector3(-0.7, -1, -0.5), scene);
 		light.autoCalcShadowZBounds = true;
 		light.intensity = 0.7;
 
 		//entity setup
-		var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.5, segments: 32 }, scene);
+		var sphere = MeshBuilder.CreateSphere("sphere", { diameter: 0.5, segments: 32 }, scene);
 		sphere.position.y = 0.25;
-		var ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 12, height: 6 }, scene);
+		var ground = MeshBuilder.CreateGround("ground", { width: 12, height: 6 }, scene);
 		ground.receiveShadows = true;
-		var box1 = BABYLON.MeshBuilder.CreateBox("player1", { width: 0.5, height: 0.3, depth: 3 }, scene);
+		var box1 = MeshBuilder.CreateBox("player1", { width: 0.5, height: 0.3, depth: 3 }, scene);
 		box1.position.x = -6;
 		box1.position.y = 0.2;
-		var box2 = BABYLON.MeshBuilder.CreateBox("player2", { width: 0.5, height: 0.3, depth: 3 }, scene);
+		var box2 = MeshBuilder.CreateBox("player2", { width: 0.5, height: 0.3, depth: 3 }, scene);
 		box2.position.x = 6;
 		box2.position.y = 0.2;
 
 		//shadow setup
-		const csm = new BABYLON.CascadedShadowGenerator(4096, light);csm.autoCalcDepthBounds = true;
+		const csm = new CascadedShadowGenerator(4096, light);csm.autoCalcDepthBounds = true;
 		csm.addShadowCaster(sphere);
 		csm.addShadowCaster(box1);
 		csm.addShadowCaster(box2);
