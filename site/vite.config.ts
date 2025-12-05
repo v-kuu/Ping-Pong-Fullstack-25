@@ -5,5 +5,5 @@ import viteFastify from "@fastify/vite/plugin";
 
 export default defineConfig({
   root: "./",
-  plugins: [fresh(), tailwindcss(), viteFastify({ useRelativePaths: true })],
+  plugins: [fresh(), tailwindcss(), viteFastify({ spa: true, useRelativePaths: true })],
 });
