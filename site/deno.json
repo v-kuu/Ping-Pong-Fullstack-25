@@ -25,7 +25,6 @@
     "@prisma/client": "npm:@prisma/client@^7.0.1",
     "daisyui": "npm:daisyui@^5.5.5",
     "dotenv": "npm:dotenv@^17.2.3",
-    "fastify": "npm:fastify@^5.6.2",
     "fastify-cors": "npm:fastify-cors@^6.1.0",
     "fresh": "jsr:@fresh/core@^2.2.0",
     "pino-pretty": "npm:pino-pretty@^13.1.2",
