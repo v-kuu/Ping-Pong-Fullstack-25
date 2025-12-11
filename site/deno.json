@@ -21,7 +21,6 @@
   "imports": {
     "@/": "./",
     "@fastify/env": "npm:@fastify/env@^5.0.3",
-    "@fastify/vite": "npm:@fastify/vite@^8.2.1",
     "@prisma/client": "npm:@prisma/client@^7.0.1",
     "daisyui": "npm:daisyui@^5.5.5",
     "dotenv": "npm:dotenv@^17.2.3",

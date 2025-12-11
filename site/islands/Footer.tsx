@@ -1,10 +1,7 @@
-import PrivacyPolicy from "../components/PrivacyPolicy.tsx"
-import ToS from "../components/ToS.tsx"
+import PrivacyPolicy from "../components/PrivacyPolicy.tsx";
+import ToS from "../components/ToS.tsx";
 
-export default function Footer(props: {
-    active: string,
-    class?: string }
-}) {
+export default function Footer(props: { active: string }) {
     const isPP = props.active == "/privacy-policy";
     const isToS = props.active == "/terms-of-service";
     const items = [
@@ -20,7 +17,7 @@ export default function Footer(props: {
     return (
         <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
             <aside>
-               <p>Copyright © {new Date().getFullYear()} - All right reserved by ACME Industries Ltd</p>
+               <p>Copyright © {new Date().getFullYear()} - All right reserved by Pong Company
                <ul>
                   {items.map((item) => (
                <li
@@ -38,6 +35,7 @@ export default function Footer(props: {
               </li>
              ))}
            </ul>
+            </p>
           </aside>
        </footer>
     )

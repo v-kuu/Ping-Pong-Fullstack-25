@@ -1,5 +1,6 @@
 import { define } from "../utils.ts";
 import Header from "../components/Header.tsx";
+import Footer from "../islands/Footer.tsx";
 
 export default define.page(function App({ Component }) {
   return (
@@ -20,6 +21,7 @@ export default define.page(function App({ Component }) {
       <body>
         <Header active="" title="ft_transcendence" />
         <Component />
+        <Footer active="" />
       </body>
     </html>
   );
