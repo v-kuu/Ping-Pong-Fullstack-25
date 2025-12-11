@@ -66,8 +66,6 @@ const html = renderMarkdown(content);
 
 export default function PrivacyPolicy() {
     return (
-        <article class="prose text-center">
-            <div dangerouslySetInnerHTML={{ __html: html }} />
-        </article>
+            <article class="prose max-w-none prose-slate text-center" dangerouslySetInnerHTML={{ __html: html }} />
     );
 };

@@ -4,11 +4,14 @@ const content = `# Terms of Service
 
 **Last Updated:** 11.12.2025
 
-Welcome to Pongsite ("we," "our," or "us"). By accessing or using our website, creating an account, or uploading content, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.
+Welcome to Pongsite (later referred to as "we," "our," or "us").</br>
+By accessing or using our website, creating an account, or uploading content, you agree to be bound by these Terms of Service ("Terms").</br>
+If you do not agree to these Terms, please do not use our services.
 
 ## 1. Description of Service
 
-Pongsite provides a simple gaming platform that allows users to create a personal user account and upload a profile picture. Our service is designed to be minimal and privacy-focused.
+Pongsite provides a simple gaming platform that allows users to create a personal user account and upload a profile picture.</br>
+Our service is designed to be minimal and privacy-focused.
 
 ## 2. User Accounts
 
@@ -23,7 +26,9 @@ We reserve the right to suspend or terminate your account if any information pro
 ## 3. User Content and Conduct
 
 ### 3.1 Your Content
-You retain full ownership of the profile picture you upload ("User Content"). By uploading a profile picture, you grant us a non-exclusive, royalty-free license to display, store, and reproduce the content solely for the purpose of operating your account and displaying your profile on the service.
+You retain full ownership of the profile picture you upload ("User Content").</br>
+By uploading a profile picture, you grant us a non-exclusive, royalty-free license to display, store, and</br>
+reproduce the content solely for the purpose of operating your account and displaying your profile on the service.
 
 ### 3.2 Prohibited Content
 You agree not to upload any content that:
@@ -33,11 +38,12 @@ You agree not to upload any content that:
 * Contains sexually explicit material or depicts violence.
 
 ### 3.3 Data Usage
-We are committed to data minimization. We do not sell, trade, or otherwise transfer your personal information to outside parties. We only store the data necessary to maintain your account (e.g., your login credentials and your uploaded profile picture).
+We are committed to data minimization. We do not sell, trade, or otherwise transfer your personal information to outside parties.</br>
+We only store the data necessary to maintain your account (e.g., your login credentials and your uploaded profile picture).
 
 ## 4. Account Termination
 
-You may delete your account at any time. Upon deletion, your profile picture and account information will be permanently removed from our active databases.
+You may delete your account at any time. Upon deletion, your profile picture and account information will be permanently removed from our active databases.</br>
 
 We reserve the right to terminate or suspend your access to the service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
 
@@ -69,7 +75,7 @@ const html = renderMarkdown(content);
 
 export default function ToS() {
     return (
-        <article class="prose text-center">
+        <article class="prose max-w-none text-center">
             <div dangerouslySetInnerHTML={{ __html: html }} />
         </article>
     )
