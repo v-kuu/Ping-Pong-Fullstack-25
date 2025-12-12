@@ -3,16 +3,18 @@ import {
 	ArcRotateCamera,
 	Engine,
 	Vector3,
+	Color3,
 	DirectionalLight,
 	MeshBuilder,
-	CascadedShadowGenerator
+	CascadedShadowGenerator,
+	HighlightLayer
 } from "@babylonjs/core"
 import { useEffect } from "preact/hooks"
 
 export function Game() {
 	useEffect(() => {
 	const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
-	const engine = new Engine(canvas, true);
+	const engine = new Engine(canvas, true, { stencil: true});
 
 	//debug info
 	const gl = engine._gl;
@@ -59,8 +61,14 @@ export function Game() {
 		box2.position.x = 6;
 		box2.position.y = 0.2;
 
+		//highlight layer
+		const hl = new HighlightLayer("hl1", scene);
+		hl.addMesh(box1, Color3.Blue());
+		hl.addMesh(box2, Color3.Red());
+
 		//shadow setup
-		const csm = new CascadedShadowGenerator(4096, light);csm.autoCalcDepthBounds = true;
+		const csm = new CascadedShadowGenerator(4096, light);
+		csm.autoCalcDepthBounds = true;
 		csm.addShadowCaster(sphere);
 		csm.addShadowCaster(box1);
 		csm.addShadowCaster(box2);
