@@ -1,46 +1,35 @@
-import { Button } from "../components/Button.tsx";
+import { Button } from "./Button.tsx";
+import { validateInput } from "./Register.tsx";
 
-export function validateInput() {
-  return () => {
-    const password = (document.getElementById("password") as HTMLInputElement)
-      .value;
-    const confirmPassword = (
-      document.getElementById("confirmPassword") as HTMLInputElement
-    ).value;
-
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return false;
-    }
-    return true;
-  };
-}
-
-export function Register() {
+export function UpdatePassword() {
   return (
-    <form class="card" method="POST" action="/register">
-      <label class="input" for="username">
-        Username:
+    <form method="POST" action="/update">
+      <label class="input" for="password">
+        Current Password:
       </label>
-      <br />
       <input
-        type="text"
-        class="input validator"
-        pattern="[A-Za-z][A-Za-z0-9\-]*"
-        title="Only letters, numbers or dash, must start with a letter"
-        minLength={3}
-        maxLength={30}
-        placeholder="Nick Offerman"
-        id="username"
-        name="username"
+        type="password"
+        class="input validor"
+        minLength={8}
+        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+        title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
+        placeholder="Your pass shall be validated"
+        id="password"
+        name="password"
         required
       />
       <p className="validator-hint">
-        Must be 3 to 30 characters containing only letters, numbers or dash
+        Must be more than 8 characters, including
+        <br />
+        At least one number
+        <br />
+        At least one lowercase letter
+        <br />
+        At least one uppercase letter
       </p>
       <br />
       <label class="input" for="password">
-        Password:
+        New Password:
       </label>
       <input
         type="password"
