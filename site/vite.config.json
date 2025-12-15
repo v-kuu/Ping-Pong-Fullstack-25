@@ -1,0 +1,15 @@
+{
+  "base": "/",
+  "root": "/home/jwnz/Git/pongsite",
+  "build": {
+    "assetsDir": "assets",
+    "outDir": "dist/client"
+  },
+  "fastify": {
+    "outDirs": {
+      "client": "dist/client",
+      "ssr": "_fresh/server"
+    },
+    "entryPaths": {}
+  }
+}
