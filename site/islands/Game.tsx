@@ -8,7 +8,8 @@ import {
 	MeshBuilder,
 	CascadedShadowGenerator,
 	HighlightLayer,
-	StandardMaterial
+	StandardMaterial,
+	AbstractMesh
 } from "@babylonjs/core"
 import { useEffect } from "preact/hooks"
 
@@ -36,7 +37,9 @@ export function Game() {
 	function createScene(): Scene
 	{
 		var scene = new Scene(engine);
-
+		scene.collisionsEnabled = true;
+		const mapWidth: number = 14;
+		const mapHeight: number = 6;
 		//camera setup
 		var camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 20, new Vector3(0, 0, 0), scene);
 		camera.attachControl(canvas, true);
@@ -51,43 +54,98 @@ export function Game() {
 		light.intensity = 0.7;
 
 		//entity setup
-		var sphere = MeshBuilder.CreateSphere("sphere", { diameter: 0.5, segments: 32 }, scene);
-		sphere.position.y = 0.25;
+		var ball = MeshBuilder.CreateSphere(
+			"ball", { diameter: 0.5, segments: 32 }, scene);
+		ball.position.y = 0.25;
 		var sphereMat = new StandardMaterial("sphereMat", scene);
 		sphereMat.diffuseColor = Color3.White();
-		sphere.material = sphereMat;
+		ball.material = sphereMat;
+		ball.checkCollisions = true;
+		ball.ellipsoid = new Vector3(0.5, 0.5, 0.5);
 
-		var ground = MeshBuilder.CreateGround("ground", { width: 12, height: 6 }, scene);
+		var ground = MeshBuilder.CreateGround(
+			"ground", { width: mapWidth, height: mapHeight }, scene);
 		ground.receiveShadows = true;
 		var groundMat = new StandardMaterial("groundMat", scene);
 		groundMat.diffuseColor = Color3.Green();
 		ground.material = groundMat;
 
-		var box1 = MeshBuilder.CreateBox("player1", { width: 0.5, height: 0.3, depth: 3 }, scene);
-		box1.position.x = -6;
-		box1.position.y = 0.2;
-		var box1Mat = new StandardMaterial("player1", scene);
-		box1Mat.diffuseColor = Color3.Blue();
-		box1.material = box1Mat;
+		var player1 = MeshBuilder.CreateBox(
+			"player1", { width: 0.5, height: 0.3, depth: 3 }, scene);
+		player1.position.x = -6;
+		player1.position.y = 0.2;
+		var player1Mat = new StandardMaterial("player1", scene);
+		player1Mat.diffuseColor = Color3.Blue();
+		player1.material = player1Mat;
+		//player1.checkCollisions = true;
+		player1.ellipsoid = new Vector3(0.25, 0.15, 1.5);
 
-		var box2 = MeshBuilder.CreateBox("player2", { width: 0.5, height: 0.3, depth: 3 }, scene);
-		box2.position.x = 6;
-		box2.position.y = 0.2;
-		var box2Mat = new StandardMaterial("player2", scene);
-		box2Mat.diffuseColor = Color3.Red();
-		box2.material = box2Mat;
+		var player2 = MeshBuilder.CreateBox(
+			"player2", { width: 0.5, height: 0.3, depth: 3 }, scene);
+		player2.position.x = 6;
+		player2.position.y = 0.2;
+		var player2Mat = new StandardMaterial("player2", scene);
+		player2Mat.diffuseColor = Color3.Red();
+		player2.material = player2Mat;
+		//player2.checkCollisions = true;
+		player2.ellipsoid = new Vector3(0.25, 0.15, 1.5);
+
+		//wall setup
+		var wallMat = new StandardMaterial("wall", scene);
+		wallMat.diffuseColor = Color3.Gray();
+		var northWall = MeshBuilder.CreateBox(
+			"horizontal", { width: mapWidth, height: 0.3, depth: 0.3}, scene);
+		northWall.position.y = 0.3;
+		northWall.position.z = mapHeight / 2;
+		northWall.material = wallMat;
+		northWall.checkCollisions = true;
+
+		var southWall = northWall.clone();
+		southWall.position.z *= -1;
+
+		var eastWall = MeshBuilder.CreateBox(
+			"vertical", {width: 0.3, height: 0.3, depth: mapHeight}, scene);
+		eastWall.position.y = 0.3;
+		eastWall.position.x = mapWidth / 2;
+		eastWall.material = wallMat;
+		eastWall.checkCollisions = true;
+
+		var westWall = eastWall.clone();
+		westWall.position.x *= -1;
+
+		const walls = [
+			{ mesh: westWall, normal: new Vector3(1, 0, 0) },
+			{ mesh: eastWall, normal: new Vector3(-1, 0, 0) },
+			{ mesh: northWall, normal: new Vector3(0, 0, -1) },
+			{ mesh: southWall, normal: new Vector3(0, 0, 1) },
+		];
 
 		//highlight layer
 		const hl = new HighlightLayer("hl1", scene);
-		hl.addMesh(box1, Color3.Blue());
-		hl.addMesh(box2, Color3.Red());
+		hl.addMesh(player1, Color3.Blue());
+		hl.addMesh(player2, Color3.Red());
 
 		//shadow setup
 		const csm = new CascadedShadowGenerator(4096, light);
 		csm.autoCalcDepthBounds = true;
-		csm.addShadowCaster(sphere);
-		csm.addShadowCaster(box1);
-		csm.addShadowCaster(box2);
+		csm.addShadowCaster(ball);
+		csm.addShadowCaster(player1);
+		csm.addShadowCaster(player2);
+
+		//ball collisions
+		function reflectVec3(vec: Vector3, normal: Vector3)
+		{
+			return vec.subtract(
+				normal.scale(2 * Vector3.Dot(vec, normal))
+			);
+		}
+
+		var ballVel = new Vector3(-6, 0, -2);
+		ball.onCollideObservable.add((collidedMesh) => {
+			const wall = walls.find(w => w.mesh === collidedMesh)
+			if (wall)
+				ballVel = reflectVec3(ballVel, wall.normal);
+		});
 
 		//input setup
 		const keys = {};
@@ -97,18 +155,23 @@ export function Game() {
 		scene.onBeforeRenderObservable.add(() => {
 			const delta = scene.getEngine().getDeltaTime() / 1e3;
 			const distance = moveSpeed * delta;
+			var vel1 = new Vector3();
+			var vel2 = new Vector3();
 			if (keys["w"]) {
-				box1.position.z += distance;
+				vel1.z = distance;
 			}
 			if (keys["s"]) {
-				box1.position.z -= distance;
+				vel1.z = -distance
 			}
 			if (keys["i"]) {
-				box2.position.z += distance;
+				vel2.z = distance;
 			}
 			if (keys["k"]) {
-				box2.position.z -= distance;
+				vel2.z = -distance;
 			}
+			player1.moveWithCollisions(vel1);
+			player2.moveWithCollisions(vel2);
+			ball.moveWithCollisions(ballVel.scale(delta));
 		});
 		return scene;
 	};
