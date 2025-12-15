@@ -41,8 +41,9 @@ export function Game() {
 		const mapWidth: number = 14;
 		const mapHeight: number = 6;
 		const playerSize: number = 2;
+
 		//camera setup
-		var camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 20, new Vector3(0, 0, 0), scene);
+		var camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 15, new Vector3(0, 0, 0), scene);
 		camera.attachControl(canvas, true);
 		camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;
 		camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;
@@ -128,10 +129,10 @@ export function Game() {
 
 		//ball collisions
 		const walls = [
-			{ mesh: westWall, normal: new Vector3(1, 0, 0) },
-			{ mesh: eastWall, normal: new Vector3(-1, 0, 0) },
-			{ mesh: northWall, normal: new Vector3(0, 0, -1) },
-			{ mesh: southWall, normal: new Vector3(0, 0, 1) },
+			{ mesh: westWall, type: 0 },
+			{ mesh: northWall, type: 1 },
+			{ mesh: eastWall, type: 2 },
+			{ mesh: southWall, type: 3 },
 		];
 
 		const players = [
@@ -139,44 +140,51 @@ export function Game() {
 			{ mesh: player2, isLeft: false }
 		];
 
-		function reflectVec3(vec: Vector3, normal: Vector3)
-		{
-			return vec.subtract(
-				normal.scale(2 * Vector3.Dot(vec, normal))
-			);
-		}
-
 		function bounceOffPlayer(
 			ball: any, player: any, ballVel: Vector3)
 		{
 			const bbox = player.mesh.getBoundingInfo().boundingBox;
-			const height = bbox.maximum.y - bbox.minimum.y;
-			const center = player.mesh.position.y;
-			const intersectY = (ball.position.y - center) / (height / 2);
-			const clamped = Math.max(-1, Math.min(1, intersectY));
+			const paddleHeight = bbox.maximum.z - bbox.minimum.z;
+			const paddleCenter = player.mesh.position.z;
+
+			const relativeIntersectZ = ball.position.z - paddleCenter;
+			const normalizedRelativeIntersectionZ =
+				relativeIntersectZ / (paddleHeight / 2);
 
 			const maxAngle = Math.PI / 3;
-			const angle = clamped * maxAngle;
-			const speed = ballVel.length() * 1.03;
-			const dir = player.isLeft ? 1 : -1;
+			const angle = normalizedRelativeIntersectionZ * maxAngle;
 
-			return new Vector3(
-				Math.cos(angle) * speed * dir,
+			const dir = player.isLeft ? 1 : -1;
+			const dirVec =  new Vector3(
+				Math.cos(angle) * dir,
 				0,
-				Math.sin(angle) * speed * Math.sign(ballVel.z)
-			);
+				Math.sin(angle)
+			).normalize();
+
+			const speed = ballVel.length() * 1.03;
+			return dirVec.scale(speed);
 		}
 
-		var ballVel = new Vector3(-0.7, 0, -0.3);
+		var ballVel = new Vector3(-1, 0, 0);
 		ball.onCollideObservable.add((collidedMesh) => {
 			const wall = walls.find(w => w.mesh === collidedMesh)
 			if (wall) {
-				ballVel = reflectVec3(ballVel, wall.normal);
+				if (wall.type % 2 === 0) {
+					var dir = wall.type - 1;
+					ballVel = new Vector3(dir, 0, 0);
+					ball.position.x = 0;
+					ball.position.y = 0.25;
+					ball.position.z = 0;
+				}
+				else {
+					ballVel.z *= -1;
+				}
 			}
 			const player = players.find(p => p.mesh === collidedMesh);
 			if (player) {
 				ballVel = bounceOffPlayer(ball, player, ballVel);
 				ball.position.x += ballVel.x * 0.1;
+				ball.position.y = 0.25;
 			}
 			ballVel.y = 0;
 		});
