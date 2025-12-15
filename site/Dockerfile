@@ -11,4 +11,5 @@ RUN deno cache _fresh/server.js
 
 EXPOSE 8000
 
-CMD ["serve", "-A", "_fresh/server.js"]
+CMD ["deno", "task", "serve"]
+
