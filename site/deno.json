@@ -11,8 +11,8 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "@/": "./",
+    "@babylonjs/core": "npm:@babylonjs/core@^8.41.1",
     "@deno/gfm": "jsr:@deno/gfm@^0.11.0",
-    "@fastify/env": "npm:@fastify/env@^5.0.3",
     "@prisma/client": "npm:@prisma/client@^7.0.1",
     "@tailwindcss/typography": "npm:@tailwindcss/typography@^0.5.19",
     "daisyui": "npm:daisyui@^5.5.5",

@@ -5,4 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   root: "./",
   plugins: [fresh(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      external: "@babylonjs/core",
+    },
+  },
 });
