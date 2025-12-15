@@ -40,6 +40,7 @@ export function Game() {
 		scene.collisionsEnabled = true;
 		const mapWidth: number = 14;
 		const mapHeight: number = 6;
+		const playerSize: number = 2;
 		//camera setup
 		var camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 20, new Vector3(0, 0, 0), scene);
 		camera.attachControl(canvas, true);
@@ -61,7 +62,7 @@ export function Game() {
 		sphereMat.diffuseColor = Color3.White();
 		ball.material = sphereMat;
 		ball.checkCollisions = true;
-		ball.ellipsoid = new Vector3(0.5, 0.5, 0.5);
+		ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
 
 		var ground = MeshBuilder.CreateGround(
 			"ground", { width: mapWidth, height: mapHeight }, scene);
@@ -71,24 +72,24 @@ export function Game() {
 		ground.material = groundMat;
 
 		var player1 = MeshBuilder.CreateBox(
-			"player1", { width: 0.5, height: 0.3, depth: 3 }, scene);
+			"player1", { width: 0.5, height: 0.3, depth: playerSize }, scene);
 		player1.position.x = -6;
 		player1.position.y = 0.2;
 		var player1Mat = new StandardMaterial("player1", scene);
 		player1Mat.diffuseColor = Color3.Blue();
 		player1.material = player1Mat;
-		//player1.checkCollisions = true;
-		player1.ellipsoid = new Vector3(0.25, 0.15, 1.5);
+		player1.checkCollisions = true;
+		player1.ellipsoid = new Vector3(0.25, 0.15, playerSize / 2);
 
 		var player2 = MeshBuilder.CreateBox(
-			"player2", { width: 0.5, height: 0.3, depth: 3 }, scene);
+			"player2", { width: 0.5, height: 0.3, depth: playerSize }, scene);
 		player2.position.x = 6;
 		player2.position.y = 0.2;
 		var player2Mat = new StandardMaterial("player2", scene);
 		player2Mat.diffuseColor = Color3.Red();
 		player2.material = player2Mat;
-		//player2.checkCollisions = true;
-		player2.ellipsoid = new Vector3(0.25, 0.15, 1.5);
+		player2.checkCollisions = true;
+		player2.ellipsoid = new Vector3(0.25, 0.15, playerSize / 2);
 
 		//wall setup
 		var wallMat = new StandardMaterial("wall", scene);
@@ -113,13 +114,6 @@ export function Game() {
 		var westWall = eastWall.clone();
 		westWall.position.x *= -1;
 
-		const walls = [
-			{ mesh: westWall, normal: new Vector3(1, 0, 0) },
-			{ mesh: eastWall, normal: new Vector3(-1, 0, 0) },
-			{ mesh: northWall, normal: new Vector3(0, 0, -1) },
-			{ mesh: southWall, normal: new Vector3(0, 0, 1) },
-		];
-
 		//highlight layer
 		const hl = new HighlightLayer("hl1", scene);
 		hl.addMesh(player1, Color3.Blue());
@@ -133,6 +127,18 @@ export function Game() {
 		csm.addShadowCaster(player2);
 
 		//ball collisions
+		const walls = [
+			{ mesh: westWall, normal: new Vector3(1, 0, 0) },
+			{ mesh: eastWall, normal: new Vector3(-1, 0, 0) },
+			{ mesh: northWall, normal: new Vector3(0, 0, -1) },
+			{ mesh: southWall, normal: new Vector3(0, 0, 1) },
+		];
+
+		const players = [
+			{ mesh: player1, isLeft: true },
+			{ mesh: player2, isLeft: false }
+		];
+
 		function reflectVec3(vec: Vector3, normal: Vector3)
 		{
 			return vec.subtract(
@@ -140,11 +146,39 @@ export function Game() {
 			);
 		}
 
-		var ballVel = new Vector3(-6, 0, -2);
+		function bounceOffPlayer(
+			ball: any, player: any, ballVel: Vector3)
+		{
+			const bbox = player.mesh.getBoundingInfo().boundingBox;
+			const height = bbox.maximum.y - bbox.minimum.y;
+			const center = player.mesh.position.y;
+			const intersectY = (ball.position.y - center) / (height / 2);
+			const clamped = Math.max(-1, Math.min(1, intersectY));
+
+			const maxAngle = Math.PI / 3;
+			const angle = clamped * maxAngle;
+			const speed = ballVel.length() * 1.03;
+			const dir = player.isLeft ? 1 : -1;
+
+			return new Vector3(
+				Math.cos(angle) * speed * dir,
+				0,
+				Math.sin(angle) * speed * Math.sign(ballVel.z)
+			);
+		}
+
+		var ballVel = new Vector3(-0.7, 0, -0.3);
 		ball.onCollideObservable.add((collidedMesh) => {
 			const wall = walls.find(w => w.mesh === collidedMesh)
-			if (wall)
+			if (wall) {
 				ballVel = reflectVec3(ballVel, wall.normal);
+			}
+			const player = players.find(p => p.mesh === collidedMesh);
+			if (player) {
+				ballVel = bounceOffPlayer(ball, player, ballVel);
+				ball.position.x += ballVel.x * 0.1;
+			}
+			ballVel.y = 0;
 		});
 
 		//input setup
@@ -152,6 +186,7 @@ export function Game() {
 		window.addEventListener("keydown", (e) => keys[e.key] = true);
 		window.addEventListener("keyup", (e) => keys[e.key] = false);
 		const moveSpeed = 6;
+		const ballSpeed = 6;
 		scene.onBeforeRenderObservable.add(() => {
 			const delta = scene.getEngine().getDeltaTime() / 1e3;
 			const distance = moveSpeed * delta;
@@ -171,7 +206,7 @@ export function Game() {
 			}
 			player1.moveWithCollisions(vel1);
 			player2.moveWithCollisions(vel2);
-			ball.moveWithCollisions(ballVel.scale(delta));
+			ball.moveWithCollisions(ballVel.scale(delta * ballSpeed));
 		});
 		return scene;
 	};
