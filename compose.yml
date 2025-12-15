@@ -1,0 +1,12 @@
+services:
+  denosite:
+    build: ./site
+    container_name: denosite
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./site:/app
+    restart: always
+    environment:
+      - DENO_ENV=development
+      - PORT=8000
