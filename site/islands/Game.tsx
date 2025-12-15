@@ -7,7 +7,8 @@ import {
 	DirectionalLight,
 	MeshBuilder,
 	CascadedShadowGenerator,
-	HighlightLayer
+	HighlightLayer,
+	StandardMaterial
 } from "@babylonjs/core"
 import { useEffect } from "preact/hooks"
 
@@ -52,14 +53,29 @@ export function Game() {
 		//entity setup
 		var sphere = MeshBuilder.CreateSphere("sphere", { diameter: 0.5, segments: 32 }, scene);
 		sphere.position.y = 0.25;
+		var sphereMat = new StandardMaterial("sphereMat", scene);
+		sphereMat.diffuseColor = Color3.White();
+		sphere.material = sphereMat;
+
 		var ground = MeshBuilder.CreateGround("ground", { width: 12, height: 6 }, scene);
 		ground.receiveShadows = true;
+		var groundMat = new StandardMaterial("groundMat", scene);
+		groundMat.diffuseColor = Color3.Green();
+		ground.material = groundMat;
+
 		var box1 = MeshBuilder.CreateBox("player1", { width: 0.5, height: 0.3, depth: 3 }, scene);
 		box1.position.x = -6;
 		box1.position.y = 0.2;
+		var box1Mat = new StandardMaterial("player1", scene);
+		box1Mat.diffuseColor = Color3.Blue();
+		box1.material = box1Mat;
+
 		var box2 = MeshBuilder.CreateBox("player2", { width: 0.5, height: 0.3, depth: 3 }, scene);
 		box2.position.x = 6;
 		box2.position.y = 0.2;
+		var box2Mat = new StandardMaterial("player2", scene);
+		box2Mat.diffuseColor = Color3.Red();
+		box2.material = box2Mat;
 
 		//highlight layer
 		const hl = new HighlightLayer("hl1", scene);
