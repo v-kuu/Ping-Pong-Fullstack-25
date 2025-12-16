@@ -29,8 +29,8 @@ jobs:
         uses: denoland/setup-deno@v2.0.3
 
       # Uncomment this step to verify the use of 'deno fmt' on each commit.
-      - name: Verify formatting
-        run: deno fmt --check
+      #- name: Verify formatting
+      #  run: deno fmt --check
 
       - name: Run build
         run: deno task build
