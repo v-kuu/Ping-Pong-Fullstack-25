@@ -13,6 +13,7 @@ import {
 import * as GUI from '@babylonjs/gui'
 import { useEffect } from "preact/hooks"
 
+
 export function Game() {
   useEffect(() => {
     const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
