@@ -3,7 +3,7 @@
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
     "dev": "vite",
-    "build": "vite build",
+    "build": "deno run -A vite build",
     "start": "deno serve -A _fresh/server.js",
     "update": "deno run -A -r jsr:@fresh/update ."
   },
@@ -11,7 +11,8 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "@/": "./",
-    "@babylonjs/core": "npm:@babylonjs/core@^8.41.1",
+    "@babylonjs/core": "npm:@babylonjs/core@^8.41.2",
+    "@babylonjs/gui": "npm:@babylonjs/gui@^8.41.2",
     "@deno/gfm": "jsr:@deno/gfm@^0.11.0",
     "@prisma/client": "npm:@prisma/client@^7.0.1",
     "@tailwindcss/typography": "npm:@tailwindcss/typography@^0.5.19",
