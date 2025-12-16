@@ -126,7 +126,6 @@ export function Game() {
     engine.runRenderLoop(() => scene.render());
     window.addEventListener("resize", () => engine.resize());
 
-=======
 		let southWall = northWall.clone();
 		southWall.position.z *= -1;
 
