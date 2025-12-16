@@ -1,8 +1,9 @@
 #!/bin/bash
 
+
+
 Help()
 {
-    echo "Available options:"
     echo "-h  Display this help text"
     echo "-b  Build the project using Docker"
     echo "-u  Build (if needed) and run container"
