@@ -6,7 +6,7 @@ export function Setting() {
   return (
     <div className="drawer lg:drawer-open">
       <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content flex flex-col items-center justify-center">
+      <div className="prose max-w-none drawer-content flex flex-col items-center justify-center">
         <Userinfo />
         <UpdatePassword />
         <ChangeAvatar />

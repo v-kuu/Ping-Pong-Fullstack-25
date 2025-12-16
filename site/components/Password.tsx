@@ -3,13 +3,16 @@ import { validateInput } from "./Register.tsx";
 
 export function UpdatePassword() {
   return (
+      <div>
+    <h2>Change your password</h2>
     <form method="POST" action="/update">
       <label class="input" for="password">
         Current Password:
       </label>
+      <br/>
       <input
         type="password"
-        class="input validor"
+        class="input validator"
         minLength={8}
         pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
         title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
@@ -18,22 +21,20 @@ export function UpdatePassword() {
         name="password"
         required
       />
-      <p className="validator-hint">
+      <div class="validator-hint">
         Must be more than 8 characters, including
-        <br />
-        At least one number
-        <br />
-        At least one lowercase letter
-        <br />
-        At least one uppercase letter
-      </p>
+        at least one number,<br/>
+        at least one lowercase letter,
+        at least one uppercase letter
+      </div>
       <br />
       <label class="input" for="password">
         New Password:
       </label>
+      <br/>
       <input
         type="password"
-        class="input validor"
+        class="input validator"
         minLength={8}
         pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
         title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
@@ -42,31 +43,32 @@ export function UpdatePassword() {
         name="password"
         required
       />
-      <p className="validator-hint">
-        Password must have
-        <li>more than 8 characters</li>
-        <li>At least one number</li>
-        <li>At least one lowercase letter</li>
-        <li>At least one uppercase letter</li>
-      </p>
+      <div class="validator-hint">
+          Must be more than 8 characters, including
+        at least one number,<br/>
+        at least one lowercase letter,
+        at least one uppercase letter
+     </div>
       <br />
       <label class="input" for="confirmPassword">
         Confirm Password:
       </label>
+      <br/>
       <input
         onSubmit={validateInput()}
         type="password"
-        class="input validor"
+        class="input validator"
         placeholder="Re-enter your password"
         required
         id="confirmPassword"
         name="confirmPassword"
       />
-      <p class="validator-hint">Passwords should match</p>
+      <div class="validator-hint">Passwords should match</div>
       <br />
       <Button id="formButton" onClick={validateInput()}>
-        Register
+        Change Password
       </Button>
     </form>
+</div>
   );
 }
