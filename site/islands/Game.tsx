@@ -9,8 +9,8 @@ import {
 	CascadedShadowGenerator,
 	HighlightLayer,
 	StandardMaterial,
-	AbstractMesh
 } from "@babylonjs/core"
+import * as GUI from '@babylonjs/gui'
 import { useEffect } from "preact/hooks"
 
 export function Game() {
@@ -36,14 +36,17 @@ export function Game() {
 
 	function createScene(): Scene
 	{
-		var scene = new Scene(engine);
+		let scene = new Scene(engine);
 		scene.collisionsEnabled = true;
 		const mapWidth: number = 14;
 		const mapHeight: number = 6;
 		const playerSize: number = 2;
+		let score1: number = 0;
+		let score2: number = 0;
+		let scoreText: GUI.TextBlock;
 
 		//camera setup
-		var camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 15, new Vector3(0, 0, 0), scene);
+		let camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 15, new Vector3(0, 0, 0), scene);
 		camera.attachControl(canvas, true);
 		camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;
 		camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;
@@ -56,63 +59,63 @@ export function Game() {
 		light.intensity = 0.7;
 
 		//entity setup
-		var ball = MeshBuilder.CreateSphere(
+		let ball = MeshBuilder.CreateSphere(
 			"ball", { diameter: 0.5, segments: 32 }, scene);
 		ball.position.y = 0.25;
-		var sphereMat = new StandardMaterial("sphereMat", scene);
+		let sphereMat = new StandardMaterial("sphereMat", scene);
 		sphereMat.diffuseColor = Color3.White();
 		ball.material = sphereMat;
 		ball.checkCollisions = true;
 		ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
 
-		var ground = MeshBuilder.CreateGround(
+		let ground = MeshBuilder.CreateGround(
 			"ground", { width: mapWidth, height: mapHeight }, scene);
 		ground.receiveShadows = true;
-		var groundMat = new StandardMaterial("groundMat", scene);
+		let groundMat = new StandardMaterial("groundMat", scene);
 		groundMat.diffuseColor = Color3.Green();
 		ground.material = groundMat;
 
-		var player1 = MeshBuilder.CreateBox(
+		let player1 = MeshBuilder.CreateBox(
 			"player1", { width: 0.5, height: 0.3, depth: playerSize }, scene);
 		player1.position.x = -6;
 		player1.position.y = 0.2;
-		var player1Mat = new StandardMaterial("player1", scene);
+		let player1Mat = new StandardMaterial("player1", scene);
 		player1Mat.diffuseColor = Color3.Blue();
 		player1.material = player1Mat;
 		player1.checkCollisions = true;
 		player1.ellipsoid = new Vector3(0.25, 0.15, playerSize / 2);
 
-		var player2 = MeshBuilder.CreateBox(
+		let player2 = MeshBuilder.CreateBox(
 			"player2", { width: 0.5, height: 0.3, depth: playerSize }, scene);
 		player2.position.x = 6;
 		player2.position.y = 0.2;
-		var player2Mat = new StandardMaterial("player2", scene);
+		let player2Mat = new StandardMaterial("player2", scene);
 		player2Mat.diffuseColor = Color3.Red();
 		player2.material = player2Mat;
 		player2.checkCollisions = true;
 		player2.ellipsoid = new Vector3(0.25, 0.15, playerSize / 2);
 
 		//wall setup
-		var wallMat = new StandardMaterial("wall", scene);
+		let wallMat = new StandardMaterial("wall", scene);
 		wallMat.diffuseColor = Color3.Gray();
-		var northWall = MeshBuilder.CreateBox(
+		let northWall = MeshBuilder.CreateBox(
 			"horizontal", { width: mapWidth, height: 0.3, depth: 0.3}, scene);
 		northWall.position.y = 0.3;
 		northWall.position.z = mapHeight / 2;
 		northWall.material = wallMat;
 		northWall.checkCollisions = true;
 
-		var southWall = northWall.clone();
+		let southWall = northWall.clone();
 		southWall.position.z *= -1;
 
-		var eastWall = MeshBuilder.CreateBox(
+		let eastWall = MeshBuilder.CreateBox(
 			"vertical", {width: 0.3, height: 0.3, depth: mapHeight}, scene);
 		eastWall.position.y = 0.3;
 		eastWall.position.x = mapWidth / 2;
 		eastWall.material = wallMat;
 		eastWall.checkCollisions = true;
 
-		var westWall = eastWall.clone();
+		let westWall = eastWall.clone();
 		westWall.position.x *= -1;
 
 		//highlight layer
@@ -165,7 +168,7 @@ export function Game() {
 			return dirVec.scale(speed);
 		}
 
-		var ballVel = new Vector3(-1, 0, 0);
+		let ballVel = new Vector3(-1, 0, 0);
 		ball.onCollideObservable.add((collidedMesh) => {
 			const wall = walls.find(w => w.mesh === collidedMesh)
 			if (wall) {
@@ -175,6 +178,11 @@ export function Game() {
 					ball.position.x = 0;
 					ball.position.y = 0.25;
 					ball.position.z = 0;
+					if (dir < 0)
+						score1++;
+					else
+						score2++;
+					updateScore();
 				}
 				else {
 					ballVel.z *= -1;
@@ -198,8 +206,8 @@ export function Game() {
 		scene.onBeforeRenderObservable.add(() => {
 			const delta = scene.getEngine().getDeltaTime() / 1e3;
 			const distance = moveSpeed * delta;
-			var vel1 = new Vector3();
-			var vel2 = new Vector3();
+			let vel1 = new Vector3();
+			let vel2 = new Vector3();
 			if (keys["w"]) {
 				vel1.z = distance;
 			}
@@ -216,6 +224,40 @@ export function Game() {
 			player2.moveWithCollisions(vel2);
 			ball.moveWithCollisions(ballVel.scale(delta * ballSpeed));
 		});
+
+		//GUI
+		const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+		
+		function createRectangle()
+		{
+			let rect1 = new GUI.Rectangle();
+			rect1.width = 0.2;
+			rect1.height = "40px";
+			rect1.cornerRadius = 20;
+			rect1.color = "Orange";
+			rect1.thickness = 4;
+			rect1.background = "green";
+
+			scoreText = new GUI.TextBlock();
+			scoreText.color = "white";
+			scoreText.fontSize = 20;
+
+			scoreText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+			scoreText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+
+			rect1.addControl(scoreText);
+			advancedTexture.addControl(rect1);
+			updateScore();
+			return rect1;
+		}
+
+		function updateScore()
+		{
+			scoreText.text = `${score1} : ${score2}`;
+		}
+
+		createRectangle().verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+
 		return scene;
 	};
 
