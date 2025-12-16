@@ -31,6 +31,8 @@ jobs:
       # Uncomment this step to verify the use of 'deno fmt' on each commit.
       #- name: Verify formatting
       #  run: deno fmt --check
+      - name: Install dependencies
+        run: deno install
 
       - name: Run build
         run: deno task --cwd=site build
