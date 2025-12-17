@@ -1,6 +1,6 @@
 import { Button } from "../components/Button.tsx";
 
-function validateInput() {
+export function validateInput() {
   return () => {
     const password = (document.getElementById("password") as HTMLInputElement)
       .value;
