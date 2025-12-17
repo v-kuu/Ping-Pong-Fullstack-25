@@ -1,9 +1,13 @@
+import { Show } from "@preact-signals/utils/components";
+import { user } from "../utils/user.ts";
+
 export function Userinfo() {
   return (
     <div>
       <h2>User Information</h2>
-      <p>This is the user information island.</p>
-      <p>You should login first.</p>
+      <Show when={user.value.length} fallback={<p>This is the user information island.<br/>You should <a href="/login">login</a> first.</p>}>
+        <p>Welcome, ${user.value}.</p>
+      </Show>
     </div>
   );
 }

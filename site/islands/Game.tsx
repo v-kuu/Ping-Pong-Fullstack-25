@@ -4,6 +4,7 @@ import {
 	Engine,
 	Vector3,
 	Color3,
+        Color4,
 	DirectionalLight,
 	MeshBuilder,
 	CascadedShadowGenerator,
@@ -38,6 +39,7 @@ export function Game() {
 	{
 		let scene = new Scene(engine);
 		scene.collisionsEnabled = true;
+                scene.clearColor = new Color4(0, 0, 0, 0);
 		const mapWidth: number = 14;
 		const mapHeight: number = 6;
 		const playerSize: number = 2;

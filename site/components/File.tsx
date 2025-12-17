@@ -1,9 +1,11 @@
 export function LoadFile() {
   return (
-    <fieldset className="fieldset">
-      <legend className="fieldset-legend">Pick a file</legend>
-      <input type="file" className="file-input" />
-      <label className="label">Max size 2MB</label>
+    <form>
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">Pick a file</legend>
+      <input id="file" type="file" class="file-input" />
+      <label class="label" for="file">Max size 2MB</label>
     </fieldset>
+    </form>
   );
 }
