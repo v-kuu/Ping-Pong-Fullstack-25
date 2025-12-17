@@ -6,11 +6,7 @@ import {
 	Engine,
 	Vector3,
 	Color3,
-<<<<<<< HEAD
-        Color4,
-=======
 	Color4,
->>>>>>> 85c6c3b (Added countdown, state machine and transparent background)
 	DirectionalLight,
 	MeshBuilder,
 	CascadedShadowGenerator,
