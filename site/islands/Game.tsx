@@ -1,10 +1,12 @@
+import earcut from 'earcut';
+(globalThis as any).earcut = earcut;
 import {
 	Scene,
 	ArcRotateCamera,
 	Engine,
 	Vector3,
 	Color3,
-        Color4,
+	Color4,
 	DirectionalLight,
 	MeshBuilder,
 	CascadedShadowGenerator,
@@ -13,6 +15,8 @@ import {
 } from "@babylonjs/core"
 import * as GUI from '@babylonjs/gui'
 import { useEffect } from "preact/hooks"
+import { startCountdown } from "../utils/babylon_countdown.ts"
+import { GameState } from "../utils/babylon_states.ts"
 
 export function Game() {
 	useEffect(() => {
@@ -38,11 +42,13 @@ export function Game() {
 	function createScene(): Scene
 	{
 		let scene = new Scene(engine);
+		let currentState: GameState = GameState.Countdown;
 		scene.collisionsEnabled = true;
-                scene.clearColor = new Color4(0, 0, 0, 0);
+		scene.clearColor = new Color4(0, 0, 0, 0);
 		const mapWidth: number = 14;
 		const mapHeight: number = 6;
 		const playerSize: number = 2;
+		let playing: boolean = false;
 		let score1: number = 0;
 		let score2: number = 0;
 		let scoreText: GUI.TextBlock;
@@ -160,12 +166,14 @@ export function Game() {
 			const angle = normalizedRelativeIntersectionZ * maxAngle;
 
 			const dir = player.isLeft ? 1 : -1;
-			const dirVec =  new Vector3(
+			let dirVec =  new Vector3(
 				Math.cos(angle) * dir,
 				0,
 				Math.sin(angle)
-			).normalize();
-
+			);
+			if (dirVec.z === 0)
+				dirVec.z = Math.random() < 0.5 ? -0.1 : 0.1;
+			dirVec = dirVec.normalize();
 			const speed = ballVel.length() * 1.03;
 			return dirVec.scale(speed);
 		}
@@ -185,6 +193,7 @@ export function Game() {
 					else
 						score2++;
 					updateScore();
+					setState(GameState.Countdown);
 				}
 				else {
 					ballVel.z *= -1;
@@ -222,9 +231,12 @@ export function Game() {
 			if (keys["k"]) {
 				vel2.z = -distance;
 			}
-			player1.moveWithCollisions(vel1);
-			player2.moveWithCollisions(vel2);
-			ball.moveWithCollisions(ballVel.scale(delta * ballSpeed));
+			if (playing)
+			{
+				player1.moveWithCollisions(vel1);
+				player2.moveWithCollisions(vel2);
+				ball.moveWithCollisions(ballVel.scale(delta * ballSpeed));
+			}
 		});
 
 		//GUI
@@ -252,14 +264,34 @@ export function Game() {
 			updateScore();
 			return rect1;
 		}
+		createRectangle().verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
 
 		function updateScore()
 		{
 			scoreText.text = `${score1} : ${score2}`;
 		}
 
-		createRectangle().verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+		function setState(newState: GameState)
+		{
+			currentState = newState;
+			
+			switch (newState)
+			{
+				case GameState.Countdown:
+					playing = false;
+					player1.position.z = 0;
+					player2.position.z = 0;
+					startCountdown(scene, mapHeight / 2 + 1, () => {
+						setState(GameState.Playing);
+					});
+					break ;
 
+				case GameState.Playing:
+					playing = true;
+					break ;
+			}
+		}
+		setState(GameState.Countdown);
 		return scene;
 	};
 
