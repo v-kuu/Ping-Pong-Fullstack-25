@@ -9,8 +9,13 @@ import {
 	MeshBuilder,
 	CascadedShadowGenerator,
 	HighlightLayer,
-	StandardMaterial,
+	PBRMetallicRoughnessMaterial,
 } from "@babylonjs/core"
+import {
+	MarbleProceduralTexture,
+	FireProceduralTexture,
+	WoodProceduralTexture,
+} from "@babylonjs/procedural-textures"
 import * as GUI from "@babylonjs/gui"
 import { startCountdown } from "./babylon_countdown.ts"
 import { GameState } from "./babylon_states.ts"
@@ -19,9 +24,10 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
 	let scene = new Scene(engine);
 	let helper = scene.createDefaultEnvironment({
-		groundYBias: 0.01,
 	});
-	let currentState: GameState = GameState.Countdown;
+	if (helper && helper.ground)
+		helper.ground.dispose();
+	let currentState: GameState;
 	scene.collisionsEnabled = true;
 	scene.clearColor = new Color4(0, 0, 0, 0);
 	const mapWidth: number = 14;
@@ -45,12 +51,18 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	light.autoCalcShadowZBounds = true;
 	light.intensity = 0.7;
 
+	//texture setup
+	const marbleTex = new MarbleProceduralTexture("marble", 1024, scene);
+	const fireTex = new FireProceduralTexture("fire", 1024, scene);
+	const woodTex = new WoodProceduralTexture("wood", 1024, scene);
+
 	//entity setup
 	let ball = MeshBuilder.CreateSphere(
 		"ball", { diameter: 0.5, segments: 32 }, scene);
 	ball.position.y = 0.25;
-	let sphereMat = new StandardMaterial("sphereMat", scene);
-	sphereMat.diffuseColor = Color3.White();
+	let sphereMat = new PBRMetallicRoughnessMaterial("sphereMat", scene);
+	sphereMat.baseTexture = fireTex;
+	sphereMat.emissiveTexture = fireTex;
 	ball.material = sphereMat;
 	ball.checkCollisions = true;
 	ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
@@ -58,16 +70,19 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	let ground = MeshBuilder.CreateGround(
 		"ground", { width: mapWidth, height: mapHeight }, scene);
 	ground.receiveShadows = true;
-	let groundMat = new StandardMaterial("groundMat", scene);
-	groundMat.diffuseColor = Color3.Green();
+	let groundMat = new PBRMetallicRoughnessMaterial("groundMat", scene);
+	groundMat.baseTexture = marbleTex;
+	groundMat.metallic = 0;
+	groundMat.roughness = 0.2;
 	ground.material = groundMat;
 
 	let player1 = MeshBuilder.CreateBox(
 		"player1", { width: 0.5, height: 0.3, depth: playerSize }, scene);
 	player1.position.x = -6;
 	player1.position.y = 0.2;
-	let player1Mat = new StandardMaterial("player1", scene);
-	player1Mat.diffuseColor = Color3.Blue();
+	let player1Mat = new PBRMetallicRoughnessMaterial("player1", scene);
+	player1Mat.baseColor = Color3.Teal();
+	player1Mat.emissiveColor = Color3.Teal();
 	player1.material = player1Mat;
 	player1.checkCollisions = true;
 	player1.ellipsoid = new Vector3(0.25, 0.15, playerSize / 2);
@@ -76,15 +91,16 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 		"player2", { width: 0.5, height: 0.3, depth: playerSize }, scene);
 	player2.position.x = 6;
 	player2.position.y = 0.2;
-	let player2Mat = new StandardMaterial("player2", scene);
-	player2Mat.diffuseColor = Color3.Red();
+	let player2Mat = new PBRMetallicRoughnessMaterial("player2", scene);
+	player2Mat.baseColor = Color3.Yellow();
+	player2Mat.emissiveColor = Color3.Yellow();
 	player2.material = player2Mat;
 	player2.checkCollisions = true;
 	player2.ellipsoid = new Vector3(0.25, 0.15, playerSize / 2);
 
 	//wall setup
-	let wallMat = new StandardMaterial("wall", scene);
-	wallMat.diffuseColor = Color3.Gray();
+	let wallMat = new PBRMetallicRoughnessMaterial("wall", scene);
+	wallMat.baseTexture = woodTex;
 	let northWall = MeshBuilder.CreateBox(
 		"horizontal", { width: mapWidth, height: 0.3, depth: 0.3}, scene);
 	northWall.position.y = 0.3;
@@ -107,8 +123,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 
 	//highlight layer
 	const hl = new HighlightLayer("hl1", scene);
-	hl.addMesh(player1, Color3.Blue());
-	hl.addMesh(player2, Color3.Red());
+	hl.addMesh(ball, Color3.Red());
 
 	//shadow setup
 	const csm = new CascadedShadowGenerator(4096, light);
@@ -209,6 +224,9 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 		}
 		if (keys["k"]) {
 			vel2.z = -distance;
+		}
+		if (keys["f"]) {
+			canvas.requestFullscreen();
 		}
 		if (playing)
 		{
