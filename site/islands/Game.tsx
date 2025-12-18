@@ -17,6 +17,7 @@ import * as GUI from '@babylonjs/gui'
 import { useEffect } from "preact/hooks"
 import { startCountdown } from "../utils/babylon_countdown.ts"
 import { GameState } from "../utils/babylon_states.ts"
+import { Canvas } from "../components/Canvas.tsx"
 
 export function Game() {
 	useEffect(() => {
@@ -304,5 +305,5 @@ export function Game() {
 		engine.dispose();
 	}
 	}, []);
-	return <canvas id="renderCanvas" class="w-full h-screen border-0" />;
+	return <Canvas />;
 }
