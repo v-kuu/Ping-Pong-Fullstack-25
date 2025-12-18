@@ -23,7 +23,7 @@ export function Game() {
 	useEffect(() => {
 	const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 	const engine = new Engine(canvas, true, { stencil: true});
-
+        window.addEventListener("wheel", e => e.preventDefault(), { passive:false })
 	//debug info
 	const gl = engine._gl;
 	if (gl)
