@@ -33,7 +33,9 @@
     "uuid": "npm:uuid@^13.0.0",
     "vite": "npm:vite@^7.2.4",
     "tailwindcss": "npm:tailwindcss@^4.1.17",
-    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.17"
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.17",
+    "vite-plugin-wasm": "npm:vite-plugin-wasm@^3.5.0",
+    "vite-plugin-watch-and-run": "npm:vite-plugin-watch-and-run@^1.7.5"
   },
   "compilerOptions": {
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],
