@@ -10,6 +10,7 @@ import {
 	CascadedShadowGenerator,
 	HighlightLayer,
 	PBRMetallicRoughnessMaterial,
+	CubeTexture,
 } from "@babylonjs/core"
 import {
 	MarbleProceduralTexture,
@@ -23,7 +24,10 @@ import { GameState } from "./babylon_states.ts"
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
 	let scene = new Scene(engine);
+	const envTexture = new CubeTexture("/alien.env", scene);
 	let helper = scene.createDefaultEnvironment({
+		environmentTexture: envTexture,
+		skyboxTexture: envTexture,
 	});
 	if (helper && helper.ground)
 		helper.ground.dispose();
@@ -182,7 +186,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 				ball.position.x = 0;
 				ball.position.y = 0.25;
 				ball.position.z = 0;
-				if (dir < 0)
+				if (dir > 0)
 					score1++;
 				else
 					score2++;
