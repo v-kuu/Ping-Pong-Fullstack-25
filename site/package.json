@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "make -sC web3d && vite",
     "build": "vite build",
     "start": "bun run server/index.ts",
     "check": "bun x @biomejs/biome check .",
@@ -35,7 +35,9 @@
     "tailwindcss": "^4.1.17",
     "uuid": "^13.0.0",
     "vike": "^0.4.249",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vite-plugin-wasm": "^3.5.0",
+    "vite-plugin-watch-and-run": "^1.7.5"
   },
   "devDependencies": {
     "@hono/vite-dev-server": "^0.23.0",

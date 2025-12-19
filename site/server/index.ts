@@ -10,9 +10,6 @@ if (process.env.NODE_ENV !== "development") {
   app.use("/*", serveStatic({ root: "./dist/client" }));
 }
 
-// Mount API routes
-app.route("/api", apiRouter);
-
 // Vike middleware for SSR
 app.all("*", async (c, next) => {
   const pageContextInit = {
