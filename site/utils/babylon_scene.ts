@@ -20,9 +20,11 @@ import {
 import * as GUI from "@babylonjs/gui"
 import { startCountdown } from "./babylon_countdown.ts"
 import { GameState } from "./babylon_states.ts"
+import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
+	registerBuiltInLoaders();
 	let scene = new Scene(engine);
 	const envTexture = new CubeTexture("/alien.env", scene);
 	let helper = scene.createDefaultEnvironment({
