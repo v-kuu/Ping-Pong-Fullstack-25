@@ -1,17 +1,15 @@
 import { defineConfig } from "vite";
 import { fresh } from "@fresh/plugin-vite";
 import tailwindcss from "@tailwindcss/vite";
-import wasm from "vite-plugin-wasm"
-import { watchAndRun } from 'vite-plugin-watch-and-run'
-import path from 'node:path'
+import wasm from "vite-plugin-wasm";
+import { run } from "vite-plugin-run";
 
 export default defineConfig({
   root: "./",
-  plugins: [fresh(), tailwindcss(), wasm(),
-    watchAndRun([{
-      name: 'web3d',
-      watch: path.resolve('./web3d/*.c'),
-      run: 'make -C web3d --no-print-directory'
-    }])
-  ],
+  plugins: [fresh(), tailwindcss(), wasm(), run([{ name: 'compile web3d', run: ['make', '-sC', 'web3d'], pattern: ['web3d/*.c'],}]),],
+  optimizeDeps: {
+      exclude: ["@babylonjs/core"],
+  },
 });
+
+

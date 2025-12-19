@@ -1,6 +1,5 @@
 typedef __UINT8_TYPE__ uint8_t;
-typedef __UINT16_TYPE__ uint16_t;
-typedef __UINT32_TYPE__ uint32_t;
+typedef __UINT16_TYPE__ uint16_t; typedef __UINT32_TYPE__ uint32_t;
 typedef __SIZE_TYPE__ size_t;
 
 #define FRAME_W 360
@@ -298,9 +297,9 @@ Color* draw(double timestamp)
             shade = max(0.0f, min(1.0f, 1.0f / (shade + 1.5f)));
             float noise = dither(x, y);
             Color color = sample(texture_wall, u, v);
-            color.r = clamp(color.r * shade + (1.0f - shade) * 190 + noise, 0, 255);
+            color.r = clamp(color.r * shade + (1.0f - shade) * 210 + noise, 0, 255);
             color.g = clamp(color.g * shade + (1.0f - shade) * 220 + noise, 0, 255);
-            color.b = clamp(color.b * shade + (1.0f - shade) * 240 + noise, 0, 255);
+            color.b = clamp(color.b * shade + (1.0f - shade) * 200 + noise, 0, 255);
             frame[x + y * FRAME_W] = color;
         }
     }
