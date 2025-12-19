@@ -1,16 +1,29 @@
-FROM denoland/deno:latest
-
-ARG GIT_REVISION
-ENV DENO_DEPLOYMENT_ID=${GIT_REVISION}
+FROM oven/bun:1
 
 WORKDIR /app
 
+# Copy package files
+COPY package.json ./
+COPY bun.lock ./
+
+# Install dependencies
+RUN bun install
+
+# Copy source code
 COPY . .
 
-RUN deno install
-RUN deno task build
-RUN deno cache _fresh/server.js
+# Generate Prisma client
+ENV DATABASE_URL="file:./dev.db"
+RUN bun run db:generate
 
-EXPOSE 8000
+# Build the application
+RUN bun run build
 
-CMD ["deno", "task", "start"]
+# Set production environment
+ENV NODE_ENV=production
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the server
+CMD ["bun", "run", "start"]
