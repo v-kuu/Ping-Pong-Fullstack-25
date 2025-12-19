@@ -17,7 +17,7 @@ export function Web3D() {
       context.fillRect(0, 0, canvas.width, canvas.height);
 
         // Instantiate the WebAssembly module containing the game code.
-        const wasm = await WebAssembly.instantiateStreaming(fetch('assets/web3d.wasm'))
+        const wasm = await WebAssembly.instantiateStreaming(fetch('web3d.wasm'))
         const exports = wasm.instance.exports
         const bytes = new Uint8Array(exports.memory.buffer)
 

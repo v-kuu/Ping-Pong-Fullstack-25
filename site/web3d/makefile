@@ -19,7 +19,7 @@ reload: DOCKERFLAGS :=
 all: *.c
 	@ docker ps | grep -q clang20 || docker run --rm $(DOCKERFLAGS) --name clang20 -v `pwd`:/src silkeh/clang:20 sh >/dev/null
 	@ docker exec clang20 clang /src/$< -o /src/$(NAME) $(CFLAGS)
-	@ mv $(NAME) ../assets/$(NAME)
+	@ mv $(NAME) ../public/$(NAME)
 
 .PHONY: reload
 reload: all
@@ -30,4 +30,4 @@ production: *.c
 
 .PHONY: clean
 clean:
-	@ $(RM) ../assets/$(NAME)
+	@ $(RM) ../public/$(NAME)

@@ -8,7 +8,7 @@ FROM oven/bun:1
 
 WORKDIR /app
 COPY . .
-COPY --from=0 web3d.wasm assets/web3d.wasm
+COPY --from=0 web3d.wasm public/web3d.wasm
 
 # Install dependencies
 RUN bun install
