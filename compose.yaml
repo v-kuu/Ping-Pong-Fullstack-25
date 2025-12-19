@@ -3,10 +3,10 @@ services:
     build: ./site
     container_name: denosite
     ports:
-      - "8000:8000"
+      - "3000:3000"
     volumes:
       - ./site:/app
     restart: always
     environment:
       - DENO_ENV=development
-      - PORT=8000
+      - PORT=3000

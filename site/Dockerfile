@@ -1,16 +1,30 @@
-FROM denoland/deno:latest
+FROM silkeh/clang:20
 
-ARG GIT_REVISION
-ENV DENO_DEPLOYMENT_ID=${GIT_REVISION}
+COPY web3d .
+RUN make production
+
+
+FROM oven/bun:1
 
 WORKDIR /app
-
 COPY . .
+COPY --from=0 web3d.wasm assets/web3d.wasm
 
-RUN deno install
-RUN deno task build
-RUN deno cache _fresh/server.js
+# Install dependencies
+RUN bun install
 
-EXPOSE 8000
+# Generate Prisma client
+ENV DATABASE_URL="file:./dev.db"
+RUN bun run db:generate
 
-CMD ["deno", "task", "start"]
+# Build the application
+RUN bun run build
+
+# Set production environment
+ENV NODE_ENV=production
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the server
+CMD ["bun", "run", "start"]

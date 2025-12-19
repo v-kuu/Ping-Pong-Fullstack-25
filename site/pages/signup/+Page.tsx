@@ -1,7 +1,6 @@
-import { define } from "../utils.ts";
-import { Signup } from "../islands/Signup.tsx";
+import { Signup } from "../../islands/Signup.tsx";
 
-export default define.page(() => {
+export default function SignupPage() {
   return (
     <main class="vt323-regular flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div class="w-full max-w-md p-8 bg-white rounded shadow-md">
@@ -10,4 +9,4 @@ export default define.page(() => {
       </div>
     </main>
   );
-});
+}

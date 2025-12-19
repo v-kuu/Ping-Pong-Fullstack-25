@@ -12,13 +12,21 @@ CFLAGS := \
     -mbulk-memory \
     -Wl,--no-entry \
 
-.PHONY: ../static/$(NAME)
-../static/$(NAME): main.c
-	# @ docker ps | grep -q clang20 || docker run --rm -dit --name clang20 -v `pwd`:/src silkeh/clang:20 sh >/dev/null
-	# @ docker exec -it clang20 clang /src/$< -o /src/$(NAME) $(CFLAGS)
-	@ docker ps | grep -q clang20 || docker run --rm -d --name clang20 -v `pwd`:/src silkeh/clang:20 sh >/dev/null
+DOCKERFLAGS := -dit
+reload: DOCKERFLAGS :=
+
+.PHONY: all
+all: *.c
+	@ docker ps | grep -q clang20 || docker run --rm $(DOCKERFLAGS) --name clang20 -v `pwd`:/src silkeh/clang:20 sh >/dev/null
 	@ docker exec clang20 clang /src/$< -o /src/$(NAME) $(CFLAGS)
 	@ mv $(NAME) ../assets/$(NAME)
+
+.PHONY: reload
+reload: all
+
+.PHONY: production
+production: *.c
+	clang /$< -o $(NAME) $(CFLAGS)
 
 .PHONY: clean
 clean:

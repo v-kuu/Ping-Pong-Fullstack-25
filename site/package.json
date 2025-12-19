@@ -1,0 +1,49 @@
+{
+  "name": "site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "make -sC web3d && vite",
+    "build": "vite build",
+    "start": "bun run server/index.ts",
+    "check": "bun x @biomejs/biome check .",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^8.41.2",
+    "@babylonjs/gui": "^8.41.2",
+    "@babylonjs/procedural-textures": "^8.42.0",
+    "@deno/gfm": "npm:@jsr/deno__gfm",
+    "@fastify/env": "^5.0.3",
+    "@preact-signals/utils": "^0.23.1",
+    "@preact/signals": "^2.5.1",
+    "@preact/signals-core": "^1.12.1",
+    "@prisma/client": "^7.0.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.1.17",
+    "daisyui": "^5.5.5",
+    "dotenv": "^17.2.3",
+    "earcut": "^3.0.2",
+    "hono": "^4.11.1",
+    "pino-pretty": "^13.1.2",
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.4",
+    "prisma": "^7.0.1",
+    "tailwindcss": "^4.1.17",
+    "uuid": "^13.0.0",
+    "vike": "^0.4.249",
+    "vite": "^6.0.0",
+    "vite-plugin-run": "^0.6.1",
+    "vite-plugin-wasm": "^3.5.0"
+  },
+  "devDependencies": {
+    "@hono/vite-dev-server": "^0.23.0",
+    "@preact/preset-vite": "^2.10.2",
+    "@types/earcut": "^3.0.0",
+    "@types/node": "^22.0.0",
+    "bun-types": "latest",
+    "typescript": "^5.0.0"
+  }
+}
