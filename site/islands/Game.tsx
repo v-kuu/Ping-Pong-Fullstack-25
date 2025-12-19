@@ -1,8 +1,6 @@
 import earcut from 'earcut';
 (globalThis as any).earcut = earcut;
 import { Engine } from "@babylonjs/core"
-import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
-registerBuiltInLoaders();
 import { useEffect } from "preact/hooks"
 import { Canvas } from "../components/Canvas.tsx"
 import { createScene } from "../utils/babylon_scene.ts"
