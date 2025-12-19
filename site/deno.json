@@ -13,6 +13,7 @@
     "@/": "./",
     "@babylonjs/core": "npm:@babylonjs/core@^8.41.2",
     "@babylonjs/gui": "npm:@babylonjs/gui@^8.41.2",
+    "@babylonjs/inspector": "npm:@babylonjs/inspector@^8.42.0",
     "@babylonjs/loaders": "npm:@babylonjs/loaders@^8.42.0",
     "@babylonjs/procedural-textures": "npm:@babylonjs/procedural-textures@^8.42.0",
     "@deno/gfm": "jsr:@deno/gfm@^0.11.0",
