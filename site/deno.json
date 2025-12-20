@@ -15,7 +15,6 @@
     "@babylonjs/gui": "npm:@babylonjs/gui@^8.42.0",
     "@babylonjs/procedural-textures": "npm:@babylonjs/procedural-textures@^8.42.0",
     "@deno/gfm": "jsr:@deno/gfm@^0.11.0",
-    "@fastify/env": "npm:@fastify/env@^5.0.3",
     "@preact-signals/utils": "npm:@preact-signals/utils@^0.23.1",
     "@preact/signals-core": "npm:@preact/signals-core@^1.12.1",
     "@prisma/client": "npm:@prisma/client@^7.2.0",
