@@ -31,11 +31,11 @@
     "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.8",
     "prisma": "npm:prisma@^7.2.0",
     "uuid": "npm:uuid@^13.0.0",
-    "vite": "npm:vite@^7.3.0",
+    "vite": "npm:rolldown-vite@latest",
     "tailwindcss": "npm:tailwindcss@^4.1.18",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.18",
     "vite-plugin-run": "npm:vite-plugin-run@^0.6.1",
-    "vite-plugin-wasm": "npm:vite-plugin-wasm@^3.5.0",
+    "vite-plugin-wasm": "npm:vite-plugin-wasm@^3.5.0"
   },
   "compilerOptions": {
     "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],
@@ -57,6 +57,6 @@
       "noscript",
       "template"
     ],
-    "types": ["vite/client"]
+    "types": ["vite/client", "@types/earcut"]
   }
 }
