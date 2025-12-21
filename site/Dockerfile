@@ -1,16 +1,36 @@
-FROM denoland/deno:latest
+# ---------------------------------------------------
+# 1. DEPS: Install all dependencies (for building)
+# ---------------------------------------------------
+FROM oven/bun:alpine AS deps
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-ARG GIT_REVISION
-ENV DENO_DEPLOYMENT_ID=${GIT_REVISION}
+# ---------------------------------------------------
+# 2. PROD-DEPS: Install only runtime dependencies
+# ---------------------------------------------------
+FROM oven/bun:alpine AS prod-deps
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
+
+FROM deps AS builder
+WORKDIR /app
+# We copy the source code here
+COPY . .
+RUN bun run build
+
+FROM oven/bun:alpine AS runner
 WORKDIR /app
 
-COPY . .
+# Copy only what is needed to run
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
 
-RUN deno install
-RUN deno task build
-RUN deno cache _fresh/server.js
+ENV HOST=0.0.0.0
+ENV PORT=3000
+EXPOSE 3000
 
-EXPOSE 8000
-
-CMD ["deno", "task", "start"]
+CMD ["bun", "run", "./dist/server/entry.mjs"]

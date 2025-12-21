@@ -8,7 +8,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: "./",
-  publicDir: false,
   plugins: [preact(), tailwindcss()],
   resolve: {
     alias: {

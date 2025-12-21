@@ -35,7 +35,7 @@ export default function Header(props: { title: string; active: string }) {
 export function Logo() {
   return (
     <a href="/" class="flex mr-3 items-center shrink-0" aria-label="Top Page">
-      <img src="/static/logo.svg" alt="Paddle logo" width={40} height={40} />
+      <img src="/logo.svg" alt="Paddle logo" width={40} height={40} />
       <svg
         preserveAspectRatio="xMinYMin"
         viewBox="0 0 250 75"
@@ -56,7 +56,7 @@ export function Logo() {
 export function GameLogo() {
   return (
     <a href="/game" class="flex mr-3 items-center shrink-0" aria-label="Game">
-      <img src="/static/web.svg" alt="Web logo" width={40} height={40} />
+      <img src="/web.svg" alt="Web logo" width={40} height={40} />
       <svg
         class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-[#0140C] dark:fill-[#f5ebf3]"
         fill="none"
