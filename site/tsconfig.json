@@ -1,11 +1,13 @@
- {
-   "compilerOptions": {
-	 "jsx": "react-jsx",
-	 "jsxImportSource": "preact",
-	 "baseUrl": ".",
-	 "paths": { "@/*": ["./*"] },
-	 "moduleResolution": "node",
-	 "target": "ES2022"
-   }
- }
- 
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["src/**/*", "components/**/*", "islands/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

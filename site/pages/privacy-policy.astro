@@ -1,0 +1,19 @@
+---
+import Header from "@/components/Header.tsx";
+import Footer from "@/islands/Footer.tsx";
+import PrivacyPolicy from "@/components/PrivacyPolicy.tsx";
+import "@/assets/styles.css";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy</title>
+  </head>
+  <body>
+    <Header client:load active="/privacy-policy" title="ft_transcendence" />
+    <PrivacyPolicy />
+    <Footer client:load active="/privacy-policy" />
+  </body>
+</html>

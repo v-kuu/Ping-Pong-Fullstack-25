@@ -1,0 +1,19 @@
+---
+import Header from "@/components/Header.tsx";
+import Footer from "@/islands/Footer.tsx";
+import { Setting } from "@/islands/Settings.tsx";
+import "@/assets/styles.css";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings</title>
+  </head>
+  <body>
+    <Header client:load active="/settings" title="ft_transcendence" />
+    <Setting client:load />
+    <Footer client:load active="/settings" />
+  </body>
+</html>
