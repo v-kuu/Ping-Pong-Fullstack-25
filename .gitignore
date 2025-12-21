@@ -3,3 +3,5 @@ site/node_modules/
 site/_fresh/
 site/dist/
 site/vite.config.json
+site/.astro
+site/bun.lock
