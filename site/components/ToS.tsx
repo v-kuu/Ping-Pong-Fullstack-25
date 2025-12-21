@@ -1,4 +1,4 @@
-import { CSS, render as renderMarkdown } from "@deno/gfm";
+import { marked } from "marked";
 
 const content = `# Terms of Service
 
@@ -71,12 +71,12 @@ If you have any questions about these Terms, please contact us at:
 
 **tos@joonastuomi.fi**`;
 
-const html = renderMarkdown(content);
+const html = marked(content);
 
 export default function ToS() {
-    return (
-        <article class="prose max-w-none text-center">
-            <div dangerouslySetInnerHTML={{ __html: html }} />
-        </article>
-    )
+  return (
+    <article class="prose max-w-none text-center">
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </article>
+  );
 }

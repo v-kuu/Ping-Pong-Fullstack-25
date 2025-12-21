@@ -1,4 +1,4 @@
-import { CSS, render as renderMarkdown } from "@deno/gfm";
+import { marked } from "marked";
 
 const content = `# Privacy Policy
 
@@ -62,10 +62,13 @@ If you have any questions about this Privacy Policy or our data practices, pleas
 
 **support@joonastuomi.fi**`;
 
-const html = renderMarkdown(content);
+const html = marked(content);
 
 export default function PrivacyPolicy() {
-    return (
-            <article class="prose max-w-none prose-slate text-center" dangerouslySetInnerHTML={{ __html: html }} />
-    );
-};
+  return (
+    <article
+      class="prose max-w-none prose-slate text-center"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
