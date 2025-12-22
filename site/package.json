@@ -4,8 +4,7 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest",
-    "vite-plugin-wasm": "^3.5.0"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -19,7 +18,6 @@
     "@preact-signals/utils": "^0.23.1",
     "@preact/preset-vite": "^2.10.2",
     "@preact/signals": "^2.5.1",
-    "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
@@ -33,7 +31,6 @@
   },
   "scripts": {
     "dev": "bun run build-wasm && bunx --bun astro dev",
-    "dev-simple": "bun run build-wasm && bunx --bun astro dev",
     "build": "bun run build-wasm && bunx --bun astro build",
     "preview": "bunx --bun astro preview",
     "start": "bun run ./dist/server/entry.mjs",

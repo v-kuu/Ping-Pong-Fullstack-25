@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: light, dark;
+}
 
 .fresh-gradient {
     background-color: rgb(200, 2, 100);
