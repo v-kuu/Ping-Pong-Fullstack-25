@@ -33,6 +33,7 @@
   },
   "scripts": {
     "dev": "bun run build-wasm && bunx --bun astro dev",
+    "dev-simple": "bun run build-wasm && bunx --bun astro dev",
     "build": "bun run build-wasm && bunx --bun astro build",
     "preview": "bunx --bun astro preview",
     "start": "bun run ./dist/server/entry.mjs",
