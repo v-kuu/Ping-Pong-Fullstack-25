@@ -35,4 +35,4 @@ jobs:
         run: deno install -c ./site/deno.json
 
       - name: Run build
-        run: make -sC web3d && deno task --cwd=site build
+        run: make -sC site/web3d && deno task --cwd=site build
