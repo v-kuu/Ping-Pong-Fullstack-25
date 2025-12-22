@@ -2,9 +2,6 @@ import NavigationBar from "./NavBar.tsx";
 
 export default function Header(props: { title: string; active: string }) {
   const isHome = props.active == "/";
-  const isLogin = props.active == "/login";
-  const isSignup = props.active == "/signup";
-  const isSettings = props.active == "/settings";
 
   return (
     <header>
