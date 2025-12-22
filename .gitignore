@@ -5,3 +5,4 @@ site/dist/
 site/vite.config.json
 site/.astro
 site/bun.lock
+*.wasm
