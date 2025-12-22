@@ -31,7 +31,7 @@
     "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.8",
     "prisma": "npm:prisma@^7.2.0",
     "uuid": "npm:uuid@^13.0.0",
-    "vite": "npm:rolldown-vite@latest",
+    "vite": "npm:vite@7.3.0",
     "tailwindcss": "npm:tailwindcss@^4.1.18",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.18",
     "vite-plugin-run": "npm:vite-plugin-run@^0.6.1",

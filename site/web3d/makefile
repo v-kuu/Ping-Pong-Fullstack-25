@@ -22,7 +22,7 @@ CFLAGS := \
 
 .PHONY: production
 production: *.c
-	clang20 $< -o /$(NAME) $(CFLAGS)
+	clang $< -o /src/$(NAME) $(CFLAGS)
 
 .PHONY: clean
 clean:
