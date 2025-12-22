@@ -1,32 +1,15 @@
 NAME := web3d.wasm
+CONTAINER := clang20
+CFLAGS := -std=c23 --target=wasm32 -nostdlib -Oz -s -Wall -Wextra -Wpedantic \
+          -mbulk-memory -Wl,--no-entry -flto
 
-CFLAGS := \
-    -Os \
-    -s \
-    -std=c23 \
-    -Wall \
-    -Wextra \
-    -Wpedantic \
-    --target=wasm32 \
-    -nostdlib \
-    -mbulk-memory \
-    -Wl,--no-entry \
-
-.PHONY: ../assets/$(NAME)
-../assets/$(NAME): *.c
-	@ docker ps | grep -q clang20 || docker run --rm -dit --name clang20 -v `pwd`:/src silkeh/clang:20 sh >/dev/null
-	@ docker exec -it clang20 clang /src/$< -o /src/$(NAME) $(CFLAGS)
-	@ mv $(NAME) ../assets/$(NAME)
-
-.PHONY: production
-production: *.c
-	clang $< -o /src/$(NAME) $(CFLAGS)
-
-.PHONY: github
-github: *.c
-	@ docker ps | grep -q clang20 || docker run --rm -d --name clang20 -v `pwd`:/src silkeh/clang:20 sh >/dev/null
-	@ docker exec clang20 clang /src$< -o /src/$(NAME) $(CFLAGS)
+.PHONY: all
+all: src/*.c
+	@ docker ps | grep -q $(CONTAINER) || docker run --rm -dit --name $(CONTAINER) silkeh/clang:20 sh >/dev/null
+	@ docker cp -q . $(CONTAINER):/ # Copy sources in
+	@ docker exec -it $(CONTAINER) clang $^ -o $(NAME) $(CFLAGS) # Compile
+	@ docker cp -q $(CONTAINER):$(NAME) ../assets/$(NAME) # Copy build artifacts out
 
 .PHONY: clean
 clean:
-	@ $(RM) ../assets/$(NAME)
+	@ $(RM) $(NAME)
