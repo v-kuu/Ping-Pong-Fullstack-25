@@ -6,3 +6,4 @@ site/vite.config.json
 site/.astro
 site/bun.lock
 *.wasm
+site/bun.lock
