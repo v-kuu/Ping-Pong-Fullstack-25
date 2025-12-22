@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "vite-plugin-wasm": "^3.5.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -31,9 +32,10 @@
     "vite": "^7.3.0"
   },
   "scripts": {
-    "dev": "bunx --bun astro dev",
-    "build": "bunx --bun astro build",
+    "dev": "bun run build-wasm && bunx --bun astro dev",
+    "build": "bun run build-wasm && bunx --bun astro build",
     "preview": "bunx --bun astro preview",
-    "start": "bun run ./dist/server/entry.mjs"
+    "start": "bun run ./dist/server/entry.mjs",
+    "build-wasm": "cd web3d && make"
   }
 }

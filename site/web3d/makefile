@@ -8,7 +8,7 @@ all: src/*.c
 	@ docker ps | grep -q $(CONTAINER) || docker run --rm -dit --name $(CONTAINER) silkeh/clang:20 sh >/dev/null
 	@ docker cp -q . $(CONTAINER):/ # Copy sources in
 	@ docker exec -it $(CONTAINER) clang $^ -o $(NAME) $(CFLAGS) # Compile
-	@ docker cp -q $(CONTAINER):$(NAME) ../assets/$(NAME) # Copy build artifacts out
+	@ docker cp -q $(CONTAINER):$(NAME) ../public/$(NAME) # Copy build artifacts out
 
 .PHONY: clean
 clean:
