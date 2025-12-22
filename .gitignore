@@ -3,4 +3,4 @@ site/node_modules/
 site/_fresh/
 site/dist/
 site/vite.config.json
-site/assets/web3d.wasm
+*.wasm

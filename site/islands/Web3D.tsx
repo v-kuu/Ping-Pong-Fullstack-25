@@ -1,6 +1,6 @@
 import { Canvas } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
-import { draw, keyup, keydown, memory } from "../assets/web3d.wasm";
+import { draw, init, keyup, keydown, memory } from "../assets/web3d.wasm";
 
 // This is a placeholder for the other game module
 export function Web3D() {
@@ -33,6 +33,7 @@ export function Web3D() {
     onkeydown = (event) => keydown(event.keyCode);
     onkeyup = (event) => keyup(event.keyCode);
     canvas.oncontextmenu = (event) => event.preventDefault();
+    init(Math.random() * (1 << 31))
     render(performance.now());
   });
   return <Canvas />;
