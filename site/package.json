@@ -35,6 +35,9 @@
     "build": "bun run build-wasm && bunx --bun astro build",
     "preview": "bunx --bun astro preview",
     "start": "bun run ./dist/server/entry.mjs",
-    "build-wasm": "cd web3d && make ${MAKE_TARGET:-all}"
+    "build-wasm": "cd web3d && make ${MAKE_TARGET:-all}",
+    "db:push": "bunx drizzle-kit push",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:studio": "bunx drizzle-kit studio",
   }
 }
