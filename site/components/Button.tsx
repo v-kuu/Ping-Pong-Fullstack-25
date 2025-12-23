@@ -1,4 +1,5 @@
 import type { ComponentChildren } from "preact";
+import "../assets/styles.css";
 
 export interface ButtonProps {
   id?: string;

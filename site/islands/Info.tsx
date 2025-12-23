@@ -5,7 +5,16 @@ export function Userinfo() {
   return (
     <div>
       <h2>User Information</h2>
-      <Show when={user.value.length} fallback={<p>This is the user information island.<br/>You should <a href="/login">login</a> first.</p>}>
+      <Show
+        when={user.value.length > 0}
+        fallback={
+          <p>
+            This is the user information island.
+            <br />
+            You should <a href="/login">login</a> first.
+          </p>
+        }
+      >
         <p>Welcome, ${user.value}.</p>
       </Show>
     </div>

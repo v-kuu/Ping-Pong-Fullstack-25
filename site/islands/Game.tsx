@@ -9,7 +9,6 @@ export function Game() {
   useEffect(() => {
     const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
     const engine = new Engine(canvas, true, { stencil: true });
-
     const preventScroll = (e: WheelEvent) => e.preventDefault();
     canvas.addEventListener("wheel", preventScroll, { passive: false });
 
