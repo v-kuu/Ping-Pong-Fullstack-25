@@ -10,6 +10,10 @@ all: src/*.c
 	@ docker exec $(CONTAINER) clang $^ -o $(NAME) $(CFLAGS) # Compile
 	@ docker cp -q $(CONTAINER):$(NAME) ../public/$(NAME) # Copy build artifacts out
 
+.PHONY: native
+native: src/*.c
+	clang $^ -o ../public/$(NAME) $(CFLAGS)
+
 .PHONY: clean
 clean:
 	@ $(RM) $(NAME)

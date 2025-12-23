@@ -1,22 +1,8 @@
 ---
-import Header from "@/components/Header.tsx";
-import Footer from "@/islands/Footer.tsx";
+import Base from "@/src/layouts/Base.astro";
 import { Game } from "@/islands/Game.tsx";
-import "@/assets/styles.css";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏓</text></svg>" />
-    <title>P O N G</title>
-  </head>
-  <body>
-    <Header client:load active="" title="ft_transcendence" />
-    <div class="px-4 py-8 mx-auto fresh-gradient2 min-h-screen">
-      <Game client:load />
-    </div>
-    <Footer client:load active="" />
-  </body>
-</html>
+<Base title="P O N G" active="" class="px-4 py-8 mx-auto fresh-gradient2 min-h-screen">
+  <Game client:load />
+</Base>

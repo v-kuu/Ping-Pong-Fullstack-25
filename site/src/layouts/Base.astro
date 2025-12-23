@@ -1,0 +1,29 @@
+---
+import Header from "@/components/Header.tsx";
+import Footer from "@/islands/Footer.tsx";
+import "@/assets/styles.css";
+
+interface Props {
+  title: string;
+  active: string;
+  class?: string;
+}
+
+const { title, active, class: className } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <Header active={active} title="ft_transcendence" />
+    <main class={className}>
+      <slot />
+    </main>
+    <Footer active={active} />
+  </body>
+</html>

@@ -1,19 +1,8 @@
 ---
-import Header from "@/components/Header.tsx";
-import Footer from "@/islands/Footer.tsx";
+import Base from "@/src/layouts/Base.astro";
 import ToS from "@/components/ToS.tsx";
-import "@/assets/styles.css";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Terms of Service</title>
-  </head>
-  <body>
-    <Header client:load active="/terms-of-service" title="ft_transcendence" />
-    <ToS />
-    <Footer client:load active="/terms-of-service" />
-  </body>
-</html>
+<Base title="Terms of Service" active="/terms-of-service">
+  <ToS />
+</Base>
