@@ -3,12 +3,8 @@ site/node_modules/
 site/_fresh/
 site/dist/
 site/vite.config.json
-<<<<<<< HEAD
 site/.astro
 site/bun.lock
 *.wasm
 site/bun.lock
 *.db*
-=======
-*.wasm
->>>>>>> main

@@ -1,5 +1,4 @@
 import { Canvas } from "../components/Canvas.tsx";
-<<<<<<< HEAD
 import { useEffect, useRef } from "preact/hooks";
 
 interface WasmModule {
@@ -9,13 +8,8 @@ interface WasmModule {
   keyup: (keycode: number) => void;
   memory: WebAssembly.Memory;
 }
-=======
-import { useEffect } from "preact/hooks";
-import { draw, init, keyup, keydown, memory } from "../assets/web3d.wasm";
->>>>>>> main
 
 export function Web3D() {
-<<<<<<< HEAD
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wasmRef = useRef<WasmModule | null>(null);
 
@@ -26,7 +20,7 @@ export function Web3D() {
         const wasmBytes = await wasmResponse.arrayBuffer();
         const wasmInstance = await WebAssembly.instantiate(wasmBytes);
         const wasm = wasmInstance.instance.exports as unknown as WasmModule;
-        
+
         if (!wasm.init || !wasm.draw || !wasm.memory) {
           console.error('WASM module missing required exports');
           return;
@@ -44,7 +38,7 @@ export function Web3D() {
 
         canvas.width = 360;
         canvas.height = 200;
-        
+
         const bytes = new Uint8Array(wasm.memory.buffer);
         const imageData = ctx.createImageData(canvas.width, canvas.height);
         const frameSize = canvas.width * canvas.height * 4;
@@ -93,39 +87,3 @@ export function Web3D() {
 
   return <Canvas ref={canvasRef} />;
 }
-=======
-  useEffect(() => {
-    // Set up the canvas for low resolution rendering.
-    const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-    canvas.style.imageRendering = "pixelated";
-    canvas.width = 360;
-    canvas.height = 200;
-
-    // Create a 2D rendering context.
-    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    context.fillStyle = "#f0f";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    const bytes = new Uint8Array(memory.buffer);
-
-    // Make an ImageData object for updating the canvas.
-    const imageData = context.createImageData(canvas.width, canvas.height);
-    const frameSize = canvas.width * canvas.height * 4;
-    // Make a callback function for updating the frame.
-    const render = (timestamp: DOMHighResTimeStamp) => {
-      const frameAddr = draw(timestamp);
-      imageData.data.set(bytes.subarray(frameAddr, frameAddr + frameSize));
-      context.putImageData(imageData, 0, 0);
-      requestAnimationFrame(render);
-    };
-
-    // Set up event handlers and render the first frame.
-    onkeydown = (event) => keydown(event.keyCode);
-    onkeyup = (event) => keyup(event.keyCode);
-    canvas.oncontextmenu = (event) => event.preventDefault();
-    init(Math.random() * (1 << 31))
-    render(performance.now());
-  });
-  return <Canvas />;
-}
->>>>>>> main
