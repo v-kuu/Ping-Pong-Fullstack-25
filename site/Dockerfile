@@ -1,7 +1,7 @@
 FROM oven/bun:alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN apk add --no-cache clang lld make musl-dev
+RUN apk add --no-cache clang lld make
 RUN bun install --frozen-lockfile
 
 FROM oven/bun:alpine AS prod-deps
