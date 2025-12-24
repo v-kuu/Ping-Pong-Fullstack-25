@@ -1,5 +1,5 @@
 import { Userinfo } from "./Info.tsx";
-import { UpdatePassword } from "../components/Password.tsx";
+import { UpdatePassword } from "./Password.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { signal } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
