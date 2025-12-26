@@ -5,7 +5,7 @@ import { validatePassword, validatePasswordMatch } from "../utils/validation.ts"
 export function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [password, setPassword] = useState("");
+  const [_password, setPassword] = useState("");
   const [showPasswordRequirements, setShowPasswordRequirements] =
     useState(false);
   const [passwordMismatch, setPasswordMismatch] = useState(false);

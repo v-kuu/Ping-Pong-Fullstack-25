@@ -1,4 +1,5 @@
 import earcut from "earcut";
+// @ts-ignore
 (globalThis as any).earcut = earcut;
 import { Engine } from "@babylonjs/core";
 import { useEffect } from "preact/hooks";

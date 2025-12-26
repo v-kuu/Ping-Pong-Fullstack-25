@@ -62,13 +62,13 @@ If you have any questions about this Privacy Policy or our data practices, pleas
 
 **support@joonastuomi.fi**`;
 
-const html = marked(content);
+const html = marked.parse(content);
 
 export default function PrivacyPolicy() {
   return (
     <article
       class="prose max-w-none prose-slate text-center"
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: html as string }}
     />
   );
 }

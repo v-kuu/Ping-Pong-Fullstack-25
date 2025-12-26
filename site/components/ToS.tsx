@@ -71,12 +71,12 @@ If you have any questions about these Terms, please contact us at:
 
 **tos@joonastuomi.fi**`;
 
-const html = marked(content);
+const html = marked.parse(content);
 
 export default function ToS() {
   return (
     <article class="prose max-w-none text-center">
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+      <div dangerouslySetInnerHTML={{ __html: html as string }} />
     </article>
   );
 }

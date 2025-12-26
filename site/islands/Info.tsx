@@ -6,7 +6,7 @@ export function UserInfo() {
     <div>
       <h2>User Information</h2>
       <Show
-        when={user.value.length > 0}
+        when={() => user.value.length > 0}
         fallback={
           <p>
             This is a user information island.

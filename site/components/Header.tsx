@@ -5,17 +5,15 @@ export default function Header(props: { title: string; active: string }) {
 
   return (
     <header>
-	<div
-      class="navbar bg-base-100 shadow-sm"
-    	>
-      	{!isHome && (
-        	<div class="flex-1 menu menu-horizontal">
-          		<Logo />
-          		<GameLogo />
-        	</div>
-      	)}
-      <NavigationBar class="flex-none" active={props.active} />
-	</div>
+      <div class="navbar bg-base-100 shadow-sm">
+        {!isHome && (
+          <div class="flex-1 menu menu-horizontal">
+            <Logo />
+            <GameLogo />
+          </div>
+        )}
+        <NavigationBar class="flex-none" active={props.active} />
+      </div>
     </header>
   );
 }
