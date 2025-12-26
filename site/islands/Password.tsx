@@ -33,7 +33,7 @@ export function UpdatePassword() {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white-700" for="newPassword">
+          <label class="block text-sm font-medium text-white-700" for="newPassword"> // RABBIT: Invalid Tailwind class 'text-white-700' doesn't exist.
             New Password
           </label>
           <input
@@ -64,17 +64,17 @@ export function UpdatePassword() {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white-700" for="confirmPassword">
+          <label class="block text-sm font-medium text-white-700" for="confirmPassword"> // RABBIT: Invalid Tailwind class 'text-white-700' doesn't exist.
             Confirm Password
           </label>
           <input
             type="password"
-            class={`w-full px-4 py-3 rounded-lg border ${passwordMismatch ? "border-red-500" : "border-gray-300"} text-white-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none`}
+            class={`w-full px-4 py-3 rounded-lg border ${passwordMismatch ? "border-red-500" : "border-gray-300"} text-white-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none`} // RABBIT: Invalid Tailwind class 'text-white-900' doesn't exist.
             placeholder="Re-enter your password"
             required
             id="confirmPassword"
             name="confirmPassword"
-            onInput={() => {
+            onInput={() => { // RABBIT: DOM access anti-pattern - using document.getElementById instead of controlled components with refs or state.
               const confirmPasswordInput = document.getElementById(
                 "confirmPassword",
               ) as HTMLInputElement;

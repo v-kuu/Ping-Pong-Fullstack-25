@@ -1,6 +1,6 @@
 import { Button } from "../components/Button.tsx";
 // unused rn
-export function Form() {
+export function Form() { // RABBIT: Generic name with hardcoded action="/login" and method="POST" - not reusable. Extract props interface and make configurable.
   return (
     <form class="card" method="POST" action="/login">
       <label class="input" for="username">
@@ -19,7 +19,7 @@ export function Form() {
         name="username"
         required
       />
-      <p className="validator-hint">
+      <p className="validator-hint"> // RABBIT: Preact/Astro uses 'class' not 'className' (React convention)
         Must be 3 to 30 characters
         <br />
         containing only letters, numbers or dash
@@ -30,7 +30,7 @@ export function Form() {
       </label>
       <input
         type="password"
-        class="input validor"
+        class="input validor" // RABBIT: Typo 'validor' should be 'validator'
         minLength={8}
         pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
         title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
@@ -39,7 +39,7 @@ export function Form() {
         name="password"
         required
       />
-      <p className="validator-hint">
+      <p className="validator-hint"> // RABBIT: Preact/Astro uses 'class' not 'className'
         Must be more than 8 characters, including
         <br />
         At least one number
@@ -49,7 +49,7 @@ export function Form() {
         At least one uppercase letter
       </p>
       <br />
-      <Button id="formButton" onClick={undefined}>
+      <Button id="formButton" onClick={undefined}> // RABBIT: Explicitly passing undefined is unnecessary and confusing. Just omit the prop.
         Login
       </Button>
       <br />

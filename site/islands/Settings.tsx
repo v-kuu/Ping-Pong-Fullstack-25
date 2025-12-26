@@ -1,4 +1,4 @@
-import { Userinfo } from "./Info.tsx";
+import { UserInfo } from "./Info.tsx";
 import { UpdatePassword } from "./Password.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { signal } from "@preact/signals";
@@ -12,9 +12,9 @@ export function Setting() {
   return (
     <div class="drawer lg:drawer-open">
       <input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
-      <div className="prose max-w-none drawer-content flex flex-col items-center justify-center">
+      <div class="prose max-w-none drawer-content flex flex-col items-center justify-center">
         <Show when={isInfo}>
-          <Userinfo />
+          <UserInfo />
         </Show>
         <Show when={isPass}>
           <UpdatePassword />
@@ -30,7 +30,7 @@ export function Setting() {
         <label
           htmlFor="my-drawer-3"
           aria-label="close sidebar"
-          className="drawer-overlay"
+          class="drawer-overlay"
         ></label>
         <ul class="menu bg-base-200 min-h-full w-80 p-4">
           <li>

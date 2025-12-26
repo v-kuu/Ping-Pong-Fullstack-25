@@ -1,13 +1,12 @@
 import NavigationBar from "./NavBar.tsx";
 
-export default function Header(props: { title: string; active: string }) {
-  const isHome = props.active == "/";
+export default function Header(props: { title: string; active: string }) { // RABBIT: Props interface should be extracted for reuse and clarity. Also using loose equality (==) instead of strict (===).
+  const isHome = props.active === "/";
 
   return (
     <header>
 	<div
       class="navbar bg-base-100 shadow-sm"
-      f-client-nav={false}
     	>
       	{!isHome && (
         	<div class="flex-1 menu menu-horizontal">
@@ -30,7 +29,7 @@ export function Logo() {
         viewBox="0 0 250 75"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-[#0A140C] dark:fill-[#f5ebf3]"
+        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-[#0140C0]"
         aria-label="Paddle logo"
       >
         <path

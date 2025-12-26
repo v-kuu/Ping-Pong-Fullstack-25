@@ -19,7 +19,7 @@ export function Web3D() {
       const bytes = new Uint8Array(memory.buffer);
       const imageData = context.createImageData(canvas.width, canvas.height);
       const frameSize = canvas.width * canvas.height * 4;
-      // Make a callback function for updating the frame  
+      // Make a callback function for updating the frame
       const render = (timestamp: DOMHighResTimeStamp) => {
         const frameAddr = draw(timestamp);
         imageData.data.set(bytes.subarray(frameAddr, frameAddr + frameSize));
