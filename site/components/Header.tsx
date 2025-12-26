@@ -44,7 +44,7 @@ export function GameLogo() {
     <a href="/game" class="flex mr-3 items-center shrink-0" aria-label="Game">
       <img src="/web.svg" alt="Web logo" width={40} height={40} />
       <svg
-        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-[#0140C] dark:fill-[#f5ebf3]"
+        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-white dark:fill-white"
         fill="none"
         viewBox="-0.1890123337507248 10.394081115722656 114.6412353515625 38.93424987792969"
       >
