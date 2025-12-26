@@ -1,5 +1,5 @@
 export function validatePassword(value: string): boolean {
-  const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/; // RABBIT: Weak password validation - no check for special characters, no maximum length. Add validation for special chars, max length, and common patterns.
+  const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   return passwordPattern.test(value);
 }
 

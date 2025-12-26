@@ -5,6 +5,13 @@
     themes: light --default, dark --prefersdark;
 }
 
+input[type="password"] {
+    letter-spacing: 0.2em;
+}
+input[type="password"]::placeholder {
+    letter-spacing: normal;
+}
+
 .fresh-gradient {
     background-color: rgb(200, 2, 100);
     background-image: linear-gradient(to right bottom,

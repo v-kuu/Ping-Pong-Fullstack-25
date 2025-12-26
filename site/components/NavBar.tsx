@@ -1,7 +1,7 @@
 import * as Icons from "./Icons.tsx";
 import clsx from "clsx";
 
-export default function NavigationBar(props: { // RABBIT: Should extract interface for reuse and clarity.
+export default function NavigationBar(props: {
   active: string;
   class?: string;
 }) {

@@ -4,5 +4,5 @@ import { Setting } from "@/islands/Settings.tsx";
 ---
 
 <Base title="Settings" active="/settings">
-  <Setting client:load /> // RABBIT: client:load forces hydration immediately on page load, which can delay First Contentful Paint. Consider using client:idle for non-critical interactivity.
+  <Setting client:load />
 </Base>

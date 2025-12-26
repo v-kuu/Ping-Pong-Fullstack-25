@@ -1,6 +1,6 @@
 import NavigationBar from "./NavBar.tsx";
 
-export default function Header(props: { title: string; active: string }) { // RABBIT: Props interface should be extracted for reuse and clarity. Also using loose equality (==) instead of strict (===).
+export default function Header(props: { title: string; active: string }) {
   const isHome = props.active === "/";
 
   return (
@@ -29,7 +29,7 @@ export function Logo() {
         viewBox="0 0 250 75"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-[#0140C0]"
+        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-[#FFFFFF]"
         aria-label="Paddle logo"
       >
         <path

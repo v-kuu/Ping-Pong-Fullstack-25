@@ -9,5 +9,5 @@ export interface ButtonProps {
 }
 
 export function Button(props: ButtonProps) {
-  return <button {...props} class="btn" />; // RABBIT: Unsafe spread - allows invalid HTML attributes and 'class' can be overridden by props.class. Destructure specific props instead.
+  return <button {...props} class="btn" />;
 }

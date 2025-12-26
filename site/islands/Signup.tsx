@@ -22,7 +22,7 @@ export function Signup() {
         method="POST"
         action="/register"
         class="space-y-6"
-        onSubmit={validateInput} // RABBIT: Event default not prevented, will submit regardless of validation. Fix: onSubmit={(e) => { e.preventDefault(); validateInput(e); }}
+        onSubmit={validateInput}
       >
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-700" for="username">
@@ -115,7 +115,7 @@ export function Signup() {
               required
               id="confirmPassword"
               name="confirmPassword"
-              onInput={() => { // RABBIT: DOM access anti-pattern - using document.getElementById instead of controlled components with refs or state.
+              onInput={() => {
                 const confirmPasswordInput = document.getElementById(
                   "confirmPassword",
                 ) as HTMLInputElement;

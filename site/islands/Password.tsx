@@ -1,9 +1,13 @@
-import { validatePassword, validatePasswordMatch } from "../utils/validation.ts";
+import {
+  validatePassword,
+  validatePasswordMatch,
+} from "../utils/validation.ts";
 import { useState } from "preact/hooks";
 
 export function UpdatePassword() {
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false);
 
   function validateInput(e: Event) {
     if (!validatePasswordMatch(e)) {
@@ -14,14 +18,19 @@ export function UpdatePassword() {
   return (
     <div>
       <h2>Change your password</h2>
-      <form method="POST" action="/update" class="space-y-6" onSubmit={validateInput}>
+      <form
+        method="POST"
+        action="/update"
+        class="space-y-6"
+        onSubmit={validateInput}
+      >
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white-700" for="oldPassword">
+          <label class="block text-sm font-medium text-white" for="oldPassword">
             Current Password
           </label>
           <input
             type="password"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 text-white-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 text-white focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none"
             minLength={8}
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
             title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
@@ -33,12 +42,12 @@ export function UpdatePassword() {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white-700" for="newPassword"> // RABBIT: Invalid Tailwind class 'text-white-700' doesn't exist.
+          <label class="block text-sm font-medium text-white" for="newPassword">
             New Password
           </label>
           <input
             type="password"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 text-white-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 text-white focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none"
             minLength={8}
             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
             title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
@@ -64,17 +73,20 @@ export function UpdatePassword() {
         </div>
 
         <div class="space-y-2">
-          <label class="block text-sm font-medium text-white-700" for="confirmPassword"> // RABBIT: Invalid Tailwind class 'text-white-700' doesn't exist.
+          <label
+            class="block text-sm font-medium text-white"
+            for="confirmPassword"
+          >
             Confirm Password
           </label>
           <input
             type="password"
-            class={`w-full px-4 py-3 rounded-lg border ${passwordMismatch ? "border-red-500" : "border-gray-300"} text-white-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none`} // RABBIT: Invalid Tailwind class 'text-white-900' doesn't exist.
+            class={`w-full px-4 py-3 rounded-lg border ${passwordMismatch ? "border-red-500" : "border-gray-300"} text-white focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none`}
             placeholder="Re-enter your password"
             required
             id="confirmPassword"
             name="confirmPassword"
-            onInput={() => { // RABBIT: DOM access anti-pattern - using document.getElementById instead of controlled components with refs or state.
+            onInput={() => {
               const confirmPasswordInput = document.getElementById(
                 "confirmPassword",
               ) as HTMLInputElement;
