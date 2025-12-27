@@ -1,0 +1,8 @@
+---
+import Base from "@/src/layouts/Base.astro";
+import { Web3D } from "@/islands/Web3D.tsx";
+---
+
+<Base title="W E B 3 D" active="/game" class="px-4 py-8 mx-auto fresh-gradient min-h-screen">
+  <Web3D client:load />
+</Base>

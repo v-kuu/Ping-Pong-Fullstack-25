@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+.env
+*.db
+*.wasm
+!web3d/src/*.c
+!web3d/web3d.h
