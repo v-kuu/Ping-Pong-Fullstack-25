@@ -7,6 +7,7 @@
     dark --prefersdark;
 }
 
+/*spacing of password inputs*/
 input[type="password"] {
   letter-spacing: 0.2em;
 }

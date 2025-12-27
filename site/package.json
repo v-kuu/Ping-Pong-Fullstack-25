@@ -4,10 +4,8 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest",
     "@types/earcut": "^3.0.0",
-    "drizzle-kit": "^0.31.8",
-    "drizzle-orm": "^0.45.1"
+    "drizzle-kit": "^0.31.8"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
@@ -20,18 +18,17 @@
     "@babylonjs/procedural-textures": "^8.42.0",
     "@nurodev/astro-bun": "^2.1.2",
     "@preact-signals/utils": "^0.23.1",
-    "@preact/preset-vite": "^2.10.2",
     "@preact/signals": "^2.5.1",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
+    "drizzle-orm": "^0.45.1",
     "earcut": "^3.0.2",
     "marked": "^17.0.1",
     "preact": "^10.28.0",
-    "tailwindcss": "^4.1.18",
-    "vite": "^7.3.0"
+    "tailwindcss": "^4.1.18"
   },
   "scripts": {
     "dev": "bun run build-wasm && bunx --bun astro dev",
