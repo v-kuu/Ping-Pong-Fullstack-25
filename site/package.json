@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "devDependencies": {
+    "@types/bun": "^1.3.5",
     "@types/earcut": "^3.0.0",
+    "better-sqlite3": "^12.5.0",
     "drizzle-kit": "^0.31.8"
   },
   "peerDependencies": {
@@ -24,6 +26,7 @@
     "astro": "^5.16.6",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
+    "drizzle": "^1.4.0",
     "drizzle-orm": "^0.45.1",
     "earcut": "^3.0.2",
     "marked": "^17.0.1",
@@ -31,14 +34,12 @@
     "tailwindcss": "^4.1.18"
   },
   "scripts": {
-    "dev": "bun run build-wasm && bunx --bun astro dev",
-    "build": "bun run build-wasm && bunx --bun astro build",
-    "preview": "bunx --bun astro preview",
-    "start": "bun run ./dist/server/entry.mjs",
-    "build-wasm": "cd web3d && make ${MAKE_TARGET:-all}",
+    "dev": "bun run db:push && bun run build-wasm && bunx --bun astro dev",
+    "build": "bun run db:push && bun run build-wasm && bunx --bun astro build",
     "check": "bunx --bun astro check",
     "db:push": "bunx drizzle-kit push",
     "db:generate": "bunx drizzle-kit generate",
-    "db:studio": "bunx drizzle-kit studio"
+    "db:studio": "bunx drizzle-kit studio",
+    "build-wasm": "make -sC web3d"
   }
 }

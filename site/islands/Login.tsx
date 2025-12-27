@@ -1,55 +1,68 @@
-import { EyeOpen, EyeClosed } from "../components/Icons.tsx";
 import { useState } from "preact/hooks";
+import { TextInput, PasswordInput, ErrorMessage } from "../components/Form.tsx";
 
 export function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    setServerError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("password", password);
+
+      const res = await fetch("/api/login", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Invalid username or password");
+      }
+
+      // Login successful, redirect to Web3D game
+      window.location.href = "/game";
+    } catch (err: any) {
+      setServerError(err.message);
+    }
+  };
 
   return (
     <div class="card">
-      <form method="POST" action="/login" class="space-y-6">
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700" for="username">
-            Username
-          </label>
-          <input
-            type="text"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none"
-            pattern="[A-Za-z][A-Za-z0-9\-]*"
-            title="Only letters, numbers or dash, must start with a letter"
-            minLength={3}
-            maxLength={30}
-            placeholder="AwesomeUser"
-            id="username"
-            name="username"
-            required
-          />
-        </div>
+      <form class="space-y-6" onSubmit={handleSubmit} novalidate>
+        {serverError && <ErrorMessage message={serverError} />}
 
-        <div class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700" for="password">
-            Password
-          </label>
-          <div class="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              class="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 text-gray-900 focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200 outline-none"
-              minLength={8}
-              placeholder="••••••••"
-              id="password"
-              name="password"
-              required
-            />
-            <button
-              type="button"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeClosed /> : <EyeOpen />}
-            </button>
-          </div>
-        </div>
+        <TextInput
+          label="Username"
+          name="username"
+          value={username}
+          onInput={setUsername}
+          pattern="[A-Za-z][A-Za-z0-9\-]*"
+          minLength={3}
+          maxLength={30}
+          placeholder="AwesomeUser"
+          autoComplete="username"
+        />
 
-        <button id="formButton" class="btn w-full py-3 text-lg">
+        <PasswordInput
+          label="Password"
+          name="password"
+          value={password}
+          onInput={setPassword}
+          placeholder="•••••••••"
+          autoComplete="current-password"
+          showPassword={showPassword}
+          onToggleShow={() => setShowPassword(!showPassword)}
+        />
+
+        <button type="submit" class="btn w-full py-3 text-lg">
           Login
         </button>
       </form>
