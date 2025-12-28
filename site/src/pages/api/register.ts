@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ request }) => {
       return createResponse(
         {
           error:
-            "Password must be at least 8 characters, contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+            "Password must be at least 12 characters and strong enough",
         },
         400,
       );
@@ -65,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
       { success: true, message: "Account created successfully" },
       201,
     );
-  } catch (error) {
+  } catch {
     return createResponse({ error: "Internal Server Error" }, 500);
   }
 };

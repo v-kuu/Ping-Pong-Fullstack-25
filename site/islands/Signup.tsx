@@ -1,20 +1,7 @@
 import { useState } from "preact/hooks";
-import {
-  TextInput,
-  EmailInput,
-  PasswordInput,
-  PasswordRules,
-  UsernameRules,
-  PasswordMatch,
-  ErrorMessage,
-  SuccessMessage,
-} from "../components/Form";
 import { validatePassword } from "../utils/validation";
 
 export function Signup() {
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,14 +10,12 @@ export function Signup() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const checkRules = (val: string) => validatePassword(val);
-
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setServerError(null);
 
-    if (!checkRules(password) || password !== confirm) {
-      setServerError("Please fix the password errors before submitting.");
+    if (!validatePassword(password) || password !== confirm) {
+      setServerError("Password must be at least 12 characters and strong enough.");
       return;
     }
 
@@ -58,82 +43,100 @@ export function Signup() {
     }
   };
 
-  if (isSuccess) {
-    return (
-      <SuccessMessage onRedirect={() => (window.location.href = "/login")} />
-    );
-  }
-
   return (
-    <div class="card">
-      <form class="space-y-6" onSubmit={handleSubmit} novalidate>
-        {serverError && <ErrorMessage message={serverError} />}
-
-        <div class="space-y-2">
-          <TextInput
-            label="Username"
-            name="username"
-            value={username}
-            onInput={setUsername}
-            disabled={isSuccess}
-            pattern="[A-Za-z][A-Za-z0-9\-]*"
-            minLength={3}
-            maxLength={30}
-            placeholder="AwesomeUser"
-            autoComplete="username"
-            hint="3-30 characters: letters, numbers or dash"
-          />
-          <UsernameRules username={username} />
+    <>
+      {isSuccess ? (
+        <div class="card text-center py-10 space-y-4">
+          <div class="mx-auto w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-3xl">
+            ✓
+          </div>
+          <h2 class="text-3xl font-bold text-white">Account Created!</h2>
+          <p class="text-gray-300">
+            Your account has been successfully registered.
+          </p>
+          <button
+            class="btn btn-success w-full py-3 mt-4"
+            onClick={() => (window.location.href = "/login")}
+          >
+            Go to Login
+          </button>
         </div>
-
-        <EmailInput
-          label="Email"
-          name="email"
-          value={email}
-          onInput={setEmail}
-          disabled={isSuccess}
-          placeholder="you@example.com"
-          autoComplete="email"
-        />
-
-        <div class="space-y-2">
-          <PasswordInput
-            label="Password"
-            name="password"
-            value={password}
-            onInput={setPassword}
-            disabled={isSuccess}
-            placeholder="•••••••••"
-            autoComplete="new-password"
-            showPassword={showPass}
-            onToggleShow={() => setShowPass(!showPass)}
-          />
-          <PasswordRules password={password} />
-        </div>
-
-        <div class="space-y-2">
-          <PasswordInput
-            label="Confirm Password"
-            name="confirmPassword"
-            value={confirm}
-            onInput={setConfirm}
-            disabled={isSuccess}
-            placeholder="•••••••••"
-            autoComplete="new-password"
-            showPassword={showConfirm}
-            onToggleShow={() => setShowConfirm(!showConfirm)}
-          />
-          <PasswordMatch password={password} confirmPassword={confirm} />
-        </div>
-
-        <button
-          type="submit"
-          class="btn w-full py-3 text-lg"
-          disabled={isSuccess}
+      ) : (
+        <form
+          class="flex flex-col gap-4 rounded-box bg-base-200 p-6 max-w-md"
+          onSubmit={handleSubmit}
         >
-          {isSuccess ? "Creating Account..." : "Create Account"}
-        </button>
-      </form>
-    </div>
+          <h1 class="text-3xl font-bold self-center">Gi'mme the Deeds</h1>
+
+          <span class="self-center">
+            Already have an account?
+            <a class="link link-secondary" href="/login">
+              Log in
+            </a>
+          </span>
+
+          {serverError && <div class="alert alert-error">{serverError}</div>}
+
+          <div class="space-y-1">
+            <label class="label-text">Username</label>
+            <input
+              type="text"
+              class="input input-bordered w-full"
+              value={username}
+              onInput={(e: any) => setUsername(e.target.value)}
+              placeholder="AwesomeUser"
+              autoComplete="username"
+              pattern="[A-Za-z][A-Za-z0-9\-]*"
+              minLength={3}
+              maxLength={30}
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="label-text">Email</label>
+            <input
+              type="email"
+              class="input input-bordered w-full"
+              value={email}
+              onInput={(e: any) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="label-text">Password</label>
+            <input
+              type="password"
+              class="input input-bordered w-full"
+              value={password}
+              onInput={(e: any) => setPassword(e.target.value)}
+              placeholder="•••••••••"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="label-text">Confirm password</label>
+            <input
+              type="password"
+              class="input input-bordered w-full"
+              value={confirm}
+              onInput={(e: any) => setConfirm(e.target.value)}
+              placeholder="•••••••••"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            Create
+          </button>
+        </form>
+      )}
+    </>
   );
 }

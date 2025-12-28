@@ -1,5 +1,8 @@
+import { zxcvbn } from "@zxcvbn-ts/core";
+
 export function validatePassword(value: string): boolean {
-  return PASSWORD_RULES.every((rule) => rule.test(value));
+  const result = zxcvbn(value);
+  return value.length >= 12 && result.score >= 2;
 }
 
 export function validateUsername(username: string): boolean {
@@ -39,16 +42,5 @@ export const USERNAME_RULES = [
   {
     label: "Letters, numbers, dash only",
     test: (u: string) => /^[A-Za-z][A-Za-z0-9\-]*$/.test(u),
-  },
-];
-
-export const PASSWORD_RULES = [
-  { label: "8+ characters", test: (p: string) => p.length >= 8 },
-  { label: "1 number", test: (p: string) => /\d/.test(p) },
-  { label: "1 lowercase", test: (p: string) => /[a-z]/.test(p) },
-  { label: "1 uppercase", test: (p: string) => /[A-Z]/.test(p) },
-  {
-    label: "1 special character",
-    test: (p: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p),
   },
 ];
