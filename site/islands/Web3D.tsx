@@ -12,7 +12,6 @@ export function Web3D() {
     canvas.width = 360;
     canvas.height = 200;
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-
     const bytes = new Uint8Array(memory.buffer);
     const imageData = context.createImageData(canvas.width, canvas.height);
     const frameSize = canvas.width * canvas.height * 4;
@@ -24,8 +23,8 @@ export function Web3D() {
       requestAnimationFrame(render);
     };
     // Set up event handlers and render the first frame
-    onkeydown = (event) => keydown(event.key.toUpperCase().charCodeAt(0));
-    onkeyup = (event) => keyup(event.key.toUpperCase().charCodeAt(0));
+    onkeydown = (event) => keydown(event.keyCode);
+    onkeyup = (event) => keyup(event.keyCode);
     canvas.oncontextmenu = (event) => event.preventDefault();
     init(Date.now());
     render(performance.now());

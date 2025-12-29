@@ -1,5 +1,8 @@
 #include "web3d.h"
 
+#define POCKETGIF_IMPLEMENTATION
+#include "pocketgif.h"
+
 int gif_get_width(const uint8_t* gif)
 {
     return gif[6] | (gif[7] << 8);
@@ -10,6 +13,14 @@ int gif_get_height(const uint8_t* gif)
     return gif[8] | (gif[9] << 8);
 }
 
+#if 1
+void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
+{
+    pgif_context ctx;
+    pgif_init(&ctx, gif, 0xfffffff);
+    pgif_next_frame(&ctx, pixels, 0xfffffff, NULL);
+}
+#else
 void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
 {
     // Read the global header and palette (if present).
@@ -95,3 +106,4 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
         }
     }
 }
+#endif

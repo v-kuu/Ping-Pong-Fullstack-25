@@ -12,7 +12,7 @@ all: src/*.c
 
 .PHONY: native
 native: src/*.c
-	clang $^ -o ../web3d/$(NAME) $(CFLAGS)
+	clang $^ -o $(NAME) $(CFLAGS)
 
 .PHONY: clean
 clean:

@@ -11,6 +11,9 @@ typedef __UINT32_TYPE__ uint32_t;
 typedef __UINT64_TYPE__ uint64_t;
 typedef __SIZE_TYPE__ size_t;
 
+// Yeah, I need to define this myself.
+#define NULL ((void*) 0)
+
 // Two times pi.
 #define TAU 6.28318530718f
 
