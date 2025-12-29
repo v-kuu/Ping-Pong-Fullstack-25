@@ -1,3 +1,5 @@
+[![CI](https://github.com/v-kuu/Ping-Pong-Fullstack-25/actions/workflows/ci.yml/badge.svg)](https://github.com/v-kuu/Ping-Pong-Fullstack-25/actions/workflows/ci.yml)
+MAX CHANGE (ALMOST) EVERYTHING UNDERNEATH
 # Usage
 Install `npm` and `deno`.
 Goto `site` and run `deno i`. Then either; </br>
@@ -11,7 +13,7 @@ Open browser and open address printed to stdout.
 Technical architect -> [vlopatin](https://intra.42.fr/users/vlopatin) </br>
 Developers -> [jtuomi](https://intra.42.fr/users/jtuomi), [maoliiny](https://intra.42.fr/users/maoliiny)
 
-## Tech stack
+## Tech stack 
 ### Framework -> [Fresh](https://fresh.deno.dev)
 Fresh is built on top of [Deno](https://deno.com) runtime. It uses [Preact](https://preactjs.com) which has React API but renders to HTML on server. </br>
 It builds using [Vite](https://vite.dev) with CORS, CRSF and trailingSlashes middleware plugins. </br> 
