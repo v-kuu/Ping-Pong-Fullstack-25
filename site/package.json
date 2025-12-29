@@ -1,5 +1,5 @@
 {
-  "name": "db",
+  "name": "ft_transcendence",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -17,6 +17,7 @@
     "@babylonjs/core": "^8.42.0",
     "@babylonjs/gui": "^8.42.0",
     "@babylonjs/procedural-textures": "^8.42.0",
+    "@libsql/client": "^0.15.15",
     "@nurodev/astro-bun": "^2.1.2",
     "@preact-signals/utils": "^0.23.1",
     "@preact/signals": "^2.5.1",
