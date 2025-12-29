@@ -7,8 +7,12 @@ CFLAGS := -std=c23 --target=wasm32 -nostdlib -Oz -s -Wall -Wextra -Wpedantic \
 all: src/*.c
 	@ docker ps | grep -q $(CONTAINER) || docker run --rm -dit --name $(CONTAINER) silkeh/clang:20 sh >/dev/null
 	@ docker cp -q . $(CONTAINER):/ # Copy sources in
-	@ docker exec -it $(CONTAINER) clang $^ -o $(NAME) $(CFLAGS) # Compile
-	@ docker cp -q $(CONTAINER):$(NAME) ../assets/$(NAME) # Copy build artifacts out
+	@ docker exec $(CONTAINER) clang $^ -o $(NAME) $(CFLAGS) # Compile
+	@ docker cp -q $(CONTAINER):$(NAME) $(NAME) # Copy build artifacts out
+
+.PHONY: native
+native: src/*.c
+	clang $^ -o ../web3d/$(NAME) $(CFLAGS)
 
 .PHONY: clean
 clean:

@@ -1,4 +1,5 @@
 import earcut from "earcut";
+// @ts-ignore
 (globalThis as any).earcut = earcut;
 import { Engine } from "@babylonjs/core";
 import { useEffect } from "preact/hooks";
@@ -9,7 +10,9 @@ export function Game() {
   useEffect(() => {
     const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
     const engine = new Engine(canvas, true, { stencil: true });
-    addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
+    const preventScroll = (e: WheelEvent) => e.preventDefault();
+    canvas.addEventListener("wheel", preventScroll, { passive: false });
+
     //debug info
     const gl = engine._gl;
     if (gl) {

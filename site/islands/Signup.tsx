@@ -1,9 +1,142 @@
-import { Register } from "../components/Register.tsx";
+import { useState } from "preact/hooks";
+import { validatePassword } from "../utils/validation";
 
 export function Signup() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    setServerError(null);
+
+    if (!validatePassword(password) || password !== confirm) {
+      setServerError("Password must be at least 12 characters and strong enough.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("confirmPassword", confirm);
+
+      const res = await fetch("/api/register", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      setIsSuccess(true);
+    } catch (err: any) {
+      setServerError(err.message);
+    }
+  };
+
   return (
-    <div class="card">
-      <Register />
-    </div>
+    <>
+      {isSuccess ? (
+        <div class="card text-center py-10 space-y-4">
+          <div class="mx-auto w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-3xl">
+            ✓
+          </div>
+          <h2 class="text-3xl font-bold text-white">Account Created!</h2>
+          <p class="text-gray-300">
+            Your account has been successfully registered.
+          </p>
+          <button
+            class="btn btn-success w-full py-3 mt-4"
+            onClick={() => (window.location.href = "/login")}
+          >
+            Go to Login
+          </button>
+        </div>
+      ) : (
+        <form
+          class="flex flex-col gap-4 rounded-box bg-base-200 p-6 max-w-md"
+          onSubmit={handleSubmit}
+        >
+          <h1 class="text-3xl font-bold self-center">Gi'mme the Deeds</h1>
+
+          <span class="self-center">
+            Already have an account?
+            <a class="link link-secondary" href="/login">
+              Log in
+            </a>
+          </span>
+
+          {serverError && <div class="alert alert-error">{serverError}</div>}
+
+          <div class="space-y-1">
+            <label class="label-text">Username</label>
+            <input
+              type="text"
+              class="input input-bordered w-full"
+              value={username}
+              onInput={(e: any) => setUsername(e.target.value)}
+              placeholder="AwesomeUser"
+              autoComplete="username"
+              pattern="[A-Za-z][A-Za-z0-9\-]*"
+              minLength={3}
+              maxLength={30}
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="label-text">Email</label>
+            <input
+              type="email"
+              class="input input-bordered w-full"
+              value={email}
+              onInput={(e: any) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="label-text">Password</label>
+            <input
+              type="password"
+              class="input input-bordered w-full"
+              value={password}
+              onInput={(e: any) => setPassword(e.target.value)}
+              placeholder="•••••••••"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="label-text">Confirm password</label>
+            <input
+              type="password"
+              class="input input-bordered w-full"
+              value={confirm}
+              onInput={(e: any) => setConfirm(e.target.value)}
+              placeholder="•••••••••"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            Create
+          </button>
+        </form>
+      )}
+    </>
   );
 }

@@ -11,12 +11,12 @@ export default function Footer(props: { active: string }) {
   ];
   return (
     <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
-      <aside>
+      <aside class="menu menu-horizontal">
         <p>
           Copyright © {new Date().getFullYear()} - All right reserved by Pong
           Company
         </p>
-        <ul>
+        <ul class="menu menu-horizontal">
           {items.map((item) => (
             <li
               key={item.href}

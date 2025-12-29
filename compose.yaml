@@ -1,12 +1,10 @@
 services:
-  denosite:
+  astro:
     build: ./site
-    container_name: denosite
+    container_name: astro
     ports:
-      - "8000:8000"
-    volumes:
-      - ./site:/app
+      - "3000:3000"
     restart: always
     environment:
-      - DENO_ENV=development
-      - PORT=8000
+      - PORT=3000
+

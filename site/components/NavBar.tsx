@@ -1,4 +1,5 @@
 import * as Icons from "./Icons.tsx";
+import clsx from "clsx";
 
 export default function NavigationBar(props: {
   active: string;
@@ -19,7 +20,7 @@ export default function NavigationBar(props: {
     },
   ];
   return (
-    <nav class={"flex " + (props.class ?? "")} f-client-nav={false}>
+    <nav class={clsx("flex", props.class)}>
       <div class="dropdown dropdown-end">
         <div tabIndex={0} role="button" class="btn btn-ghost btn-circle avatar">
           <div class="icon w-6 h-6">
