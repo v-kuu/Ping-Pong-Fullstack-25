@@ -1,12 +1,14 @@
 import { defineConfig } from "astro/config";
 import preact from "@astrojs/preact";
 import tailwindcss from "@tailwindcss/vite";
+import wasm from "vite-plugin-wasm";
 import bun from "@nurodev/astro-bun";
 import { resolve } from "node:path";
 
 process.env.ASTRO_TELEMETRY_DISABLED = "1";
 
 export default defineConfig({
+  devToolbar: { enabled: false },
   integrations: [
     preact(),
     {
@@ -46,6 +48,6 @@ export default defineConfig({
     host: true,
   },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), wasm()],
   },
 });

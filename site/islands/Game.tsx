@@ -28,10 +28,10 @@ export function Game() {
 
     const scene = createScene(engine, canvas);
     engine.runRenderLoop(() => scene.render());
-    window.addEventListener("resize", () => engine.resize());
+    addEventListener("resize", () => engine.resize());
 
     return () => {
-      window.removeEventListener("resize", () => engine.resize());
+      removeEventListener("resize", () => engine.resize());
       engine.dispose();
     };
   }, []);
