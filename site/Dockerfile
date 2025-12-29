@@ -14,7 +14,7 @@ FROM deps AS builder
 WORKDIR /app
 COPY . .
 ENV MAKE_TARGET=native
-RUN bun run build
+RUN bun run docker
 
 FROM oven/bun:alpine AS runner
 WORKDIR /app

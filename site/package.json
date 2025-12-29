@@ -25,7 +25,6 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "astro": "^5.16.6",
-    "better-sqlite3": "^12.5.0",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
     "drizzle-orm": "^0.45.1",
@@ -38,10 +37,11 @@
   "scripts": {
     "dev": "bun run db:push && bun run build-wasm && bunx --bun astro dev",
     "build": "bun run build-wasm && bun run check && bunx --bun astro build",
+    "docker": "make -sC web3d native && bun run check && bunx --bun astro build",
     "check": "bunx --bun astro check",
-    "db:push": "bunx drizzle-kit push",
-    "db:generate": "bunx drizzle-kit generate",
-    "db:studio": "bunx drizzle-kit studio",
+    "db:push": "bun drizzle-kit push",
+    "db:generate": "bun drizzle-kit generate",
+    "db:studio": "bun drizzle-kit studio",
     "build-wasm": "make -sC web3d"
   }
 }
