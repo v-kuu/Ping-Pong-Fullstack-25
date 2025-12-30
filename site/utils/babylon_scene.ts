@@ -1,5 +1,6 @@
 import {
 	Scene,
+	LoadAssetContainerAsync,
 	ArcRotateCamera,
 	Engine,
 	Vector3,
@@ -21,13 +22,13 @@ import {
 import * as GUI from "@babylonjs/gui"
 import { startCountdown } from "./babylon_countdown.ts"
 import { GameState } from "./babylon_states.ts"
+import { createGround } from "./babylon_entities.ts"
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
 	registerBuiltInLoaders();
 	let scene = new Scene(engine);
-	const pmMat = loadTexture("painted_metal/xeutbhl_tier_3.gltf", scene);
 	const envTexture = new CubeTexture("/clouds.env", scene);
 	let helper = scene.createDefaultEnvironment({
 		environmentTexture: envTexture,
@@ -37,6 +38,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 		helper.ground.dispose();
 	let currentState: GameState;
 	scene.collisionsEnabled = true;
+	scene.environmentIntensity = 3.0;
 	scene.clearColor = new Color4(0, 0, 0, 0);
 	const mapWidth: number = 14;
 	const mapHeight: number = 6;
@@ -75,14 +77,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	ball.checkCollisions = true;
 	ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
 
-	let ground = MeshBuilder.CreateGround(
-		"ground", { width: mapWidth, height: mapHeight }, scene);
-	ground.receiveShadows = true;
-	let groundMat = new PBRMetallicRoughnessMaterial("groundMat", scene);
-	groundMat.baseTexture = marbleTex;
-	groundMat.metallic = 0;
-	groundMat.roughness = 0.2;
-	ground.material = groundMat;
+	createGround(mapWidth, mapHeight, scene);
 
 	let player1 = MeshBuilder.CreateBox(
 		"player1", { width: 0.5, height: 0.3, depth: playerSize }, scene);
