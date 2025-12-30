@@ -11,6 +11,7 @@ import {
 	HighlightLayer,
 	PBRMetallicRoughnessMaterial,
 	CubeTexture,
+	ImportMeshAsync,
 } from "@babylonjs/core"
 import {
 	MarbleProceduralTexture,
@@ -26,6 +27,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
 	registerBuiltInLoaders();
 	let scene = new Scene(engine);
+	const pmMat = loadTexture("painted_metal/xeutbhl_tier_3.gltf", scene);
 	const envTexture = new CubeTexture("/alien.env", scene);
 	let helper = scene.createDefaultEnvironment({
 		environmentTexture: envTexture,
@@ -297,3 +299,9 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	setState(GameState.Countdown);
 	return scene;
 };
+
+async function loadTexture(path: string, scene: Scene)
+{
+	const ret = await ImportMeshAsync(path, scene);
+	return ret;
+}
