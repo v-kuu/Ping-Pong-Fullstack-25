@@ -1,7 +1,5 @@
 import type { APIRoute } from "astro";
-import { db } from "@/db/index.ts";
-import { users } from "@/db/schema.ts";
-import { eq } from "drizzle-orm";
+import { db, Users, eq } from "astro:db";
 import { createResponse } from "@/utils/validation.ts";
 
 export const POST: APIRoute = async ({ request }) => {
@@ -26,12 +24,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     const user = await db
       .select({
-        id: users.id,
-        username: users.username,
-        password: users.password,
+        id: Users.id,
+        username: Users.username,
+        password: Users.password,
       })
-      .from(users)
-      .where(eq(users.username, username))
+      .from(Users)
+      .where(eq(Users.username, username))
       .limit(1);
 
     if (user.length === 0) {

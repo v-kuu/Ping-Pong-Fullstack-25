@@ -9,8 +9,17 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["astro/client", "bun-types"],
+    "types": [
+      "astro/client",
+      "bun-types",
+      "@astrojs/db"
+    ],
   },
-  "include": ["src/**/*", "components/**/*", "islands/**/*"],
+  "include": [".astro/types.d.ts",
+    "src/**/*",
+    "components/**/*",
+    "islands/**/*",
+    "db/**/*"
+  ],
   "exclude": ["node_modules", "dist"],
 }
