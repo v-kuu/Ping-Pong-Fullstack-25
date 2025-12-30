@@ -1,8 +1,5 @@
 import type { APIRoute } from "astro";
-import { db } from "@/db/index.ts";
-import { users } from "@/db/schema.ts";
-import { eq, or } from "drizzle-orm";
-import type { NewUser } from "@/db/schema.ts";
+import { db, Users, eq, or } from "astro:db";
 import {
   validatePassword,
   validateUsername,
@@ -43,8 +40,8 @@ export const POST: APIRoute = async ({ request }) => {
     // Database Check
     const existingUser = await db
       .select()
-      .from(users)
-      .where(or(eq(users.username, username), eq(users.email, email)))
+      .from(Users)
+      .where(or(eq(Users.username, username), eq(Users.email, email)))
       .limit(1);
 
     if (existingUser.length > 0) {
@@ -53,13 +50,13 @@ export const POST: APIRoute = async ({ request }) => {
 
     const hashedPassword = await Bun.password.hash(password);
 
-    const newUser: NewUser = {
+    const newUser = {
       username,
       email,
       password: hashedPassword,
     };
 
-    await db.insert(users).values(newUser);
+    await db.insert(Users).values(newUser);
 
     return createResponse(
       { success: true, message: "Account created successfully" },
