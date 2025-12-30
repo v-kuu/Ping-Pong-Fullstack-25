@@ -11,28 +11,32 @@ import {
 	HighlightLayer,
 	PBRMetallicRoughnessMaterial,
 	CubeTexture,
+	ImportMeshAsync,
 } from "@babylonjs/core"
 import {
-	MarbleProceduralTexture,
 	FireProceduralTexture,
 	WoodProceduralTexture,
 } from "@babylonjs/procedural-textures"
 import * as GUI from "@babylonjs/gui"
 import { startCountdown } from "./babylon_countdown.ts"
 import { GameState } from "./babylon_states.ts"
+import { createGround } from "./babylon_entities.ts"
+import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
+	registerBuiltInLoaders();
 	let scene = new Scene(engine);
-	const envTexture = new CubeTexture("/alien.env", scene);
+	const envTexture = new CubeTexture("/clouds.env", scene);
 	let helper = scene.createDefaultEnvironment({
 		environmentTexture: envTexture,
-		skyboxTexture: envTexture,
+		createSkybox: false,
 	});
 	if (helper && helper.ground)
 		helper.ground.dispose();
 	let currentState: GameState;
 	scene.collisionsEnabled = true;
+	scene.environmentIntensity = 3.0;
 	scene.clearColor = new Color4(0, 0, 0, 0);
 	const mapWidth: number = 14;
 	const mapHeight: number = 6;
@@ -56,7 +60,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	light.intensity = 0.7;
 
 	//texture setup
-	const marbleTex = new MarbleProceduralTexture("marble", 1024, scene);
 	const fireTex = new FireProceduralTexture("fire", 1024, scene);
 	const woodTex = new WoodProceduralTexture("wood", 1024, scene);
 
@@ -71,14 +74,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	ball.checkCollisions = true;
 	ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
 
-	let ground = MeshBuilder.CreateGround(
-		"ground", { width: mapWidth, height: mapHeight }, scene);
-	ground.receiveShadows = true;
-	let groundMat = new PBRMetallicRoughnessMaterial("groundMat", scene);
-	groundMat.baseTexture = marbleTex;
-	groundMat.metallic = 0;
-	groundMat.roughness = 0.2;
-	ground.material = groundMat;
+	createGround(mapWidth, mapHeight, scene);
 
 	let player1 = MeshBuilder.CreateBox(
 		"player1", { width: 0.5, height: 0.3, depth: playerSize }, scene);
@@ -116,7 +112,8 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	southWall.position.z *= -1;
 
 	let eastWall = MeshBuilder.CreateBox(
-		"vertical", {width: 0.3, height: 0.3, depth: mapHeight}, scene);
+		"vertical", {width: 1, height: 1, depth: 1}, scene);
+	eastWall.scaling = new Vector3(0.3, 0.3, mapHeight);
 	eastWall.position.y = 0.3;
 	eastWall.position.x = mapWidth / 2;
 	eastWall.material = wallMat;
@@ -295,3 +292,9 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	setState(GameState.Countdown);
 	return scene;
 };
+
+async function loadTexture(path: string, scene: Scene)
+{
+	const ret = await ImportMeshAsync(path, scene);
+	return ret;
+}

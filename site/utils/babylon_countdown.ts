@@ -83,10 +83,10 @@ export async function startCountdown(scene: Scene, posZ: number, onComplete: () 
 			countdownMesh.position.z = posZ;
 			countdownMesh.rotation.x = Tools.ToRadians(45);
 			animateCountdown(countdownMesh, textMat);
+			if (value === "GO!")
+				onComplete();
 			await Tools.DelayAsync(1000);
 			countdownMesh.dispose();
 		}
-		if (value === "GO!")
-			onComplete();
 	}
 }
