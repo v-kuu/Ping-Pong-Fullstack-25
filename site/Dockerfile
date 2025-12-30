@@ -1,27 +1,14 @@
-FROM oven/bun:alpine AS deps
+FROM silkeh/clang:20
 WORKDIR /app
-COPY package.json bun.lock* ./
-RUN apk add --no-cache clang lld make
-RUN bun install --frozen-lockfile
+COPY web3d ./web3d
+RUN make -sC web3d native
 
-FROM oven/bun:alpine AS prod-deps
-WORKDIR /app
-COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile --production
-
-
-FROM deps AS builder
+FROM oven/bun:alpine
 WORKDIR /app
 COPY . .
-ENV MAKE_TARGET=native
+RUN mkdir -p /app/web3d
+COPY --from=0 app/web3d /app/web3d
 RUN bun run docker
-
-FROM oven/bun:alpine AS runner
-WORKDIR /app
-
-COPY --from=prod-deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY package.json ./
 
 ENV HOST=0.0.0.0
 ENV PORT=3000
