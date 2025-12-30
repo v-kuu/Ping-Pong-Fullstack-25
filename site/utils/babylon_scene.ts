@@ -1,6 +1,5 @@
 import {
 	Scene,
-	LoadAssetContainerAsync,
 	ArcRotateCamera,
 	Engine,
 	Vector3,
@@ -62,7 +61,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	light.intensity = 0.7;
 
 	//texture setup
-	const marbleTex = new MarbleProceduralTexture("marble", 1024, scene);
 	const fireTex = new FireProceduralTexture("fire", 1024, scene);
 	const woodTex = new WoodProceduralTexture("wood", 1024, scene);
 
