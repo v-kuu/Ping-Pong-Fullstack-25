@@ -28,10 +28,10 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	registerBuiltInLoaders();
 	let scene = new Scene(engine);
 	const pmMat = loadTexture("painted_metal/xeutbhl_tier_3.gltf", scene);
-	const envTexture = new CubeTexture("/alien.env", scene);
+	const envTexture = new CubeTexture("/clouds.env", scene);
 	let helper = scene.createDefaultEnvironment({
 		environmentTexture: envTexture,
-		skyboxTexture: envTexture,
+		createSkybox: false,
 	});
 	if (helper && helper.ground)
 		helper.ground.dispose();
