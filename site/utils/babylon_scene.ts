@@ -14,7 +14,6 @@ import {
 	ImportMeshAsync,
 } from "@babylonjs/core"
 import {
-	MarbleProceduralTexture,
 	FireProceduralTexture,
 	WoodProceduralTexture,
 } from "@babylonjs/procedural-textures"
