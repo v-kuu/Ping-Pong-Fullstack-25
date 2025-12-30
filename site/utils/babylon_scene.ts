@@ -115,7 +115,8 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	southWall.position.z *= -1;
 
 	let eastWall = MeshBuilder.CreateBox(
-		"vertical", {width: 0.3, height: 0.3, depth: mapHeight}, scene);
+		"vertical", {width: 1, height: 1, depth: 1}, scene);
+	eastWall.scaling = new Vector3(0.3, 0.3, mapHeight);
 	eastWall.position.y = 0.3;
 	eastWall.position.x = mapWidth / 2;
 	eastWall.material = wallMat;

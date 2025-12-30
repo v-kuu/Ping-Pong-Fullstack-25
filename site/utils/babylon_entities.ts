@@ -14,7 +14,12 @@ export async function createGround(width: number, height: number, scene: Scene)
 	{
 		const container = await LoadAssetContainerAsync("painted_metal/xeutbhl_tier_3.gltf", scene);
 		if (container.materials)
-			ground.material = container.materials[0];
+		{
+			const pbrMat = container.materials[0];
+			pbrMat.roughness = 0.5;
+			pbrMat.metallic = 1.0;
+			ground.material = pbrMat;
+		}
 		else
 			console.error("No materials found in model");
 	}
