@@ -19,23 +19,20 @@ export enum Sides
 	SOUTH
 }
 
-function loadMat(path: string, scene: Scene): PBRMaterial | null
+async function loadMat(path: string, scene: Scene): Promise<PBRMaterial | null>
 {
 	try
 	{
-		LoadAssetContainerAsync(path, scene).then(
-		container =>
+		const container = await LoadAssetContainerAsync(path, scene);
+		if (container.materials)
 		{
-			if (container.materials)
-			{
-				return container.materials[0];
-			}
-			else
-			{
-				console.error("No materials found in model");
-				return null;
-			}
-		});
+			return container.materials[0] as PBRMaterial;
+		}
+		else
+		{
+			console.error("No materials found in model");
+			return null;
+		}
 	}
 	catch (e)
 	{
@@ -50,9 +47,10 @@ function createGround(scene: Scene)
 		"ground", { width: Globals.mapWidth, height: Globals.mapHeight }, scene
 	);
 	ground.receiveShadows = true;
-	const pbrMat = loadMat("painted_metal/xeutbhl_tier_3.gltf", scene);
-	if (pbrMat)
+	loadMat("painted_metal/xeutbhl_tier_3.gltf", scene).then(pbrMat =>
+	{
 		ground.material = pbrMat;
+	});
 }
 
 function createBall(scene: Scene): Mesh
@@ -60,9 +58,10 @@ function createBall(scene: Scene): Mesh
 	let ball = MeshBuilder.CreateSphere(
 		"ball", { diameter: 0.5, segments: 32 }, scene);
 	ball.position.y = 0.25;
-	const pbrMat = loadMat("marble/tgjpcanc_tier_3.gltf", scene);
-	if (pbrMat)
+	loadMat("marble/tgjpcanc_tier_3.gltf", scene).then(pbrMat =>
+	{
 		ball.material = pbrMat;
+	});
 	ball.checkCollisions = true;
 	ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
 	return ball;
@@ -74,11 +73,12 @@ function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 		"player", { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
 	player.position.x = leftPlayer ? -6 : 6;
 	player.position.y = 0.2;
-	const pbrMat = leftPlayer
-		? loadMat("polypropylene/schbehmp_tier_3.gltf", scene)
-		: loadMat("polyvinyl/sccnbdnp_tier_3.gltf", scene);
-	if (pbrMat)
+	const path = leftPlayer
+		? "polypropylene/schbehmp_tier_3.gltf" : "polyvinyl/sccnbdnp_tier_3.gltf";
+	loadMat(path, scene).then(pbrMat =>
+	{
 		player.material = pbrMat;
+	});
 	player.checkCollisions = true;
 	player.ellipsoid = new Vector3(0.25, 0.15, Globals.playerSize / 2);
 	return player;
@@ -86,16 +86,12 @@ function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 
 function createWalls(scene: Scene): Mesh[]
 {
-	const pbrMat = loadMat("damaged_concrete/vdcnfcd_tier_3.gltf", scene);
-
 	//north
 	let walls: Mesh[] = [];
 	walls[Sides.NORTH] = MeshBuilder.CreateBox(
 		"horizontal", { width: Globals.mapWidth, height: 0.3, depth: 0.3}, scene);
 	walls[Sides.NORTH].position.y = 0.3;
 	walls[Sides.NORTH].position.z = Globals.mapHeight / 2;
-	if (pbrMat)
-		walls[Sides.NORTH].material = pbrMat;
 	walls[Sides.NORTH].checkCollisions = true;
 	
 	//south
@@ -103,8 +99,6 @@ function createWalls(scene: Scene): Mesh[]
 		"horizontal", { width: Globals.mapWidth, height: 0.3, depth: 0.3}, scene);
 	walls[Sides.SOUTH].position.y = 0.3;
 	walls[Sides.SOUTH].position.z = Globals.mapHeight / -2;
-	if (pbrMat)
-		walls[Sides.SOUTH].material = pbrMat;
 	walls[Sides.SOUTH].checkCollisions = true;
 
 	//east
@@ -113,8 +107,6 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.EAST].scaling = new Vector3(0.3, 0.3, Globals.mapHeight);
 	walls[Sides.EAST].position.y = 0.3;
 	walls[Sides.EAST].position.x = Globals.mapWidth / 2;
-	if (pbrMat)
-		walls[Sides.EAST].material = pbrMat;
 	walls[Sides.EAST].checkCollisions = true;
 
 	//west
@@ -123,9 +115,15 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.WEST].scaling = new Vector3(0.3, 0.3, Globals.mapHeight);
 	walls[Sides.WEST].position.y = 0.3;
 	walls[Sides.WEST].position.x = Globals.mapWidth / -2;
-	if (pbrMat)
-		walls[Sides.WEST].material = pbrMat;
 	walls[Sides.WEST].checkCollisions = true;
+	
+	loadMat("damaged_concrete/vdcnfcd_tier_3.gltf", scene).then(pbrMat =>
+	{
+		for (const wall of walls)
+		{
+			wall.material = pbrMat;
+		}
+	});
 	return walls;
 }
 
