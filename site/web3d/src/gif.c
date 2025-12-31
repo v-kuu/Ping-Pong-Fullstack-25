@@ -1,8 +1,5 @@
 #include "web3d.h"
 
-#define POCKETGIF_IMPLEMENTATION
-#include "pocketgif.h"
-
 int gif_get_width(const uint8_t* gif)
 {
     return gif[6] | (gif[7] << 8);
@@ -13,14 +10,6 @@ int gif_get_height(const uint8_t* gif)
     return gif[8] | (gif[9] << 8);
 }
 
-#if 1
-void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
-{
-    pgif_context ctx;
-    pgif_init(&ctx, gif, 0xfffffff);
-    pgif_next_frame(&ctx, pixels, 0xfffffff, NULL);
-}
-#else
 void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
 {
     // Read the global header and palette (if present).
@@ -58,7 +47,7 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
     // Extract variable-length LZW codes from length-prefixed sub-blocks.
     int length = root + 1, bits = 0, part = 0, prev = 0, code = 0, block = 0;
     for (;;) {
-        block = block == 0 ? *gif++ : block - 1;
+        block = (block ? block : *gif++) - 1;
         part |= *gif++ << bits;
         for (bits += 8; bits >= length; prev = code) {
             code = part & ((1 << length) - 1);
@@ -106,4 +95,3 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
         }
     }
 }
-#endif
