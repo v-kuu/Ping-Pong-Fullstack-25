@@ -69,7 +69,7 @@ export function Signup() {
           <h1 class="text-3xl font-bold self-center">Gi'mme the Deeds</h1>
 
           <span class="self-center">
-            Already have an account?
+            Already have an account?&nbsp;
             <a class="link link-secondary" href="/login">
               Log in
             </a>
@@ -84,7 +84,7 @@ export function Signup() {
               class="input input-bordered w-full"
               value={username}
               onInput={(e: any) => setUsername(e.target.value)}
-              placeholder="AwesomeUser"
+              placeholder="Username"
               autoComplete="username"
               pattern="[A-Za-z][A-Za-z0-9\-]*"
               minLength={3}

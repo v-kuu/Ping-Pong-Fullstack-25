@@ -39,7 +39,7 @@ export function Login() {
       <h1 class="text-3xl font-bold self-center">Hit Me With Your Best Shot!</h1>
 
       <span class="self-center">
-        Don't have an account?
+        Don't have an account?&nbsp;
         <a class="link link-secondary" href="/signup">
           Register
         </a>

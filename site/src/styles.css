@@ -4,7 +4,8 @@
 @plugin "daisyui" {
   themes:
     light --default,
-    dark --prefersdark;
+    dark --prefersdark,
+    synthwave;
 }
 
 /*spacing of password inputs*/
