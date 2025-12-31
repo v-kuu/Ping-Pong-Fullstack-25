@@ -8,7 +8,6 @@ import {
 	Mesh,
 	Animation,
 } from "@babylonjs/core"
-import * as GUI from "@babylonjs/gui"
 
 async function get3dFont() : Promise<any>
 {
