@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
-import { db, Users, eq } from "astro:db";
+import { db, Sessions, Users, eq } from "astro:db";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const formData = await request.formData();
 
@@ -15,7 +15,6 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Username validation
     const usernamePattern = /^[A-Za-z][A-Za-z0-9\-]{2,29}$/;
     if (!usernamePattern.test(username)) {
       return Response.json({ error: "Invalid username format" }, { status: 400 });
@@ -40,7 +39,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     const foundUser = user[0];
 
-    // Verify password using Bun
     const isValidPassword = await Bun.password.verify(
       password,
       foundUser.password,
@@ -53,7 +51,16 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Login successful, need to implement the rest later
+    const sessionId = crypto.randomUUID();
+    await db.insert(Sessions).values({ id: sessionId, userId: foundUser.id });
+
+    cookies.set("session", sessionId, {
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: "lax",
+      path: "/",
+    });
+
     return Response.json(
       { success: true, message: "Login successful" },
       { status: 200 },

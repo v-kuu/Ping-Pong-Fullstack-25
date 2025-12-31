@@ -25,6 +25,13 @@ const Matches = defineTable({
     }
 });
 
+const Sessions = defineTable({
+    columns: {
+        id: column.text({ primaryKey: true }),
+        userId: column.number({ references: () => Users.columns.id }),
+    }
+});
+
 export default defineDb({
-    tables: { Users, Matches }
+    tables: { Users, Matches, Sessions }
 });

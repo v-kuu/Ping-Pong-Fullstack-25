@@ -3,18 +3,24 @@ import { UpdatePassword } from "./Password.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { signal } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
+import type { MatchData, UserData } from "@/utils/types";
 
 const isInfo = signal(true);
 const isPass = signal(false);
 const isAvatar = signal(false);
 
-export function Setting() {
+interface ProfileMenuProps {
+  user: UserData | null;
+  matches?: MatchData[];
+}
+
+export function ProfileMenu({ user, matches }: ProfileMenuProps) {
   return (
     <div class="drawer lg:drawer-open">
       <input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
       <div class="prose max-w-none drawer-content flex flex-col items-center justify-center">
         <Show when={isInfo}>
-          <UserInfo />
+          <UserInfo user={user} matches={matches} />
         </Show>
         <Show when={isPass}>
           <UpdatePassword />
