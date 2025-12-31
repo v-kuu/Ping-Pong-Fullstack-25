@@ -26,6 +26,7 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "astro": "^5.16.6",
+    "better-auth": "^1.4.10",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
     "earcut": "^3.0.2",

@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import type { APIRoute } from "astro";
 import { db, Users, eq } from "astro:db";
 import { createResponse } from "@/utils/validation.ts";
@@ -43,6 +44,8 @@ export const POST: APIRoute = async ({ request }) => {
       password,
       foundUser.password,
     );
+
+    await auth.handler(request);
 
     if (!isValidPassword) {
       return createResponse({ error: "Invalid username or password" }, 401);

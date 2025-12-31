@@ -1,6 +1,16 @@
 ---
 import Base from "@/src/layouts/Base.astro";
 import { Signup as SignupComponent } from "@/islands/Signup.tsx";
+
+const session = () => {
+    if (Astro.locals.session) {
+        return Astro.redirect("/settings");
+    } else {
+        // Redirect to login page if the user is not authenticated
+        return Astro.locals.session;
+    }
+}
+
 ---
 
 <Base title="Sign Up" active="/signup" class="vt323-regular flex items-center justify-center min-h-screen bg-gray-900">

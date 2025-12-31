@@ -1,6 +1,16 @@
 ---
 import Base from "@/src/layouts/Base.astro";
 import { Setting } from "@/islands/Settings.tsx";
+
+const session = () => {
+    if (Astro.locals.session) {
+        return Astro.locals.session;
+    } else {
+        // Redirect to login page if the user is not authenticated
+        return Astro.redirect("/login");
+    }
+}
+
 ---
 
 <Base title="Settings" active="/settings">

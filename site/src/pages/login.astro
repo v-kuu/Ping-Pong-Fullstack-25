@@ -1,8 +1,17 @@
 ---
 import Base from "@/src/layouts/Base.astro";
 import { Login as LoginComp } from "@/islands/Login.tsx";
+
+const session = () => {
+    if (Astro.locals.session) {
+        return Astro.redirect("/settings");
+    } else {
+        // Redirect to login page if the user is not authenticated
+        return Astro.locals.session;
+    }
+}
 ---
 
-<Base title="Login" active="/login" class="vt323-regular flex items-center justify-center min-h-screen bg-gray-900">
+<Base title="Login" active="/login" class="vt323-regular prose flex items-center justify-center min-h-screen bg-gray-900">
   <LoginComp client:load />
 </Base>

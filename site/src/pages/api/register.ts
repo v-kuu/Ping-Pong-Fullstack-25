@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import type { APIRoute } from "astro";
 import { db, Users, eq, or } from "astro:db";
 import {
@@ -58,6 +59,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     await db.insert(Users).values(newUser);
 
+    await auth.handler(request);
+    
     return createResponse(
       { success: true, message: "Account created successfully" },
       201,
