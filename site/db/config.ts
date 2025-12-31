@@ -14,7 +14,7 @@ const Users = defineTable({
 
 const Matches = defineTable({
     columns: {
-        id: column.number({ primaryKey: true }),
+        id: column.number({ primaryKey: true, autoIncrement: true }),
         game: column.text(),
         player1Id: column.number({ references: () => Users.columns.id }),
         player2Id: column.number({ references: () => Users.columns.id }),

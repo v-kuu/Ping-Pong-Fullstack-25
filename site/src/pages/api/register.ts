@@ -3,7 +3,6 @@ import { db, Users, eq, or } from "astro:db";
 import {
   validatePassword,
   validateUsername,
-  createResponse,
 } from "@/utils/validation";
 
 export const POST: APIRoute = async ({ request }) => {
@@ -16,24 +15,24 @@ export const POST: APIRoute = async ({ request }) => {
     const confirmPassword = formData.get("confirmPassword")?.toString();
 
     if (!username || !email || !password || !confirmPassword) {
-      return createResponse({ error: "All fields are required" }, 400);
+      return Response.json({ error: "All fields are required" }, { status: 400 });
     }
 
     if (!validateUsername(username)) {
-      return createResponse({ error: "Invalid username format" }, 400);
+      return Response.json({ error: "Invalid username format" }, { status: 400 });
     }
 
     if (password !== confirmPassword) {
-      return createResponse({ error: "Passwords do not match" }, 400);
+      return Response.json({ error: "Passwords do not match" }, { status: 400 });
     }
 
     if (!validatePassword(password)) {
-      return createResponse(
+      return Response.json(
         {
           error:
             "Password must be at least 12 characters and strong enough",
         },
-        400,
+        { status: 400 },
       );
     }
 
@@ -45,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
       .limit(1);
 
     if (existingUser.length > 0) {
-      return createResponse({ error: "Username or email already taken" }, 409);
+      return Response.json({ error: "Username or email already taken" }, { status: 409 });
     }
 
     const hashedPassword = await Bun.password.hash(password);
@@ -58,11 +57,11 @@ export const POST: APIRoute = async ({ request }) => {
 
     await db.insert(Users).values(newUser);
 
-    return createResponse(
+    return Response.json(
       { success: true, message: "Account created successfully" },
-      201,
+      { status: 201 },
     );
   } catch {
-    return createResponse({ error: "Internal Server Error" }, 500);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 };

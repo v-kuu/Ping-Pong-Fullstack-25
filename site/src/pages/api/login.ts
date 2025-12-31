@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { db, Users, eq } from "astro:db";
-import { createResponse } from "@/utils/validation.ts";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -10,16 +9,16 @@ export const POST: APIRoute = async ({ request }) => {
     const password = formData.get("password")?.toString();
 
     if (!username || !password) {
-      return createResponse(
+      return Response.json(
         { error: "Username and password are required" },
-        400,
+        { status: 400 },
       );
     }
 
     // Username validation
     const usernamePattern = /^[A-Za-z][A-Za-z0-9\-]{2,29}$/;
     if (!usernamePattern.test(username)) {
-      return createResponse({ error: "Invalid username format" }, 400);
+      return Response.json({ error: "Invalid username format" }, { status: 400 });
     }
 
     const user = await db
@@ -33,7 +32,10 @@ export const POST: APIRoute = async ({ request }) => {
       .limit(1);
 
     if (user.length === 0) {
-      return createResponse({ error: "Invalid username or password" }, 401);
+      return Response.json(
+        { error: "Invalid username or password" },
+        { status: 401 },
+      );
     }
 
     const foundUser = user[0];
@@ -45,12 +47,18 @@ export const POST: APIRoute = async ({ request }) => {
     );
 
     if (!isValidPassword) {
-      return createResponse({ error: "Invalid username or password" }, 401);
+      return Response.json(
+        { error: "Invalid username or password" },
+        { status: 401 },
+      );
     }
 
     // Login successful, need to implement the rest later
-    return createResponse({ success: true, message: "Login successful" }, 200);
+    return Response.json(
+      { success: true, message: "Login successful" },
+      { status: 200 },
+    );
   } catch (error) {
-    return createResponse({ error: "Internal Server Error" }, 500);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 };
