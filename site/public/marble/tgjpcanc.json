@@ -1,0 +1,487 @@
+{
+  "assetCategories": {
+    "surface": {
+      "marble": {
+        "polished": {}
+      }
+    }
+  },
+  "averageColor": "#727679",
+  "categories": [
+    "surface",
+    "stone",
+    "marble"
+  ],
+  "comp_version": 1,
+  "description": "",
+  "environment": {
+    "biome": "undefined",
+    "region": "undefined"
+  },
+  "highest_available_res": 8192,
+  "id": "tgjpcanc",
+  "json": {
+    "contentLength": 10051,
+    "uri": "tgjpcanc.json"
+  },
+  "maps": [
+    {
+      "averageColor": "#727679",
+      "bitDepth": 16,
+      "colorSpace": "sRGB",
+      "contentLength": 215218240,
+      "maxIntensity": 180,
+      "mimeType": "image/x-exr",
+      "minIntensity": 64,
+      "name": "Basecolor",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "basecolor",
+      "uri": "tgjpcanc_8K_Basecolor.exr"
+    },
+    {
+      "averageColor": "#727679",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 30563081,
+      "maxIntensity": 180,
+      "mimeType": "image/jpeg",
+      "minIntensity": 64,
+      "name": "Basecolor",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "basecolor",
+      "uri": "tgjpcanc_8K_Basecolor.jpg"
+    },
+    {
+      "averageColor": "#FFFFFF",
+      "bitDepth": 32,
+      "colorSpace": "sRGB",
+      "contentLength": 41742274,
+      "maxIntensity": 255,
+      "mimeType": "image/x-exr",
+      "minIntensity": 254.55,
+      "name": "Cavity",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "cavity",
+      "uri": "tgjpcanc_8K_Cavity.exr"
+    },
+    {
+      "averageColor": "#FFFFFF",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 7268627,
+      "maxIntensity": 255,
+      "mimeType": "image/jpeg",
+      "minIntensity": 254.55,
+      "name": "Cavity",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "cavity",
+      "uri": "tgjpcanc_8K_Cavity.jpg"
+    },
+    {
+      "averageColor": "#D4D4D4",
+      "bitDepth": 32,
+      "colorSpace": "Linear",
+      "contentLength": 72267363,
+      "maxIntensity": 214,
+      "mimeType": "image/x-exr",
+      "minIntensity": 206,
+      "name": "Gloss",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "gloss",
+      "uri": "tgjpcanc_8K_Gloss.exr"
+    },
+    {
+      "averageColor": "#D4D4D4",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 9608017,
+      "maxIntensity": 214,
+      "mimeType": "image/jpeg",
+      "minIntensity": 206,
+      "name": "Gloss",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "gloss",
+      "uri": "tgjpcanc_8K_Gloss.jpg"
+    },
+    {
+      "averageColor": "#8181FF",
+      "bitDepth": 16,
+      "colorSpace": "Linear",
+      "contentLength": 19077121,
+      "maxIntensity": 144,
+      "mimeType": "image/x-exr",
+      "minIntensity": 143,
+      "name": "Normal",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "normal",
+      "uri": "tgjpcanc_8K_Normal.exr"
+    },
+    {
+      "averageColor": "#8181FF",
+      "bitDepth": 8,
+      "colorSpace": "Linear",
+      "contentLength": 972057,
+      "maxIntensity": 144,
+      "mimeType": "image/jpeg",
+      "minIntensity": 143,
+      "name": "Normal",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "normal",
+      "uri": "tgjpcanc_8K_Normal.jpg"
+    },
+    {
+      "averageColor": "#2B2B2B",
+      "bitDepth": 32,
+      "colorSpace": "sRGB",
+      "contentLength": 76654884,
+      "maxIntensity": 49,
+      "mimeType": "image/x-exr",
+      "minIntensity": 41,
+      "name": "Roughness",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "roughness",
+      "uri": "tgjpcanc_8K_Roughness.exr"
+    },
+    {
+      "averageColor": "#2B2B2B",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 10207244,
+      "maxIntensity": 49,
+      "mimeType": "image/jpeg",
+      "minIntensity": 41,
+      "name": "Roughness",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "roughness",
+      "uri": "tgjpcanc_8K_Roughness.jpg"
+    },
+    {
+      "averageColor": "#3D3D3D",
+      "bitDepth": 16,
+      "colorSpace": "sRGB",
+      "contentLength": 149493293,
+      "maxIntensity": 66,
+      "mimeType": "image/x-exr",
+      "minIntensity": 56,
+      "name": "Specular",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "specular",
+      "uri": "tgjpcanc_8K_Specular.exr"
+    },
+    {
+      "averageColor": "#3D3D3D",
+      "bitDepth": 8,
+      "colorSpace": "sRGB",
+      "contentLength": 9107181,
+      "maxIntensity": 66,
+      "mimeType": "image/jpeg",
+      "minIntensity": 56,
+      "name": "Specular",
+      "physicalSize": "0.49x0.49",
+      "resolution": "8192x8192",
+      "type": "specular",
+      "uri": "tgjpcanc_8K_Specular.jpg"
+    }
+  ],
+  "meta": [
+    {
+      "key": "scanArea",
+      "name": "Scan Area",
+      "value": "0.49x0.49 m"
+    },
+    {
+      "key": "height",
+      "name": "Height",
+      "value": "20 m"
+    },
+    {
+      "key": "tileable",
+      "name": "Tileable",
+      "value": true
+    },
+    {
+      "key": "texelDensity",
+      "name": "Texel Density",
+      "value": "16834 px/m"
+    },
+    {
+      "key": "calibration",
+      "name": "Calibration",
+      "value": "GretagMacbeth ColorChecker Color Rendition Chart"
+    },
+    {
+      "key": "scanner",
+      "name": "Scanner",
+      "value": "MKX"
+    }
+  ],
+  "models": [],
+  "name": "Bardiglio Marble",
+  "pack": {
+    "_id": "pristine-marbles",
+    "name": "Pristine Marbles"
+  },
+  "physicalSize": null,
+  "points": 2,
+  "previews": {
+    "images": [
+      {
+        "contentLength": 261183,
+        "resolution": "360x360",
+        "tags": [
+          "thumb"
+        ],
+        "uri": "tgjpcanc_Grid_360.png"
+      },
+      {
+        "contentLength": 352504,
+        "resolution": "420x420",
+        "tags": [
+          "thumb"
+        ],
+        "uri": "tgjpcanc_Grid_420.png"
+      },
+      {
+        "contentLength": 1036447,
+        "resolution": "720x720",
+        "tags": [
+          "thumb",
+          "retina"
+        ],
+        "uri": "tgjpcanc_Grid_720.png"
+      },
+      {
+        "contentLength": 1408679,
+        "resolution": "840x840",
+        "tags": [
+          "thumb",
+          "retina"
+        ],
+        "uri": "tgjpcanc_Grid_840.png"
+      },
+      {
+        "contentLength": 1743317,
+        "resolution": "1440x768",
+        "tags": [
+          "preview",
+          "clay"
+        ],
+        "uri": "tgjpcanc_PopupClay_1440.png"
+      },
+      {
+        "contentLength": 3206379,
+        "resolution": "1920x1080",
+        "tags": [
+          "preview",
+          "clay"
+        ],
+        "uri": "tgjpcanc_PopupClay_1920.png"
+      },
+      {
+        "contentLength": 6747898,
+        "resolution": "2880x1536",
+        "tags": [
+          "preview",
+          "clay",
+          "retina"
+        ],
+        "uri": "tgjpcanc_PopupClay_2880.png"
+      },
+      {
+        "contentLength": 11961582,
+        "resolution": "3840x2160",
+        "tags": [
+          "preview",
+          "clay",
+          "retina"
+        ],
+        "uri": "tgjpcanc_PopupClay_3840.png"
+      },
+      {
+        "contentLength": 2648556,
+        "resolution": "1440x768",
+        "tags": [
+          "preview",
+          "tiled"
+        ],
+        "uri": "tgjpcanc_PopupTiled_1440.png"
+      },
+      {
+        "contentLength": 4930952,
+        "resolution": "1920x1080",
+        "tags": [
+          "preview",
+          "tiled"
+        ],
+        "uri": "tgjpcanc_PopupTiled_1920.png"
+      },
+      {
+        "contentLength": 10502745,
+        "resolution": "2880x1536",
+        "tags": [
+          "preview",
+          "tiled",
+          "retina"
+        ],
+        "uri": "tgjpcanc_PopupTiled_2880.png"
+      },
+      {
+        "contentLength": 20412471,
+        "resolution": "3840x2160",
+        "tags": [
+          "preview",
+          "tiled",
+          "retina"
+        ],
+        "uri": "tgjpcanc_PopupTiled_3840.png"
+      },
+      {
+        "contentLength": 2634485,
+        "resolution": "1440x768",
+        "tags": [
+          "preview"
+        ],
+        "uri": "tgjpcanc_Popup_1440.png"
+      },
+      {
+        "contentLength": 4900932,
+        "resolution": "1920x1080",
+        "tags": [
+          "preview"
+        ],
+        "uri": "tgjpcanc_Popup_1920.png"
+      },
+      {
+        "contentLength": 10422458,
+        "resolution": "2880x1536",
+        "tags": [
+          "preview",
+          "retina"
+        ],
+        "uri": "tgjpcanc_Popup_2880.png"
+      },
+      {
+        "contentLength": 20128697,
+        "resolution": "3840x2160",
+        "tags": [
+          "preview",
+          "retina"
+        ],
+        "uri": "tgjpcanc_Popup_3840.png"
+      }
+    ],
+    "relativeSize": "1x1",
+    "scaleReferences": []
+  },
+  "process_date": "2024-04-17 10:08:41",
+  "properties": [],
+  "referencePreviews": {
+    "maps": [],
+    "models": []
+  },
+  "references": [],
+  "revised": false,
+  "revision": 0,
+  "semanticTags": {
+    "3d_mesh": [],
+    "architectural_style": {},
+    "asset_type": "surface",
+    "contains": [
+      "marble"
+    ],
+    "descriptive": [
+      "smooth",
+      " shiny",
+      " polished",
+      " decorative"
+    ],
+    "environment": [
+      "urban"
+    ],
+    "industry": [
+      "games",
+      "VFX",
+      "archviz"
+    ],
+    "interior_exterior": [
+      "interior"
+    ],
+    "latin_name": [],
+    "locations": {
+      "Global": {
+        "Global": {}
+      }
+    },
+    "maxSize": 0.49,
+    "minSize": 0.49,
+    "name": "Bardiglio Marble",
+    "orientation": [
+      "floor"
+    ],
+    "resolution": 8192,
+    "season": [],
+    "state": [
+      "new"
+    ],
+    "subject_matter": "manmade",
+    "theme": [
+      "kitchen",
+      " counter tops",
+      " washroom",
+      " bathroom"
+    ]
+  },
+  "tags": [
+    "bardiglio",
+    "marble",
+    "archviz"
+  ],
+  "texelDensity": 16718,
+  "texture_type": "basic",
+  "ue_plugin_archives": [
+    {
+      "contentLength": 99018028,
+      "gltfVersion": "2.0",
+      "tier": 0,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_0/tgjpcanc_tier_0.zip",
+      "version": 1
+    },
+    {
+      "contentLength": 35824051,
+      "gltfVersion": "2.0",
+      "tier": 1,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_1/tgjpcanc_tier_1.zip",
+      "version": 1
+    },
+    {
+      "contentLength": 9672464,
+      "gltfVersion": "2.0",
+      "tier": 2,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_2/tgjpcanc_tier_2.zip",
+      "version": 1
+    },
+    {
+      "contentLength": 733647,
+      "gltfVersion": "2.0",
+      "tier": 3,
+      "type": "gltf",
+      "uri": "ue_plugin_archives/tier_3/tgjpcanc_tier_3.zip",
+      "version": 1
+    }
+  ],
+  "version": 2
+}
