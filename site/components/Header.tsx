@@ -1,6 +1,6 @@
 import NavigationBar from "./NavBar.tsx";
 
-export default function Header(props: { title: string; active: string }) {
+export default function Header(props: { title: string; active: string; user?: { username: string } | null }) {
   const isHome = props.active === "/";
 
   return (
@@ -12,7 +12,7 @@ export default function Header(props: { title: string; active: string }) {
             <GameLogo />
           </div>
         )}
-        <NavigationBar class="flex-none" active={props.active} />
+        <NavigationBar class="flex-none" active={props.active} user={props.user} />
       </div>
     </header>
   );

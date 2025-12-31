@@ -10,6 +10,7 @@ interface Props {
 }
 
 const { title, active, class: className } = Astro.props;
+const user = Astro.locals.user ?? null;
 ---
 
 <html lang="en" data-theme="dark">
@@ -22,7 +23,7 @@ const { title, active, class: className } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <Header active={active} title="ft_transcendence" />
+    <Header active={active} title="ft_transcendence" user={user} />
     <main class={className}>
       <slot />
     </main>

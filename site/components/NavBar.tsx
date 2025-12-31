@@ -1,31 +1,41 @@
-import * as Icons from "./Icons.tsx";
+import { UserCircle } from "./Icons.tsx";
 import clsx from "clsx";
+
+interface NavItem {
+  name: string;
+  href: string;
+}
+
+const loggedOutItems: NavItem[] = [
+  { name: "Login", href: "/login" },
+  { name: "Signup", href: "/signup" },
+];
+
+const loggedInItems: NavItem[] = [
+  { name: "Profile", href: "/profile" },
+  { name: "Log out", href: "/logout" },
+];
 
 export default function NavigationBar(props: {
   active: string;
   class?: string;
+  user?: { username: string } | null;
 }) {
-  const items = [
-    {
-      name: "Login",
-      href: "/login",
-    },
-    {
-      name: "Signup",
-      href: "/signup",
-    },
-    {
-      name: "Settings",
-      href: "/settings",
-    },
-  ];
+  const items = props.user ? loggedInItems : loggedOutItems;
+
   return (
     <nav class={clsx("flex", props.class)}>
       <div class="dropdown dropdown-end">
         <div tabIndex={0} role="button" class="btn btn-ghost btn-circle avatar">
-          <div class="icon w-6 h-6">
-            <Icons.UserCircle />
-          </div>
+          {props.user ? (
+            <div class="w-10 rounded-full overflow-hidden">
+              <img src="/avatar.png" alt="Avatar" />
+            </div>
+          ) : (
+            <div class="icon w-6 h-6">
+              <UserCircle />
+            </div>
+          )}
         </div>
         <div class="dropdown-end dropdown-content mt-3">
           <ul

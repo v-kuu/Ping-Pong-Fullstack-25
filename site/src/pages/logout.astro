@@ -1,0 +1,22 @@
+---
+import Base from "@/src/layouts/Base.astro";
+import { LogoutSuccess } from "@/islands/LogoutSuccess.tsx";
+import { getSessionUser } from "@/utils/session";
+import { db, Sessions, eq } from "astro:db";
+
+const user = await getSessionUser(Astro.cookies);
+
+if (user) {
+  const sessionId = Astro.cookies.get("session")?.value;
+  if (sessionId) {
+    await db.delete(Sessions).where(eq(Sessions.id, sessionId));
+    Astro.cookies.delete("session");
+  }
+}
+---
+
+<Base title="Logged Out" active="/logout" class="px-4 py-8 mx-auto min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <LogoutSuccess client:load />
+  </div>
+</Base>

@@ -22,17 +22,6 @@ export function validatePasswordMatch(e: Event) {
   return true;
 }
 
-// helper
-export function createResponse(
-  body: Record<string, any>,
-  status: number,
-): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
 export const USERNAME_RULES = [
   {
     label: "3-30 characters",

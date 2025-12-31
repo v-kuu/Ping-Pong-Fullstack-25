@@ -1,8 +1,7 @@
 import type { APIRoute } from "astro";
-import { db, Users, eq } from "astro:db";
-import { createResponse } from "@/utils/validation.ts";
+import { db, Sessions, Users, eq } from "astro:db";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const formData = await request.formData();
 
@@ -10,16 +9,15 @@ export const POST: APIRoute = async ({ request }) => {
     const password = formData.get("password")?.toString();
 
     if (!username || !password) {
-      return createResponse(
+      return Response.json(
         { error: "Username and password are required" },
-        400,
+        { status: 400 },
       );
     }
 
-    // Username validation
     const usernamePattern = /^[A-Za-z][A-Za-z0-9\-]{2,29}$/;
     if (!usernamePattern.test(username)) {
-      return createResponse({ error: "Invalid username format" }, 400);
+      return Response.json({ error: "Invalid username format" }, { status: 400 });
     }
 
     const user = await db
@@ -33,24 +31,41 @@ export const POST: APIRoute = async ({ request }) => {
       .limit(1);
 
     if (user.length === 0) {
-      return createResponse({ error: "Invalid username or password" }, 401);
+      return Response.json(
+        { error: "Invalid username or password" },
+        { status: 401 },
+      );
     }
 
     const foundUser = user[0];
 
-    // Verify password using Bun
     const isValidPassword = await Bun.password.verify(
       password,
       foundUser.password,
     );
 
     if (!isValidPassword) {
-      return createResponse({ error: "Invalid username or password" }, 401);
+      return Response.json(
+        { error: "Invalid username or password" },
+        { status: 401 },
+      );
     }
 
-    // Login successful, need to implement the rest later
-    return createResponse({ success: true, message: "Login successful" }, 200);
+    const sessionId = crypto.randomUUID();
+    await db.insert(Sessions).values({ id: sessionId, userId: foundUser.id });
+
+    cookies.set("session", sessionId, {
+      httpOnly: true,
+      secure: import.meta.env.PROD,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return Response.json(
+      { success: true, message: "Login successful" },
+      { status: 200 },
+    );
   } catch (error) {
-    return createResponse({ error: "Internal Server Error" }, 500);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 };
