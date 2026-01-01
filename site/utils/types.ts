@@ -10,14 +10,7 @@ export interface MatchData {
   won: boolean;
 }
 
-export interface UserData {
-  username: string;
-  email: string;
-  elo: number;
-}
-
-export interface PublicUserData {
+export interface UserProfileData {
   username: string;
   elo: number;
-  createdAt: string;
 }

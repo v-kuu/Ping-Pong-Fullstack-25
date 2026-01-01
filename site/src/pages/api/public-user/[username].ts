@@ -1,30 +1,14 @@
 import type { APIRoute } from "astro";
 import { db, Users, Matches, eq, or, sql, inArray } from "astro:db";
-
-interface PublicUserData {
-  username: string;
-  elo: number;
-  createdAt: string;
-}
-
-interface PublicMatchData {
-  id: number;
-  game: string;
-  player1Id: number;
-  player2Id: number;
-  winnerId: number | null;
-  startedAt: string;
-  score: string | null;
-  opponentName: string;
-  opponentUsername: string;
-  won: boolean;
-}
+import type { MatchData } from "@/utils/types";
 
 export const GET: APIRoute = async ({ params }) => {
   const username = params.username;
 
   if (!username) {
-    return new Response(JSON.stringify({ error: "Username required" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Username required" }), {
+      status: 400,
+    });
   }
 
   const userResult = await db
@@ -32,14 +16,15 @@ export const GET: APIRoute = async ({ params }) => {
       id: Users.id,
       username: Users.username,
       elo: Users.elo,
-      createdAt: Users.createdAt,
     })
     .from(Users)
     .where(eq(Users.username, username))
     .limit(1);
 
   if (userResult.length === 0) {
-    return new Response(JSON.stringify({ error: "User not found" }), { status: 404 });
+    return new Response(JSON.stringify({ error: "User not found" }), {
+      status: 404,
+    });
   }
 
   const user = userResult[0];
@@ -59,18 +44,23 @@ export const GET: APIRoute = async ({ params }) => {
     .orderBy(sql`${Matches.startedAt} DESC`)
     .limit(20);
 
-  const playerIds = userMatches.length > 0
-    ? Array.from(new Set(userMatches.flatMap(m => [m.player1Id, m.player2Id])))
-    : [];
+  const playerIds =
+    userMatches.length > 0
+      ? Array.from(
+          new Set(userMatches.flatMap((m) => [m.player1Id, m.player2Id])),
+        )
+      : [];
 
-  const allPlayers = playerIds.length > 0
-    ? await db.select().from(Users).where(inArray(Users.id, playerIds))
-    : [];
+  const allPlayers =
+    playerIds.length > 0
+      ? await db.select().from(Users).where(inArray(Users.id, playerIds))
+      : [];
 
-  const playerMap = new Map(allPlayers.map(p => [p.id, p]));
+  const playerMap = new Map(allPlayers.map((p) => [p.id, p]));
 
-  const matches: PublicMatchData[] = userMatches.map(match => {
-    const opponentId = match.player1Id === user.id ? match.player2Id : match.player1Id;
+  const matches: MatchData[] = userMatches.map((match) => {
+    const opponentId =
+      match.player1Id === user.id ? match.player2Id : match.player1Id;
     const opponent = playerMap.get(opponentId);
     return {
       id: match.id,
@@ -81,19 +71,12 @@ export const GET: APIRoute = async ({ params }) => {
       startedAt: match.startedAt?.toISOString() || "",
       score: match.score,
       opponentName: opponent?.username || "Unknown",
-      opponentUsername: opponent?.username || "unknown",
       won: match.winnerId === user.id,
     };
   });
 
-  const publicUser: PublicUserData = {
-    username: user.username,
-    elo: user.elo,
-    createdAt: user.createdAt?.toISOString() || "",
-  };
-
   return Response.json({
-    user: publicUser,
+    user: { username: user.username, elo: user.elo },
     matches,
   });
 };

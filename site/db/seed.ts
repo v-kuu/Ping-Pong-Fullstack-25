@@ -1,4 +1,4 @@
-import { db, Users, Matches } from "astro:db";
+import { db, Users, Matches, Friendships } from "astro:db";
 
 const users = [
   { username: "maks", email: "maks@hive.fi", password: "maks@hive.fi", elo: 1200 },
@@ -6,6 +6,9 @@ const users = [
   { username: "ville", email: "ville@hive.fi", password: "ville@hive.fi", elo: 1100 },
   { username: "vallu", email: "vallu@hive.fi", password: "vallu@hive.fi", elo: 1250 },
   { username: "axel", email: "axel@hive.fi", password: "axel@hive.fi", elo: 1300 },
+  { username: "teemu", email: "teemu@hive.fi", password: "teemu@hive.fi", elo: 1050 },
+  { username: "juhani", email: "juhani@hive.fi", password: "juhani@hive.fi", elo: 1080 },
+  { username: "aapeli", email: "aapeli@hive.fi", password: "aapeli@hive.fi", elo: 1120 },
 ];
 
 export default async function seed() {
@@ -26,9 +29,34 @@ export default async function seed() {
     { game: "pong", player1Id: userIds[1], player2Id: userIds[2], winnerId: userIds[1], score: "3-0" },
     { game: "pong", player1Id: userIds[3], player2Id: userIds[0], winnerId: userIds[3], score: "4-2" },
     { game: "pong", player1Id: userIds[4], player2Id: userIds[1], winnerId: userIds[4], score: "3-1" },
+    { game: "pong", player1Id: userIds[5], player2Id: userIds[6], winnerId: userIds[5], score: "2-1" },
+    { game: "pong", player1Id: userIds[6], player2Id: userIds[7], winnerId: userIds[7], score: "1-3" },
   ];
 
   for (const match of matches) {
     await db.insert(Matches).values(match);
+  }
+
+  const friendships = [
+    { userId: userIds[0], friendId: userIds[1], status: 'accepted' },
+    { userId: userIds[0], friendId: userIds[4], status: 'accepted' },
+    { userId: userIds[1], friendId: userIds[0], status: 'accepted' },
+    { userId: userIds[1], friendId: userIds[2], status: 'accepted' },
+    { userId: userIds[2], friendId: userIds[3], status: 'accepted' },
+    { userId: userIds[3], friendId: userIds[4], status: 'accepted' },
+    { userId: userIds[5], friendId: userIds[6], status: 'accepted' },
+    { userId: userIds[6], friendId: userIds[7], status: 'accepted' },
+    { userId: userIds[0], friendId: userIds[3], status: 'pending' },
+    { userId: userIds[1], friendId: userIds[3], status: 'pending' },
+    { userId: userIds[2], friendId: userIds[4], status: 'pending' },
+    { userId: userIds[3], friendId: userIds[0], status: 'pending' },
+    { userId: userIds[4], friendId: userIds[1], status: 'pending' },
+    { userId: userIds[5], friendId: userIds[7], status: 'pending' },
+    { userId: userIds[6], friendId: userIds[5], status: 'pending' },
+    { userId: userIds[7], friendId: userIds[5], status: 'pending' },
+  ];
+
+  for (const friendship of friendships) {
+    await db.insert(Friendships).values(friendship);
   }
 }
