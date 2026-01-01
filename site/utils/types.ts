@@ -15,3 +15,9 @@ export interface UserData {
   email: string;
   elo: number;
 }
+
+export interface PublicUserData {
+  username: string;
+  elo: number;
+  createdAt: string;
+}

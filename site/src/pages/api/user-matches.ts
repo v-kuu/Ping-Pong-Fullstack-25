@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
 import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
-import { getSessionUser } from "@/utils/session";
 
-export const GET: APIRoute = async ({ cookies }) => {
-  const user = await getSessionUser(cookies);
+export const GET: APIRoute = async ({ locals }) => {
+  const user = locals.user;
   
   if (!user) {
     return new Response(JSON.stringify({ error: "Not logged in" }), { status: 401 });
