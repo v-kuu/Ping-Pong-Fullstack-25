@@ -1,11 +1,11 @@
 #include "web3d.h"
 
-int gif_get_width(const uint8_t* gif)
+int gif_get_image_w(const uint8_t* gif)
 {
     return gif[6] | (gif[7] << 8);
 }
 
-int gif_get_height(const uint8_t* gif)
+int gif_get_image_h(const uint8_t* gif)
 {
     return gif[8] | (gif[9] << 8);
 }
@@ -16,7 +16,7 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
     const uint8_t (*palette)[3] = (const uint8_t(*)[3]) (gif + 13);
     gif += 13 + (gif[10] >> 7) * 3 * (2 << (gif[10] & 7));
 
-    // Find the image header, handling extensions along the way.
+    // Read extension blocks.
     int transparent = -1; // Transparent color index (or -1 if none).
     while (*gif++ == 0x21) { // Extension introducer.
         if (*gif++ == 0xf9) { // Graphic control extension.
@@ -59,22 +59,19 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
                 count = code;
                 length = root + 1;
                 continue;
+            }
 
             // Handle the end code.
-            } else if (code == (1 << root) + 1) {
+            if (code == (1 << root) + 1)
                 return;
-            }
 
             // Traverse a chain of codes, pushing each one on a stack.
             uint8_t stack[0x1000];
             int top = code > count;
-            int start = code > count ? prev : code;
-            for (int j = start; j >= 0; j = code_next[j]) {
-                stack[top++] = code_value[j];
-            }
-            if (code > count) {
+            for (int i = code > count ? prev : code; i >= 0; i = code_next[i])
+                stack[top++] = code_value[i];
+            if (code > count)
                 stack[0] = stack[top - 1];
-            }
 
             // Add a new code if there's room in the code table.
             if (count < 0xfff) {

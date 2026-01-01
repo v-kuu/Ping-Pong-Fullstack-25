@@ -57,8 +57,8 @@ static const uint8_t image_font_tiny[] = {
 static const uint8_t image_font_big[] = {
     #embed "../assets/font_big.gif"
 };
-static const uint8_t image_strawberry[] = {
-    #embed "../assets/strawberry.gif"
+static const uint8_t image_apple[] = {
+    #embed "../assets/apple.gif"
 };
 
 typedef struct {
@@ -69,20 +69,25 @@ typedef struct {
 
 static Texture* texture_ground;
 static Texture* texture_wall;
-static Texture* texture_strawberry;
+static Texture* texture_apple;
 static Texture* font_tiny;
 static Texture* font_big;
 
 static char map[MAP_W * MAP_H];
 
+static bool is_out_of_bounds(int x, int y)
+{
+    return x < 0 || x >= MAP_W || y < 0 || y >= MAP_H;
+}
+
 // Check if a map tile is a wall. Coordinates outside of the map are treated as
 // walls.
 static bool is_wall(int x, int y)
 {
-    return x < 0 || x >= MAP_W
-        || y < 0 || y >= MAP_H
-        || map[x + y * MAP_W] == '#';
+    return is_out_of_bounds(x, y) || map[x + y * MAP_W] == '#';
 }
+
+#define RNG(state) ((state) = (state) * 1103515245u + 12345u)
 
 static float raycast(float ax, float ay, float bx, float by)
 {
@@ -105,10 +110,10 @@ static float raycast(float ax, float ay, float bx, float by)
 static unsigned int key_index(int keycode)
 {
     switch (keycode) {
-        case 'W': return KEY_FORWARD;
-        case 'S': return KEY_BACK;
-        case 'A': return KEY_LEFT;
-        case 'D': return KEY_RIGHT;
+        case 'W': case 38: return KEY_FORWARD;
+        case 'S': case 40: return KEY_BACK;
+        case 'A': case 37: return KEY_LEFT;
+        case 'D': case 39: return KEY_RIGHT;
         case 'Q': return KEY_LSTRAFE;
         case 'E': return KEY_RSTRAFE;
         default: return KEY_MAX;
@@ -157,8 +162,8 @@ static uint32_t texture_fetch(const Texture* tex, size_t x, size_t y)
 // Sample a texture using normalized texture coordinates (u, v).
 static uint32_t texture_sample(const Texture* tex, float u, float v)
 {
-    int x = tex->w * u - 0.5f;
-    int y = tex->h * v - 0.5f;
+    int x = floor(tex->w * u);
+    int y = floor(tex->h * v);
     return texture_fetch(tex, x, y);
 }
 
@@ -181,8 +186,8 @@ static void init_glyph_widths(Texture* tex)
 // Load a texture (or font) from a GIF file.
 Texture* texture_load(const void* gif_data, bool font)
 {
-    int w = gif_get_width(gif_data);
-    int h = gif_get_height(gif_data);
+    int w = gif_get_image_w(gif_data);
+    int h = gif_get_image_h(gif_data);
     size_t size = w * h * sizeof(uint32_t) + FONT_GLYPH_COUNT * font;
     Texture* tex = malloc(sizeof(Texture) + size);
     tex->glyph_width = (uint8_t*) (tex->pixels + w * h);
@@ -260,14 +265,14 @@ void init(unsigned int rng)
     // Load assets.
     texture_ground = texture_load(image_ground, false);
     texture_wall = texture_load(image_wall, false);
-    texture_strawberry = texture_load(image_strawberry, false);
+    texture_apple = texture_load(image_apple, false);
     font_tiny = texture_load(image_font_tiny, true);
     font_big = texture_load(image_font_big, true);
 
     // Generate a random map.
     for (int y = 0; y < MAP_H; y++)
     for (int x = 0; x < MAP_W; x++) {
-        map[x + y * MAP_W] = rng % 100 < 5 ? '#' : ' ';
+        map[x + y * MAP_W] = rng % 100 < 3 ? '#' : ' ';
         rng = rng * 1103515245u + 12345u;
     }
 }
@@ -275,12 +280,129 @@ void init(unsigned int rng)
 // Apply fog to a color.
 static uint32_t apply_fog(uint32_t color, float amount, int x, int y)
 {
-    amount = 1.0f - max(0.0f, min(1.0f, 3.0f / (amount + 3.0f)));
+    amount = 1.0f - max(0.0f, min(1.0f, 9.0f / (amount + 9.0f)));
     amount += dither(x, y) * 4.0f / 255.0f;
     uint32_t r = min(255.0f, lerp((color >>  0) & 0xff, 255, amount));
-    uint32_t g = min(255.0f, lerp((color >>  8) & 0xff, 255, amount));
-    uint32_t b = min(255.0f, lerp((color >> 16) & 0xff, 255, amount));
+    uint32_t g = min(255.0f, lerp((color >>  8) & 0xff, 205, amount));
+    uint32_t b = min(255.0f, lerp((color >> 16) & 0xff, 185, amount));
     return (r << 0) | (g << 8) | (b << 16) | (0xff << 24);
+}
+
+typedef struct {
+    float vx, vy; // View direction.
+    float px, py; // Ray origin.
+    float dx, dy; // Ray direction.
+    uint32_t color[FRAME_H]; // Color of each pixel in the column.
+    float light[FRAME_H]; // Light received by each pixel in the column.
+    float depth[FRAME_H]; // Depth buffer.
+} Column;
+
+static void draw_sky(Column* col)
+{
+    for (int y = 0; y < FRAME_H / 2; y++) {
+        float t = -500 / (y - FRAME_H * 0.5);
+        float u = fract(0.1f * col->px + t * col->dx);
+        float v = fract(0.1f * col->py + t * col->dy);
+        col->color[y] = texture_sample(texture_wall, u, v);
+        col->light[y] = t * 10.0f;
+        col->depth[y] = t * 10.0f;
+    }
+}
+
+static void draw_floor(Column* col)
+{
+    for (int y = FRAME_H / 2; y < FRAME_H; y++) {
+        float t = WALL_HEIGHT / (y - FRAME_H * 0.5f);
+        float u = fract(col->px + col->dx * t);
+        float v = fract(col->py + col->dy * t);
+        col->color[y] = texture_sample(texture_ground, u, v);
+        col->light[y] = t;
+        col->depth[y] = t;
+    }
+}
+
+static uint32_t blend(uint32_t x, uint32_t y, float t)
+{
+    uint32_t r = lerp((x >>  0) & 0xff, (y >>  0) & 0xff, t);
+    uint32_t g = lerp((x >>  8) & 0xff, (y >>  8) & 0xff, t);
+    uint32_t b = lerp((x >> 16) & 0xff, (y >> 16) & 0xff, t);
+    return (r << 0) | (g << 8) | (b << 16) | (0xff << 24);
+}
+
+static void draw_walls(Column* col)
+{
+    // Raycast against the map.
+    const float depth = raycast(col->px, col->py, col->dx, col->dy);
+    const float y0 = FRAME_H * 0.5f + 0.5f - WALL_HEIGHT / depth;
+    const float y1 = FRAME_H * 0.5f + 0.5f + WALL_HEIGHT / depth;
+    const int y0_clamped = max(0, min(y0, FRAME_H));
+    const int y1_clamped = max(0, min(y1, FRAME_H));
+
+    // Draw walls.
+    for (int y = y0_clamped; y < y1_clamped; y++) {
+        float hit_x = col->px + col->dx * depth;
+        float hit_y = col->py + col->dy * depth;
+        float edge_x = abs(fract(hit_x) - 0.5f);
+        float edge_y = abs(fract(hit_y) - 0.5f);
+        float u = fract(edge_x < edge_y ? hit_x : hit_y);
+        float v = fract(4.0f * (y - y0) / (y1 - y0));
+        col->color[y] = texture_sample(texture_wall, u, v);
+        col->light[y] = depth;
+        col->depth[y] = depth;
+    }
+
+    // Draw shadows.
+    for (int y = y1_clamped; y < FRAME_H; y++)
+        col->light[y] += max(0.0f, 4.0f * min(1.0f, (y - y1) / (y1 - y0)));
+}
+
+static void draw_sprite(Column* col, float sx, float sy, float w, float h)
+{
+    const float shadow_scale = 0.8f;
+
+    // Find the intersection with the sprite billboard.
+    const float px = sx - col->px;
+    const float py = sy - col->py;
+    const float scale = -1.0f / (col->dx * col->vx + col->dy * col->vy);
+    const float t = scale * (-px * col->vx - py * col->vy);
+    const float s = scale * (+px * col->dy - py * col->dx) / w;
+    if (t < 0.0f)
+        return;
+
+    const float y0 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (h + w) * 150) / t;
+    const float y1 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (h + 0) * 150) / t;
+    const int y0_clamped = max(0, min(y0, FRAME_H));
+    const int y1_clamped = max(0, min(y1, FRAME_H));
+
+    // Draw the shadow.
+    const float radius = w * shadow_scale * 0.5f;
+    if (-0.707f * shadow_scale < s && s < 0.707f * shadow_scale) {
+        for (int y = 0; y < FRAME_H; y++) {
+            float hit_t = WALL_HEIGHT / (y - FRAME_H * 0.5f);
+            if (hit_t > col->depth[y])
+                continue;
+            float hit_x = hit_t * col->dx - px;
+            float hit_y = hit_t * col->dy - py;
+            if (hit_x * hit_x + hit_y * hit_y < radius * radius)
+                col->light[y] = t;
+        }
+    }
+
+    // Draw the sprite itself.
+    if (-0.5f < s && s < 0.5f) {
+        for (int y = y0_clamped; y < y1_clamped; y++) {
+            if (t > col->depth[y])
+                continue;
+            float u = 0.5f - s;
+            float v = (y - y0 + 1.0f) / (y1 - y0);
+            uint32_t color = texture_sample(texture_apple, u, v);
+            if (color) {
+                col->color[y] = color;
+                col->depth[y] = t;
+                col->light[y] = t;
+            }
+        }
+    }
 }
 
 // Render the next frame of the game.
@@ -327,86 +449,38 @@ void* draw(double timestamp)
     player_y_smooth = smooth(player_y_smooth, player_y, 10.0f * dt);
 
     // Render the frame.
-    float vx = cosf(player_angle_smooth);
-    float vy = sinf(player_angle_smooth);
+    Column col;
+    col.vx = cosf(player_angle_smooth);
+    col.vy = sinf(player_angle_smooth);
     for (int x = 0; x < FRAME_W; x++) {
 
         // Determine the direction vector for the ray.
         float t = (float) x / (FRAME_W - 1) * 2.0f - 1.0f;
-        float dx = vx - vy * FOV * t;
-        float dy = vy + vx * FOV * t;
+        col.px = player_x_smooth;
+        col.py = player_y_smooth;
+        col.dx = col.vx - col.vy * FOV * t;
+        col.dy = col.vy + col.vx * FOV * t;
 
-        // Raycast against walls.
-        const float depth = raycast(player_x_smooth, player_y_smooth, dx, dy);
-        const float horizon = FRAME_H * 0.5f;
-        int y0 = horizon - WALL_HEIGHT / depth;
-        int y1 = horizon + WALL_HEIGHT / depth;
-        for (int y = 0; y < FRAME_H; y++) {
-            float shade = depth;
-            float u, v;
+        draw_sky(&col);
+        draw_floor(&col);
+        draw_walls(&col);
 
-            // Walls.
-            const Texture* texture = texture_wall;
-            if (y0 <= y && y <= y1) {
-                float hit_x = player_x_smooth + depth * dx;
-                float hit_y = player_y_smooth + depth * dy;
-                float edge_distance_x = abs(fract(hit_x) - 0.5f);
-                float edge_distance_y = abs(fract(hit_y) - 0.5f);
-                u = fract(edge_distance_x < edge_distance_y ? hit_x : hit_y);
-                v = fract(4.0f * (y - y0) / (y1 - y0));
+#define RAND_FLOAT(state, min, max) (RNG(state) * 0x1p-32f * ((max) - (min)) + (min));
 
-            // Sky.
-            } else if (y < horizon) {
-                shade = -300 / (y - horizon);
-                u = fract(player_x_smooth * 0.1f + shade * dx);
-                v = fract(player_y_smooth * 0.1f + shade * dy);
-                shade *= 10.0f;
-
-            // Ground.
-            } else {
-                shade = WALL_HEIGHT / (y - horizon);
-                u = fract(player_x_smooth + shade * dx);
-                v = fract(player_y_smooth + shade * dy);
-                texture = texture_ground;
-            }
-            uint32_t texel = texture_sample(texture, u, v);
-            float fog = shade + max(0.0f, 4.0f * min(1.0f, (y - y1) / (float) (y1 - y0)));
-
-            // Strawberry sprite.
-            {
-                // Find the intersection with the sprite billboard.
-                const float sprite_x = MAP_W / 2 + 0.5f;
-                const float sprite_y = MAP_H / 2 + 0.5f;
-                const float px = sprite_x - player_x_smooth;
-                const float py = sprite_y - player_y_smooth;
-                const float scale = -1.0f / (dx * vx + dy * vy);
-                const float t = scale * (-px * vx - py * vy);
-                const float s = scale * (+px * dy - py * dx);
-                const float y0 = horizon - 100 / t;
-                const float y1 = horizon + 100 / t;
-                if (0.0f < t && t < depth) {
-
-                    // Draw the shadow.
-                    float ht = (float) WALL_HEIGHT / (y - horizon);
-                    float hx = ht * dx - px;
-                    float hy = ht * dy - py;
-                    if (hx * hx + hy * hy < 0.2f)
-                        fog = t;
-
-                    // Draw the sprite itself.
-                    float u = 0.5f - s;
-                    float v = (y - y0) / (y1 - y0);
-                    uint32_t texel2 = texture_sample(texture_strawberry, u, v);
-                    if (texel2) {
-                        texel = texel2;
-                        fog = t;
-                    }
-                }
-            }
-
-            // Apply fog to the final pixel.
-            frame[x + y * FRAME_W] = apply_fog(texel, fog, x, y);
+        unsigned int rng = 0;
+        for (int i = 0; i < 50; i++) {
+            float x = RAND_FLOAT(rng, 0.5f, MAP_W - 0.5f);
+            float y = RAND_FLOAT(rng, 0.5f, MAP_W - 0.5f);
+            float w = RAND_FLOAT(rng, 0.3f, 1.2f);
+            float h = RAND_FLOAT(rng, 0.0f, 3.0f);
+            float phase = timestamp * 0.002f + RAND_FLOAT(rng, 0.0f, TAU);
+            h += sinf(phase) * 0.5f;
+            draw_sprite(&col, x, y, w, h);
         }
+
+        // Write out the pixels for this column.
+        for (int y = 0; y < FRAME_H; y++)
+            frame[x + y * FRAME_W] = apply_fog(col.color[y], col.light[y], x, y);
     }
 
     // Draw some test text.
@@ -415,7 +489,7 @@ void* draw(double timestamp)
     int y = 181;
     texture_print(font_big, x + 1, y + 1, 0xff000000, text);
     texture_print(font_big, x + 0, y + 0, 0xffffffff, text);
-    texture_draw(texture_strawberry, 5, 180);
+    texture_draw(texture_apple, 5, 180);
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));

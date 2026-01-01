@@ -23,8 +23,8 @@ typedef __SIZE_TYPE__ size_t;
 #define memset(...) __builtin_memset(__VA_ARGS__)
 
 // gif.c
-int gif_get_width(const uint8_t* gif);
-int gif_get_height(const uint8_t* gif);
+int gif_get_image_w(const uint8_t* gif);
+int gif_get_image_h(const uint8_t* gif);
 void gif_get_pixels(const uint8_t* gif, uint8_t* pixels);
 
 // math.c
