@@ -1,11 +1,12 @@
 import type { APIRoute } from "astro";
+import { unauthorized, success } from "@/utils/apiHelpers";
 
 export const GET: APIRoute = async ({ locals }) => {
   if (!locals.user) {
-    return new Response(JSON.stringify({ error: "Not logged in" }), { status: 401 });
+    return unauthorized();
   }
   
-  return Response.json({
+  return success({
     username: locals.user.username,
     elo: locals.user.elo,
   });

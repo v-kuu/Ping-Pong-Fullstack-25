@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Friendships, Users, eq, or, and, inArray } from "astro:db";
+import { unauthorized, success, notFound, badRequest, internalError } from "@/utils/apiHelpers";
 
 function getOnlineStatus(lastSeen: Date | null | undefined): "online" | "offline" {
     if (!lastSeen) return "offline";
@@ -10,7 +11,7 @@ function getOnlineStatus(lastSeen: Date | null | undefined): "online" | "offline
 export const GET: APIRoute = async ({ locals }) => {
     const user = locals.user;
     if (!user) {
-        return new Response(JSON.stringify([]), { status: 200 });
+        return success([]);
     }
 
     try {
@@ -28,7 +29,7 @@ export const GET: APIRoute = async ({ locals }) => {
             );
 
         if (friendships.length === 0) {
-            return new Response(JSON.stringify([]), { status: 200 });
+            return success([]);
         }
 
         const friendIds = friendships.map((f) =>
@@ -52,27 +53,23 @@ export const GET: APIRoute = async ({ locals }) => {
             status: getOnlineStatus(f.lastSeen),
         }));
 
-        return new Response(JSON.stringify(formattedFriends), { status: 200 });
+        return success(formattedFriends);
     } catch (error) {
         console.error("Failed to get friends:", error);
-        return new Response(JSON.stringify([]), { status: 200 });
+        return success([]);
     }
 };
 
 export const DELETE: APIRoute = async ({ request, locals }) => {
     const user = locals.user;
     if (!user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-        });
+        return unauthorized();
     }
 
     try {
         const { friendId } = await request.json();
         if (!friendId) {
-            return new Response(JSON.stringify({ error: "Friend ID required" }), {
-                status: 400,
-            });
+            return badRequest("Friend ID required");
         }
 
         const result = await db
@@ -95,16 +92,12 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
             .returning();
 
         if (result.length === 0) {
-            return new Response(JSON.stringify({ error: "Friendship not found" }), {
-                status: 404,
-            });
+            return notFound("Friendship not found");
         }
 
-        return new Response(JSON.stringify({ success: true }), { status: 200 });
+        return success({ success: true });
     } catch (error) {
         console.error("Failed to remove friend:", error);
-        return new Response(JSON.stringify({ error: "Failed to remove friend" }), {
-            status: 500,
-        });
+        return internalError("Failed to remove friend");
     }
 };

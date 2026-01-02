@@ -1,14 +1,14 @@
 import type { APIRoute } from "astro";
 import { db, Users, Matches, eq, or, sql, inArray } from "astro:db";
 import type { MatchData } from "@/utils/types";
+import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
+import { badRequest, notFound, success } from "@/utils/apiHelpers";
 
 export const GET: APIRoute = async ({ params }) => {
   const username = params.username;
 
   if (!username) {
-    return new Response(JSON.stringify({ error: "Username required" }), {
-      status: 400,
-    });
+    return badRequest("Username required");
   }
 
   const userResult = await db
@@ -22,9 +22,7 @@ export const GET: APIRoute = async ({ params }) => {
     .limit(1);
 
   if (userResult.length === 0) {
-    return new Response(JSON.stringify({ error: "User not found" }), {
-      status: 404,
-    });
+    return notFound("User not found");
   }
 
   const user = userResult[0];
@@ -44,39 +42,14 @@ export const GET: APIRoute = async ({ params }) => {
     .orderBy(sql`${Matches.startedAt} DESC`)
     .limit(20);
 
-  const playerIds =
-    userMatches.length > 0
-      ? Array.from(
-          new Set(userMatches.flatMap((m) => [m.player1Id, m.player2Id])),
-        )
-      : [];
+  const playerIds = getPlayerIdsFromMatches(userMatches);
 
   const allPlayers =
     playerIds.length > 0
       ? await db.select().from(Users).where(inArray(Users.id, playerIds))
       : [];
 
-  const playerMap = new Map(allPlayers.map((p) => [p.id, p]));
+  const matches: MatchData[] = processMatchData(userMatches, user.id, allPlayers);
 
-  const matches: MatchData[] = userMatches.map((match) => {
-    const opponentId =
-      match.player1Id === user.id ? match.player2Id : match.player1Id;
-    const opponent = playerMap.get(opponentId);
-    return {
-      id: match.id,
-      game: match.game,
-      player1Id: match.player1Id,
-      player2Id: match.player2Id,
-      winnerId: match.winnerId,
-      startedAt: match.startedAt?.toISOString() || "",
-      score: match.score,
-      opponentName: opponent?.username || "Unknown",
-      won: match.winnerId === user.id,
-    };
-  });
-
-  return Response.json({
-    user: { username: user.username, elo: user.elo },
-    matches,
-  });
+  return success({ user: { username: user.username, elo: user.elo }, matches });
 };

@@ -26,6 +26,8 @@ export function FriendsList() {
 
   useEffect(() => {
     fetchFriendsData();
+    const interval = setInterval(fetchFriendsData, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchFriendsData = async () => {

@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Users, Friendships, eq, or, and } from "astro:db";
+import { success } from "@/utils/apiHelpers";
 
 const NONE_RESPONSE = { status: "none", requestId: null };
 
@@ -8,13 +9,11 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const friendUsername = params.username;
 
   if (!user || !friendUsername) {
-    return new Response(JSON.stringify(NONE_RESPONSE), { status: 200 });
+    return success(NONE_RESPONSE);
   }
 
   if (friendUsername === user.username) {
-    return new Response(JSON.stringify({ status: "self", requestId: null }), {
-      status: 200,
-    });
+    return success({ status: "self", requestId: null });
   }
 
   try {
@@ -25,7 +24,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
       .limit(1);
 
     if (!friend) {
-      return new Response(JSON.stringify(NONE_RESPONSE), { status: 200 });
+      return success(NONE_RESPONSE);
     }
 
     const [friendship] = await db
@@ -46,22 +45,17 @@ export const GET: APIRoute = async ({ params, locals }) => {
       .limit(1);
 
     if (!friendship) {
-      return new Response(JSON.stringify(NONE_RESPONSE), { status: 200 });
+      return success(NONE_RESPONSE);
     }
 
     if (friendship.status === "accepted") {
-      return new Response(
-        JSON.stringify({ status: "accepted", requestId: friendship.id }),
-        { status: 200 },
-      );
+      return success({ status: "accepted", requestId: friendship.id });
     }
 
     const status = friendship.userId === user.id ? "sent" : "received";
-    return new Response(JSON.stringify({ status, requestId: friendship.id }), {
-      status: 200,
-    });
+    return success({ status, requestId: friendship.id });
   } catch (error) {
     console.error("Failed to get friendship status:", error);
-    return new Response(JSON.stringify(NONE_RESPONSE), { status: 200 });
+    return success(NONE_RESPONSE);
   }
 };

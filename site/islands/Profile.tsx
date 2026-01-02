@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { signal, computed } from "@preact/signals";
+import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
 import type { MatchData, UserProfileData } from "@/utils/types";
 import { UserProfileCard } from "./UserProfileCard";
@@ -8,12 +8,23 @@ import { ChangeAvatar } from "./Avatar.tsx";
 import { FriendsList } from "./Friends";
 
 type Tab = "info" | "pass" | "avatar" | "friends";
-const activeTab = signal<Tab>("info");
+const getInitialTab = (): Tab => {
+  if (typeof window === "undefined") return "info";
+  const saved = localStorage.getItem("profileTab") as Tab | null;
+  return saved && ["info", "pass", "avatar", "friends"].includes(saved) ? saved : "info";
+};
+const activeTab = signal<Tab>(getInitialTab());
 
 const showInfo = computed(() => activeTab.value === "info");
 const showPass = computed(() => activeTab.value === "pass");
 const showAvatar = computed(() => activeTab.value === "avatar");
 const showFriends = computed(() => activeTab.value === "friends");
+
+if (typeof window !== "undefined") {
+  effect(() => {
+    localStorage.setItem("profileTab", activeTab.value);
+  });
+}
 
 interface ProfileMenuProps {
   user: UserProfileData | null;
@@ -21,11 +32,16 @@ interface ProfileMenuProps {
 }
 
 export function ProfileMenu({ user, matches }: ProfileMenuProps) {
+  const [mounted, setMounted] = useState(false);
   const [userData, setUserData] = useState<UserProfileData | null>(
     user ?? null,
   );
   const [userMatches, setUserMatches] = useState<MatchData[]>(matches ?? []);
   const [loading, setLoading] = useState(!user);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -72,30 +88,32 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
           <div class="w-full max-w-4xl flex flex-col items-center gap-6">
             <div class="w-full max-w-2xl flex justify-center">
-              <Show when={showInfo}>
-                {loading ? (
-                  <div class="text-center p-4">Loading...</div>
-                ) : userData ? (
-                  <UserProfileCard
-                    user={userData}
-                    matches={userMatches}
-                    title="User Information"
-                  />
-                ) : (
-                  <p>Failed to load user information</p>
-                )}
-              </Show>
+              <div class={mounted ? "" : "opacity-0 transition-opacity duration-0"}>
+                <Show when={showInfo}>
+                  {loading ? (
+                    <div class="text-center p-4">Loading...</div>
+                  ) : userData ? (
+                    <UserProfileCard
+                      user={userData}
+                      matches={userMatches}
+                      title="User Information"
+                    />
+                  ) : (
+                    <p>Failed to load user information</p>
+                  )}
+                </Show>
 
-              <Show when={showPass}>
-                <UpdatePassword />
-              </Show>
-              <Show when={showAvatar}>
-                <ChangeAvatar />
-              </Show>
+                <Show when={showPass}>
+                  <UpdatePassword />
+                </Show>
+                <Show when={showAvatar}>
+                  <ChangeAvatar />
+                </Show>
 
-              <Show when={showFriends}>
-                <FriendsList />
-              </Show>
+                <Show when={showFriends}>
+                  <FriendsList />
+                </Show>
+              </div>
             </div>
           </div>
         </div>
