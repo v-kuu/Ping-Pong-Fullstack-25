@@ -33,10 +33,12 @@ export function Login() {
 
   return (
     <form
-      class="flex flex-col gap-4 rounded-box bg-base-200 p-6 max-w-md"
+      class="flex flex-col gap-4 rounded-box bg-base-200 border border-base-content/20 p-6 max-w-md"
       onSubmit={handleSubmit}
     >
-      <h1 class="text-3xl font-bold self-center">Hit Me With Your Best Shot!</h1>
+      <h1 class="text-3xl font-bold self-center">
+        Hit Me With Your Best Shot!
+      </h1>
 
       <span class="self-center">
         Don't have an account?&nbsp;

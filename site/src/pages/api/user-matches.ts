@@ -1,12 +1,13 @@
 import type { APIRoute } from "astro";
 import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
-import { getSessionUser } from "@/utils/session";
+import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
+import { unauthorized, success } from "@/utils/apiHelpers";
 
-export const GET: APIRoute = async ({ cookies }) => {
-  const user = await getSessionUser(cookies);
+export const GET: APIRoute = async ({ locals }) => {
+  const user = locals.user;
   
   if (!user) {
-    return new Response(JSON.stringify({ error: "Not logged in" }), { status: 401 });
+    return unauthorized("Not logged in");
   }
   
   const userId = user.id;
@@ -26,31 +27,13 @@ export const GET: APIRoute = async ({ cookies }) => {
     .orderBy(sql`${Matches.startedAt} DESC`)
     .limit(10);
   
-  const playerIds = Array.from(new Set(userMatches.flatMap(m => [m.player1Id, m.player2Id])));
+  const playerIds = getPlayerIdsFromMatches(userMatches);
   
   const allPlayers = playerIds.length > 0
     ? await db.select().from(Users).where(inArray(Users.id, playerIds))
     : [];
   
-  const playerMap = new Map(allPlayers.map(p => [p.id, p]));
+  const enrichedMatches = processMatchData(userMatches, userId, allPlayers);
   
-  const enrichedMatches = userMatches.map(match => {
-    const opponentId = match.player1Id === userId ? match.player2Id : match.player1Id;
-    const opponent = playerMap.get(opponentId);
-    const won = match.winnerId === userId;
-    
-    return {
-      id: match.id,
-      game: match.game,
-      player1Id: match.player1Id,
-      player2Id: match.player2Id,
-      winnerId: match.winnerId,
-      startedAt: match.startedAt,
-      score: match.score,
-      opponentName: opponent?.username || "Unknown",
-      won,
-    };
-  });
-  
-  return Response.json(enrichedMatches);
+  return success(enrichedMatches);
 };
