@@ -49,8 +49,6 @@ function createGround(scene: Scene)
 	ground.receiveShadows = true;
 	loadMat("painted_metal/xeutbhl_tier_3.gltf", scene).then(pbrMat =>
 	{
-		pbrMat.roughness = 0.0;
-		pbrMat.metallic = 1.0;
 		ground.material = pbrMat;
 	});
 }
