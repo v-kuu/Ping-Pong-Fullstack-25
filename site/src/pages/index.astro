@@ -1,8 +1,8 @@
 ---
-import Base from "@/src/layouts/Base.astro";
+import GameLayout from "@/src/layouts/GameLayout.astro";
 import { Game } from "@/islands/Game.tsx";
 ---
 
-<Base title="P O N G" active="" class="px-4 py-8 mx-auto fresh-gradient2 min-h-screen">
+<GameLayout title="P O N G" active="" class="px-4 py-8 mx-auto fresh-gradient2">
   <Game client:load />
-</Base>
+</GameLayout>
