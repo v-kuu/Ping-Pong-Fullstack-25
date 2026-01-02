@@ -49,6 +49,8 @@ function createGround(scene: Scene)
 	ground.receiveShadows = true;
 	loadMat("painted_metal/xeutbhl_tier_3.gltf", scene).then(pbrMat =>
 	{
+		pbrMat.roughness = 0.0;
+		pbrMat.metallic = 1.0;
 		ground.material = pbrMat;
 	});
 }
@@ -89,14 +91,14 @@ function createWalls(scene: Scene): Mesh[]
 	//north
 	let walls: Mesh[] = [];
 	walls[Sides.NORTH] = MeshBuilder.CreateBox(
-		"horizontal", { width: Globals.mapWidth, height: 0.3, depth: 0.3}, scene);
+		"horizontal", { width: Globals.mapWidth, height: 0.6, depth: 0.3}, scene);
 	walls[Sides.NORTH].position.y = 0.3;
 	walls[Sides.NORTH].position.z = Globals.mapHeight / 2;
 	walls[Sides.NORTH].checkCollisions = true;
 	
 	//south
 	walls[Sides.SOUTH] = MeshBuilder.CreateBox(
-		"horizontal", { width: Globals.mapWidth, height: 0.3, depth: 0.3}, scene);
+		"horizontal", { width: Globals.mapWidth, height: 0.6, depth: 0.3}, scene);
 	walls[Sides.SOUTH].position.y = 0.3;
 	walls[Sides.SOUTH].position.z = Globals.mapHeight / -2;
 	walls[Sides.SOUTH].checkCollisions = true;
@@ -104,7 +106,7 @@ function createWalls(scene: Scene): Mesh[]
 	//east
 	walls[Sides.EAST] = MeshBuilder.CreateBox(
 		"vertical", {width: 1, height: 1, depth: 1}, scene);
-	walls[Sides.EAST].scaling = new Vector3(0.3, 0.3, Globals.mapHeight);
+	walls[Sides.EAST].scaling = new Vector3(0.3, 0.6, Globals.mapHeight);
 	walls[Sides.EAST].position.y = 0.3;
 	walls[Sides.EAST].position.x = Globals.mapWidth / 2;
 	walls[Sides.EAST].checkCollisions = true;
@@ -112,7 +114,7 @@ function createWalls(scene: Scene): Mesh[]
 	//west
 	walls[Sides.WEST] = MeshBuilder.CreateBox(
 		"vertical", {width: 1, height: 1, depth: 1}, scene);
-	walls[Sides.WEST].scaling = new Vector3(0.3, 0.3, Globals.mapHeight);
+	walls[Sides.WEST].scaling = new Vector3(0.3, 0.6, Globals.mapHeight);
 	walls[Sides.WEST].position.y = 0.3;
 	walls[Sides.WEST].position.x = Globals.mapWidth / -2;
 	walls[Sides.WEST].checkCollisions = true;

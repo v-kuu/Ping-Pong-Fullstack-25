@@ -16,6 +16,7 @@ import {
 	GameState,
 	setState
 } from "./babylon_states.ts"
+import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
@@ -43,7 +44,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	//light setup
 	const light = new DirectionalLight("light", new Vector3(-0.7, -1, -0.5), scene);
 	light.autoCalcShadowZBounds = true;
-	light.intensity = 0.7;
+	light.intensity = 1.0;
 
 	//entity setup
 	setupEntities(light, scene);
@@ -74,7 +75,10 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 		}
 	});
 
+	//gui
 	createRectangle().verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+
+	enablePostProcess(scene, envTexture);
 	setState(GameState.Countdown, scene);
 	return scene;
 };
