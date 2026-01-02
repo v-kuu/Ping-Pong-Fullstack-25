@@ -1,6 +1,6 @@
 ---
 import Base from "@/src/layouts/Base.astro";
-import { LogoutSuccess } from "@/islands/LogoutSuccess.tsx";
+import { SuccessCard } from "@/components/SuccessCard.tsx";
 import { db, Sessions, eq } from "astro:db";
 
 const user = Astro.locals.user;
@@ -16,6 +16,11 @@ if (user) {
 
 <Base title="Logged Out" active="/logout" class="px-4 py-8 mx-auto min-h-screen flex items-center justify-center">
   <div class="w-full max-w-md">
-    <LogoutSuccess client:load />
+    <SuccessCard
+      title="Logged Out!"
+      message="You have been successfully logged out."
+      buttonText="Play Game"
+      buttonHref="/game"
+    />
   </div>
 </Base>

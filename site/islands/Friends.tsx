@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { Check, X } from "../components/Icons";
+import { Check, XMark } from "../components/Icons";
 
 interface Friend {
   id: number;
@@ -20,7 +20,9 @@ export function FriendsList() {
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [addUsername, setAddUsername] = useState("");
-  const [addMessage, setAddMessage] = useState<"success" | "error" | "not_found" | "already" | null>(null);
+  const [addMessage, setAddMessage] = useState<
+    "success" | "error" | "not_found" | "already" | null
+  >(null);
 
   useEffect(() => {
     fetchFriendsData();
@@ -64,7 +66,10 @@ export function FriendsList() {
         const data = await res.json();
         if (data.error === "User not found") {
           setAddMessage("not_found");
-        } else if (data.error.includes("already") || data.error.includes("pending")) {
+        } else if (
+          data.error.includes("already") ||
+          data.error.includes("pending")
+        ) {
           setAddMessage("already");
         } else {
           setAddMessage("error");
@@ -152,11 +157,17 @@ export function FriendsList() {
           <h2 class="text-xl font-bold mb-4">Friend Requests</h2>
           <div class="space-y-2">
             {pendingRequests.map((request) => (
-              <div key={request.id} class="flex items-center justify-between p-3 bg-base-300 rounded-lg">
+              <div
+                key={request.id}
+                class="flex items-center justify-between p-3 bg-base-300 rounded-lg"
+              >
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-full bg-base-100 bg-cover bg-center bg-[url('/avatar.png')]" />
                   <div>
-                    <a href={`/profile/${request.username}`} class="link link-primary hover:underline font-medium">
+                    <a
+                      href={`/profile/${request.username}`}
+                      class="link link-primary hover:underline font-medium"
+                    >
                       {request.username}
                     </a>
                     <p class="text-sm opacity-70">ELO: {request.elo}</p>
@@ -173,7 +184,7 @@ export function FriendsList() {
                     onClick={() => handleDeclineRequest(request.id)}
                     class="btn btn-circle btn-sm btn-error"
                   >
-                    <X />
+                    <XMark />
                   </button>
                 </div>
               </div>
@@ -190,11 +201,17 @@ export function FriendsList() {
         ) : (
           <div class="space-y-2">
             {friends.map((friend) => (
-              <div key={friend.id} class="flex items-center justify-between p-3 bg-base-300 rounded-lg">
+              <div
+                key={friend.id}
+                class="flex items-center justify-between p-3 bg-base-300 rounded-lg"
+              >
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded-full bg-base-100 bg-cover bg-center bg-[url('/avatar.png')]" />
                   <div>
-                    <a href={`/profile/${friend.username}`} class="link link-primary hover:underline font-medium">
+                    <a
+                      href={`/profile/${friend.username}`}
+                      class="link link-primary hover:underline font-medium"
+                    >
                       {friend.username}
                     </a>
                     <p class="text-sm opacity-70">ELO: {friend.elo}</p>
@@ -202,7 +219,9 @@ export function FriendsList() {
                 </div>
                 <div class="flex items-center gap-4">
                   <div class="flex items-center gap-2">
-                    <span class={`w-3 h-3 rounded-full ${statusColors[friend.status]}`} />
+                    <span
+                      class={`w-3 h-3 rounded-full ${statusColors[friend.status]}`}
+                    />
                     <span class="capitalize text-sm">{friend.status}</span>
                   </div>
                   <button class="btn btn-sm btn-outline">Request Game</button>

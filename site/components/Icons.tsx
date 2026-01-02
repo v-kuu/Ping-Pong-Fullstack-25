@@ -249,8 +249,6 @@ export function XMark() {
   );
 }
 
-export const X = XMark;
-
 export function Clock() {
   return (
     <svg

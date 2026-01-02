@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import { validatePassword } from "../utils/validation";
+import { SuccessCard } from "../components/SuccessCard";
 
 export function Signup() {
   const [username, setUsername] = useState("");
@@ -58,21 +59,12 @@ export function Signup() {
   };
 
   return isSuccess ? (
-    <div class="card text-center py-10 space-y-4">
-      <div class="mx-auto w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-3xl">
-        ✓
-      </div>
-      <h2 class="text-3xl font-bold text-white">Account Created!</h2>
-      <p class="text-gray-300">
-        Your account has been successfully registered.
-      </p>
-      <button
-        class="btn btn-success w-full py-3 mt-4"
-        onClick={() => (window.location.href = "/login")}
-      >
-        Go to Login
-      </button>
-    </div>
+    <SuccessCard
+      title="Account Created!"
+      message="Your account has been successfully registered."
+      buttonText="Go to Login"
+      buttonHref="/login"
+    />
   ) : (
     <form
       class="flex flex-col gap-4 rounded-box bg-base-200 border border-base-content/20 p-6 max-w-md"
@@ -81,7 +73,7 @@ export function Signup() {
       <h1 class="text-3xl font-bold self-center">Gi'mme the Deeds</h1>
 
       <span class="self-center">
-        Already have an account?
+        Already have an account?&nbsp;
         <a class="link link-secondary" href="/login">
           Log in
         </a>
