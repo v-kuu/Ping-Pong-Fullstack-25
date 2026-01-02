@@ -38,3 +38,8 @@ float smooth(float source, float target, float rate);
 float dither(int x, int y);
 float lerp(float x0, float x1, float t);
 float sign(float x);
+
+// random.c
+void random_seed(unsigned int seed);
+int random_int(int min, int max);
+float random_float(float min, float max);

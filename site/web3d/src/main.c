@@ -47,17 +47,8 @@ static float player_angle_smooth;
 static float player_x_smooth = 0.5f;
 static float player_y_smooth = 0.5f;
 
-// Gems.
-#define GEM_TYPES 14
-#define MAX_GEMS 100
-typedef struct {
-    int type;       // Visual type.
-    float x, y;     // Map position.
-    float phase;    // Random animation phase.
-} Gem;
-
-static Gem gem_array[MAX_GEMS];
-static int gem_count = MAX_GEMS;
+// Shake effect when collecting a gem.
+static float score_shake;
 
 // Textures.
 typedef struct {
@@ -65,6 +56,31 @@ typedef struct {
     uint16_t pitch; // Texels per row.
     void* data;     // GIF file data (before load) or texel data (after load).
 } Texture;
+
+// Gems.
+#define GEM_TYPES 14
+#define MAX_GEMS 100
+typedef struct {
+    Texture* tex;   // Texture to use for drawing.
+    uint32_t color; // Gem color (used for particle effect).
+    float x, y;     // Map position.
+    float phase;    // Random animation phase.
+} Gem;
+static Gem gem_array[MAX_GEMS];
+static int gem_count = MAX_GEMS;
+
+// Particles.
+#define MAX_PARTICLES 100
+typedef struct {
+    float x, y, z;      // Position (z = height).
+    float vx, vy, vz;   // Velocity.
+    float lifespan;     // How long the particle should live.
+    float counter;      // How long the particle has existed.
+    float size;         // Size of the particle.
+    uint32_t color;     // Drawing color.
+} Particle;
+static Particle particle_array[MAX_PARTICLES];
+static int particle_count;
 
 static Texture texture_floor = { .data = (uint8_t[]) {
     #embed "../assets/floor.gif"
@@ -277,6 +293,27 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
 
 #define RAND_FLOAT(state, min, max) (RNG(state) * 0x1p-32f * ((max) - (min)) + (min));
 
+static uint32_t average_color(Texture* tex)
+{
+    uint32_t r = 0;
+    uint32_t g = 0;
+    uint32_t b = 0;
+    uint8_t (*pixels)[4] = tex->data;
+    for (int y = 0; y < tex->h; y++)
+    for (int x = 0; x < tex->w; x++) {
+        uint8_t* pixel = pixels[x + y * tex->pitch];
+        if (pixel[0] + pixel[1] + pixel[2]) {
+            r += pixel[0];
+            g += pixel[1];
+            b += pixel[2];
+        }
+    }
+    r /= tex->w * tex->h;
+    g /= tex->w * tex->h;
+    b /= tex->w * tex->h;
+    return r | (g << 8) | (b << 16) | (0xff << 24);
+}
+
 // Initialize the game.
 __attribute__((export_name("init")))
 void init(unsigned int rng)
@@ -303,8 +340,9 @@ void init(unsigned int rng)
         Gem* gem = &gem_array[i];
         gem->x = RAND_FLOAT(rng, 0.5f, MAP_W - 0.5f);
         gem->y = RAND_FLOAT(rng, 0.5f, MAP_W - 0.5f);
-        gem->type = RNG(rng) % GEM_TYPES;
+        gem->tex = &texture_gem[RNG(rng) % GEM_TYPES];
         gem->phase = RAND_FLOAT(rng, 0.0f, TAU);
+        gem->color = average_color(gem->tex);
     }
 }
 
@@ -320,6 +358,7 @@ static uint32_t apply_fog(uint32_t color, float amount, int x, int y)
 }
 
 typedef struct {
+    int x;          // Frame x position.
     float vx, vy; // View direction.
     float px, py; // Ray origin.
     float dx, dy; // Ray direction.
@@ -392,8 +431,8 @@ static void draw_sprite(Column* col, float sx, float sy, float w, float h, Textu
     if (t < 0.0f)
         return;
 
-    const float y0 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (h + w) * 150) / t;
-    const float y1 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (h + 0) * 150) / t;
+    const float y0 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (h + w) * 160) / t;
+    const float y1 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (h + 0) * 160) / t;
     const int y0_clamped = max(0, min(y0, FRAME_H));
     const int y1_clamped = max(0, min(y1, FRAME_H));
 
@@ -437,6 +476,82 @@ static char* number_to_string(char* buffer, unsigned int value)
     return buffer + 1;
 }
 
+// TODO: Dither per frame.
+static void spawn_particles(float x, float y, uint32_t color)
+{
+    for (int i = 0; i < 30; i++) {
+        if (particle_count < MAX_PARTICLES) {
+            Particle* particle = &particle_array[particle_count++];
+            particle->x = x + random_float(-0.3f, +0.3f);
+            particle->y = y + random_float(-0.3f, +0.3f);
+            particle->z = 1.5f + random_float(-0.3f, +0.3f);
+            particle->vx = random_float(-1.0f, +1.0f);
+            particle->vy = random_float(-1.0f, +1.0f);
+            particle->vz = random_float(+2.0f, +3.0f);
+            particle->lifespan = random_float(0.1f, 0.3f);
+            particle->counter = 0.0f;
+            particle->size = random_float(0.1f, 0.4f);
+            int brighten = random_int(0, 200);
+            uint32_t r = min(255, ((color >>  0) & 0xff) + brighten + random_int(-25, 25));
+            uint32_t g = min(255, ((color >>  8) & 0xff) + brighten + random_int(-25, 25));
+            uint32_t b = min(255, ((color >> 16) & 0xff) + brighten + random_int(-25, 25));
+            particle->color = r | (g << 8) | (b << 16) | (0xff << 24);
+        }
+    }
+}
+
+static void update_particles(float dt)
+{
+    // Update each particle's state.
+    for (int i = 0; i < particle_count; i++) {
+        Particle* particle = &particle_array[i];
+        particle->x += particle->vx * dt;
+        particle->y += particle->vy * dt;
+        particle->z += particle->vz * dt;
+        particle->vz -= 15.0f * dt;
+
+        // Destroy the particle when its lifetime runs out.
+        if (particle->z < 0.0f || (particle->counter += dt) > particle->lifespan)
+            particle_array[i--] = particle_array[--particle_count];
+    }
+}
+
+static void draw_particles(Column* col)
+{
+    for (int i = 0; i < particle_count; i++) {
+
+        // Find the intersection with the particle billboard.
+        Particle* particle = &particle_array[i];
+        const float w = particle->size * (1.0f - particle->counter / particle->lifespan * 0.8f);
+        const float px = particle->x - col->px;
+        const float py = particle->y - col->py;
+        const float scale = -1.0f / (col->dx * col->vx + col->dy * col->vy);
+        const float t = scale * (-px * col->vx - py * col->vy);
+        const float s = scale * (+px * col->dy - py * col->dx) / w;
+        if (t < 0.0f)
+            continue; // No intersection.
+
+        const float y0 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (particle->z + w) * 160) / t;
+        const float y1 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (particle->z + 0) * 160) / t;
+        const int y0_clamped = max(0, min(y0, FRAME_H));
+        const int y1_clamped = max(0, min(y1, FRAME_H));
+
+        // Draw the sprite itself.
+        if (-0.5f < s && s < 0.5f) {
+            for (int y = y0_clamped; y < y1_clamped; y++) {
+                if (t > col->depth[y])
+                    continue;
+                float v = (y - y0 + 1.0f) / (y1 - y0) - 0.5f;
+                if (s * s + v * v < 0.25f && dither(col->x, y) > particle->counter / particle->lifespan * 2.0f - 1.0f) {
+                    col->color[y] = particle->color;
+                    col->depth[y] = t;
+                    col->light[y] = t;
+                }
+            }
+        }
+    }
+}
+
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
 void* draw(double timestamp)
@@ -476,17 +591,25 @@ void* draw(double timestamp)
     }
 
     // Collect gems when touching them.
+#define PLAYER_REACH 1.0f
     for (int i = 0; i < gem_count; i++) {
-        float dx = player_x - gem_array[i].x;
-        float dy = player_y - gem_array[i].y;
-        if (dx * dx + dy * dy < 1.0f)
+        Gem* gem = &gem_array[i];
+        float dx = player_x - gem->x;
+        float dy = player_y - gem->y;
+        if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
+            spawn_particles(gem->x, gem->y, gem->color);
+            score_shake = 0.2f;
             gem_array[i--] = gem_array[--gem_count];
+        }
     }
 
     // Smooth out player movement.
     player_angle_smooth = smooth(player_angle_smooth, player_angle, 20.0f * dt);
     player_x_smooth = smooth(player_x_smooth, player_x, 10.0f * dt);
     player_y_smooth = smooth(player_y_smooth, player_y, 10.0f * dt);
+
+    // Update particle effects.
+    update_particles(dt);
 
     // Render the frame.
     Column col;
@@ -496,6 +619,7 @@ void* draw(double timestamp)
 
         // Determine the direction vector for the ray.
         float t = (float) x / (FRAME_W - 1) * 2.0f - 1.0f;
+        col.x = x;
         col.px = player_x_smooth;
         col.py = player_y_smooth;
         col.dx = col.vx - col.vy * FOV * t;
@@ -509,9 +633,11 @@ void* draw(double timestamp)
         for (int i = 0; i < gem_count; i++) {
             Gem* gem = &gem_array[i];
             float h = 1.0f + sinf(timestamp * 0.002f + gem->phase) * 0.1f;
-            Texture* tex = &texture_gem[gem->type];
-            draw_sprite(&col, gem->x, gem->y, 1, h, tex);
+            draw_sprite(&col, gem->x, gem->y, 1, h, gem->tex);
         }
+
+        // Draw particles.
+        draw_particles(&col);
 
         // Write out the pixels for this column.
         for (int y = 0; y < FRAME_H; y++)
@@ -521,13 +647,27 @@ void* draw(double timestamp)
     // Draw the gem count.
     char text[100] = {0};
     char* next = number_to_string(text, MAX_GEMS - gem_count);
-    *next++ = '/';
-    number_to_string(next, MAX_GEMS);
     int x = 23;
-    int y = 182;
+    int y = 182 + 10.0f * score_shake * sinf(timestamp * 0.08f);
+    score_shake = max(0.0f, score_shake - dt);
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
     texture_draw(&texture_gem[1], 5, 180);
+
+    // Draw a timer.
+    static double elapsed;
+    elapsed += dt;
+    int cents = floor(elapsed * 100.0);
+    text[0] = '0' + cents / 1000 % 10;
+    text[1] = '0' + cents /  100 % 10;
+    text[2] = ':';
+    text[3] = '0' + cents /   10 % 10;
+    text[4] = '0' + cents /    1 % 10;
+    text[5] = '\0';
+    x = FRAME_W - 40;
+    y = 182;
+    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));
