@@ -9,6 +9,7 @@ const users = [
   { username: "teemu", email: "teemu@hive.fi", password: "teemu@hive.fi", elo: 1050 },
   { username: "juhani", email: "juhani@hive.fi", password: "juhani@hive.fi", elo: 1080 },
   { username: "aapeli", email: "aapeli@hive.fi", password: "aapeli@hive.fi", elo: 1120 },
+  { username: "test", email: "test@test.com", password: "testtest", elo: 1000 },
 ];
 
 export default async function seed() {
@@ -54,9 +55,34 @@ export default async function seed() {
     { userId: userIds[5], friendId: userIds[7], status: 'pending' },
     { userId: userIds[6], friendId: userIds[5], status: 'pending' },
     { userId: userIds[7], friendId: userIds[5], status: 'pending' },
+    // test user friends with all other users
+    { userId: userIds[8], friendId: userIds[0], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[1], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[2], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[3], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[4], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[5], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[6], status: 'accepted' },
+    { userId: userIds[8], friendId: userIds[7], status: 'accepted' },
   ];
 
   for (const friendship of friendships) {
     await db.insert(Friendships).values(friendship);
+  }
+
+  const dbUsersAfterFriendships = await db.select().from(Users);
+  const testUser = dbUsersAfterFriendships.find(u => u.username === "test");
+  if (testUser) {
+    const otherUserIds = dbUsersAfterFriendships
+      .filter(u => u.username !== "test")
+      .map(u => u.id);
+    
+    for (const friendId of otherUserIds) {
+      await db.insert(Friendships).values({
+        userId: testUser.id,
+        friendId: friendId,
+        status: "accepted",
+      });
+    }
   }
 }

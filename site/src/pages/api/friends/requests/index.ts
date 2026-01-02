@@ -109,37 +109,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 )
             )
             .limit(1)
-            .get(); // .get() is not available on all drivers, but Astro DB (libsql) supports it locally. 
-        // However, .limit(1) returns an array in 'select()'. 
-        // Wait, previous code used .get() after select().
-        // Let's check previous files. 
-        // "const friendResult = await db.select()...limit(1)" returns { ... }[] usually in Drizzle, 
-        // but Astro DB might have .get() helper? 
-        // Previous 'friend-request.ts' used: `const existing = await db...get();`
-        // Previous 'friend-request.ts' line 20: `const friendResult = await db...limit(1);` then checked `.length`
-        // Ah, inconsistent usage in old code? 
-        // 'site/src/pages/api/friend-request.ts':
-        // line 20: `friendResult` ... `if (friendResult.length === 0)`
-        // line 49: `.get()`
-        // I should use standard array return for safety or check docs.
-        // I will use array destructuring.
+            .then(res => res[0]);
 
         if (existing) {
-            // 'existing' from .get() would be the object or undefined
-            // If I remove .get() and rely on array:
-            // const existing = (await db.select()...).at(0);
-            // But I will stick to what seems to be working in other files if I can.
-            // Actually friend-request.ts line 49 used .get().
-            // I'll stick to array to be safe since I saw both.
             return new Response(JSON.stringify({ error: "Already friends or request pending" }), {
                 status: 400,
             });
         }
-
-        /* 
-           Wait, let me correct the 'existing' check code block above.
-           The code I'm writing is inside the string. I will revise it to use array check to be 100% sure.
-        */
 
         const result = await db.insert(Friendships).values({
             userId: user.id,

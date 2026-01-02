@@ -55,9 +55,7 @@ export const GET: APIRoute = async ({ locals }) => {
         return new Response(JSON.stringify(formattedFriends), { status: 200 });
     } catch (error) {
         console.error("Failed to get friends:", error);
-        return new Response(JSON.stringify({ error: "Failed to get friends" }), {
-            status: 500,
-        });
+        return new Response(JSON.stringify([]), { status: 200 });
     }
 };
 
@@ -77,7 +75,7 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
             });
         }
 
-        await db
+        const result = await db
             .delete(Friendships)
             .where(
                 and(
@@ -93,7 +91,14 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
                     ),
                     eq(Friendships.status, "accepted")
                 )
-            );
+            )
+            .returning();
+
+        if (result.length === 0) {
+            return new Response(JSON.stringify({ error: "Friendship not found" }), {
+                status: 404,
+            });
+        }
 
         return new Response(JSON.stringify({ success: true }), { status: 200 });
     } catch (error) {

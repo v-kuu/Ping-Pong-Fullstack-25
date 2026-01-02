@@ -12,7 +12,3 @@ export function ChangeAvatar() {
     </div>
   );
 }
-
-export function Avatar() {
-  return;
-}

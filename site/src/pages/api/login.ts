@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Sessions, Users, eq } from "astro:db";
+import { validateUsername } from "@/utils/validation";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -15,9 +16,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    const usernamePattern = /^[A-Za-z][A-Za-z0-9\-]{2,29}$/;
-    if (!usernamePattern.test(username)) {
-      return Response.json({ error: "Invalid username format" }, { status: 400 });
+    if (!validateUsername(username)) {
+      return Response.json(
+        { error: "Invalid username format" },
+        { status: 400 },
+      );
     }
 
     const user = await db
