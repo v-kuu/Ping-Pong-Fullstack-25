@@ -3,9 +3,8 @@
 
 @plugin "daisyui" {
   themes:
-    light --default,
-    dark --prefersdark,
-    synthwave;
+    synthwave --default,
+    dracula;
 }
 
 /*spacing of password inputs*/
