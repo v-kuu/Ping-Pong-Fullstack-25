@@ -1,10 +1,9 @@
 ---
 import Base from "@/src/layouts/Base.astro";
 import { ProfileMenu } from "@/islands/Profile.tsx";
-import { getSessionUser } from "@/utils/session";
 import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
 
-const user = await getSessionUser(Astro.cookies);
+const user = Astro.locals.user;
 if (!user) {
   return Astro.redirect("/login");
 }
