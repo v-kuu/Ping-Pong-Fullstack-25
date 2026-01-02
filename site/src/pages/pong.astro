@@ -1,6 +1,6 @@
 ---
 import Header from "@/components/Header";
-import { Web3D } from "@/islands/Web3D";
+import { Game } from "@/islands/Game";
 import "@/src/styles.css";
 
 const { user = null } = Astro.locals;
@@ -13,12 +13,12 @@ const { user = null } = Astro.locals;
     <link rel="preload" href="/logo.svg" as="image" />
     <link rel="preload" href="/web.svg" as="image" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" />
-    <title>W E B 3 D</title>
+    <title>P O N G</title>
   </head>
   <body class="h-full m-0">
     <Header active="/game" title="ft_transcendence" {user} />
     <main class="flex flex-col h-[calc(100vh-64px)]">
-      <Web3D client:load />
+      <Game client:load />
     </main>
   </body>
 </html>
