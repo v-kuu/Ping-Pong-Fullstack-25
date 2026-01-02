@@ -25,7 +25,7 @@ typedef __SIZE_TYPE__ size_t;
 // gif.c
 int gif_get_image_w(const uint8_t* gif);
 int gif_get_image_h(const uint8_t* gif);
-void gif_get_pixels(const uint8_t* gif, uint8_t* pixels);
+void* gif_get_pixels(const uint8_t* gif, void* pixels);
 
 // math.c
 float min(float x, float y);

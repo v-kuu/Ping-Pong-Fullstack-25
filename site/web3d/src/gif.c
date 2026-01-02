@@ -10,7 +10,7 @@ int gif_get_image_h(const uint8_t* gif)
     return gif[8] | (gif[9] << 8);
 }
 
-void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
+void* gif_get_pixels(const uint8_t* gif, void* output)
 {
     // Read the global header and palette (if present).
     const uint8_t (*palette)[3] = (const uint8_t(*)[3]) (gif + 13);
@@ -45,6 +45,7 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
     }
 
     // Extract variable-length LZW codes from length-prefixed sub-blocks.
+    uint8_t* pixels = output;
     int length = root + 1, bits = 0, part = 0, prev = 0, code = 0, block = 0;
     for (;;) {
         block = (block ? block : *gif++) - 1;
@@ -63,7 +64,7 @@ void gif_get_pixels(const uint8_t* gif, uint8_t* pixels)
 
             // Handle the end code.
             if (code == (1 << root) + 1)
-                return;
+                return output;
 
             // Traverse a chain of codes, pushing each one on a stack.
             uint8_t stack[0x1000];
