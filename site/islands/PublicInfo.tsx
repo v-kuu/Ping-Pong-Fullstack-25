@@ -13,7 +13,8 @@ export function PublicUserInfo({ username, isOwnProfile = false, isLoggedIn = fa
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [friendStatus, setFriendStatus] = useState<"none" | "pending" | "accepted">("none");
+  const [friendStatus, setFriendStatus] = useState<"none" | "sent" | "received" | "accepted">("none");
+  const [requestId, setRequestId] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -31,6 +32,7 @@ export function PublicUserInfo({ username, isOwnProfile = false, isLoggedIn = fa
         if (statusRes && statusRes.ok) {
           const statusData = await statusRes.json();
           setFriendStatus(statusData.status);
+          setRequestId(statusData.requestId);
         }
       })
       .catch((e) => {
@@ -43,14 +45,29 @@ export function PublicUserInfo({ username, isOwnProfile = false, isLoggedIn = fa
 
   const handleAddFriend = async () => {
     try {
-      const res = await fetch(`/api/friend-request/${username}`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        setFriendStatus("pending");
+      if (friendStatus === "none") {
+        // Send Request
+        const res = await fetch(`/api/friends/requests`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username }),
+        });
+        if (res.ok) {
+          setFriendStatus("sent");
+        }
+      } else if (friendStatus === "received" && requestId) {
+        // Accept Request
+        const res = await fetch(`/api/friends/requests/${requestId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "accepted" }),
+        });
+        if (res.ok) {
+          setFriendStatus("accepted");
+        }
       }
     } catch (e) {
-      console.error("Failed to send friend request:", e);
+      console.error("Failed to update friendship:", e);
     }
   };
 

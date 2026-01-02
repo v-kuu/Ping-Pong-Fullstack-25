@@ -5,7 +5,7 @@ interface UserProfileCardProps {
   user: UserProfileData;
   matches: MatchData[];
   showAddFriend?: boolean;
-  friendStatus?: "none" | "pending" | "accepted";
+  friendStatus?: "none" | "sent" | "received" | "accepted";
   onAddFriend?: () => void;
   title?: string;
   maxWidth?: string;
@@ -34,20 +34,23 @@ export function UserProfileCard({
           </div>
           {showAddFriend && onAddFriend && (
             <button
-              onClick={onAddFriend}
-              disabled={friendStatus !== "none"}
-              class={`btn btn-circle btn-lg ${
-                friendStatus === "accepted"
-                  ? "btn-success"
-                  : friendStatus === "pending"
+              onClick={friendStatus === "none" || friendStatus === "received" ? onAddFriend : undefined}
+              title={friendStatus === "received" ? "Accept Request" : friendStatus === "sent" ? "Request Sent" : "Add Friend"}
+              class={`btn btn-circle btn-lg ${friendStatus === "accepted" || friendStatus === "sent" ? "pointer-events-none" : ""} ${friendStatus === "accepted"
+                ? "btn-success"
+                : friendStatus === "sent"
                   ? "btn-warning"
-                  : "btn-primary"
-              }`}
+                  : friendStatus === "received"
+                    ? "btn-primary ring-2 ring-primary ring-offset-2 ring-offset-base-100" // Highlight received requests
+                    : "btn-primary"
+                }`}
             >
               {friendStatus === "accepted" ? (
-                <Check />
-              ) : friendStatus === "pending" ? (
-                <Clock />
+                <Check class="text-black" />
+              ) : friendStatus === "sent" ? (
+                <Clock class="text-black" />
+              ) : friendStatus === "received" ? (
+                <IconPlus /> // Or maybe a different icon for Accept? But Plus works as "Add Back".
               ) : (
                 <IconPlus />
               )}

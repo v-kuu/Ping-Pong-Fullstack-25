@@ -93,20 +93,19 @@ export function UserCircle() {
 }
 
 // from https://heroicons.com/
-export function Check() {
+export function Check(props: { class?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      class="h-5 w-5 text-black"
+      class={`h-6 w-6 ${props.class ?? "text-black"}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      aria-hidden="true"
     >
       <path
-        stroke-width={3}
         stroke-linecap="round"
         stroke-linejoin="round"
+        stroke-width="3"
         d="M5 13l4 4L19 7"
       />
     </svg>
@@ -249,11 +248,11 @@ export function XMark() {
   );
 }
 
-export function Clock() {
+export function Clock(props: { class?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 text-warning"
+      class={`h-6 w-6 ${props.class ?? "text-warning"}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"

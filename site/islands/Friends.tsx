@@ -32,7 +32,7 @@ export function FriendsList() {
     try {
       const [friendsRes, requestsRes] = await Promise.all([
         fetch("/api/friends"),
-        fetch("/api/friend-requests/received"),
+        fetch("/api/friends/requests"),
       ]);
 
       if (friendsRes.ok) {
@@ -54,8 +54,12 @@ export function FriendsList() {
 
     setAddMessage(null);
     try {
-      const res = await fetch(`/api/friend-request/${addUsername.trim()}`, {
+      const res = await fetch(`/api/friends/requests`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username: addUsername.trim() }),
       });
 
       if (res.ok) {
@@ -68,7 +72,8 @@ export function FriendsList() {
           setAddMessage("not_found");
         } else if (
           data.error.includes("already") ||
-          data.error.includes("pending")
+          data.error.includes("pending") ||
+          data.error.includes("Cannot add yourself")
         ) {
           setAddMessage("already");
         } else {
@@ -82,8 +87,12 @@ export function FriendsList() {
 
   const handleAcceptRequest = async (requestId: number) => {
     try {
-      const res = await fetch(`/api/friend-requests/${requestId}/accept`, {
-        method: "POST",
+      const res = await fetch(`/api/friends/requests/${requestId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "accepted" }),
       });
       if (res.ok) {
         fetchFriendsData();
@@ -95,8 +104,12 @@ export function FriendsList() {
 
   const handleDeclineRequest = async (requestId: number) => {
     try {
-      const res = await fetch(`/api/friend-requests/${requestId}/decline`, {
-        method: "POST",
+      const res = await fetch(`/api/friends/requests/${requestId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "rejected" }),
       });
       if (res.ok) {
         fetchFriendsData();
@@ -178,7 +191,7 @@ export function FriendsList() {
                     onClick={() => handleAcceptRequest(request.id)}
                     class="btn btn-circle btn-sm btn-success"
                   >
-                    <Check />
+                    <Check class="text-black" />
                   </button>
                   <button
                     onClick={() => handleDeclineRequest(request.id)}
