@@ -38,6 +38,7 @@ static bool key_down[KEY_MAX];
 static bool key_held[KEY_MAX];
 
 // Player state.
+static bool player_is_ghost = true;
 static float player_x = 0.5f;
 static float player_y = 0.5f;
 static float player_angle;
@@ -49,6 +50,11 @@ static float player_y_smooth = 0.5f;
 
 // Shake effect when collecting a gem.
 static float score_shake;
+
+// Timer.
+static double elapsed_time;
+static double start_time;
+static size_t frame_number;
 
 // Textures.
 typedef struct {
@@ -122,19 +128,18 @@ static bool is_wall(int x, int y)
     return is_out_of_bounds(x, y) || map[x + y * MAP_W] == '#';
 }
 
-#define RNG(state) ((state) = (state) * 1103515245u + 12345u)
-
-static float raycast(float ax, float ay, float bx, float by)
+static float raycast(float ax, float ay, float bx, float by, float t)
 {
-    int ix = ax, sx = (bx > 0.0f) - (bx < 0.0f);
-    int iy = ay, sy = (by > 0.0f) - (by < 0.0f);
+    int ix = floor(ax), sx = (bx > 0.0f) - (bx < 0.0f);
+    int iy = floor(ay), sy = (by > 0.0f) - (by < 0.0f);
     float dx = abs(1 / bx), tx = dx * ((sx > 0) - sx * fract(ax));
     float dy = abs(1 / by), ty = dy * ((sy > 0) - sy * fract(ay));
     for (;;) {
         int axis = !sy || tx < ty;
+        int px = ix, py = iy;
         ix += sx * axis;
         iy += sy * !axis;
-        if (is_wall(ix, iy))
+        if (min(tx, ty) > t && (is_out_of_bounds(ix, iy) || (is_wall(ix, iy) && !is_wall(px, py))))
             return min(tx, ty);
         tx += dx * axis;
         ty += dy * !axis;
@@ -291,8 +296,6 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
     }
 }
 
-#define RAND_FLOAT(state, min, max) (RNG(state) * 0x1p-32f * ((max) - (min)) + (min));
-
 static uint32_t average_color(Texture* tex)
 {
     uint32_t r = 0;
@@ -338,10 +341,10 @@ void init(unsigned int rng)
     // Place gems on the map.
     for (int i = 0; i < gem_count; i++) {
         Gem* gem = &gem_array[i];
-        gem->x = RAND_FLOAT(rng, 0.5f, MAP_W - 0.5f);
-        gem->y = RAND_FLOAT(rng, 0.5f, MAP_W - 0.5f);
-        gem->tex = &texture_gem[RNG(rng) % GEM_TYPES];
-        gem->phase = RAND_FLOAT(rng, 0.0f, TAU);
+        gem->x = random_float(0.5f, MAP_W - 0.5f);
+        gem->y = random_float(0.5f, MAP_W - 0.5f);
+        gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
+        gem->phase = random_float(0.0f, TAU);
         gem->color = average_color(gem->tex);
     }
 }
@@ -358,13 +361,13 @@ static uint32_t apply_fog(uint32_t color, float amount, int x, int y)
 }
 
 typedef struct {
-    int x;          // Frame x position.
-    float vx, vy; // View direction.
-    float px, py; // Ray origin.
-    float dx, dy; // Ray direction.
+    int x;                   // Frame x position.
+    float vx, vy;            // View direction.
+    float px, py;            // Ray origin.
+    float dx, dy;            // Ray direction.
     uint32_t color[FRAME_H]; // Color of each pixel in the column.
-    float light[FRAME_H]; // Light received by each pixel in the column.
-    float depth[FRAME_H]; // Depth buffer.
+    float light[FRAME_H];    // Light received by each pixel in the column.
+    float depth[FRAME_H];    // Depth of each pixel in the column.
 } Column;
 
 static void draw_sky(Column* col)
@@ -386,7 +389,7 @@ static void draw_floor(Column* col)
         float u = fract(col->px + col->dx * t);
         float v = fract(col->py + col->dy * t);
         col->color[y] = texture_sample(&texture_floor, u, v);
-        col->light[y] = t;
+        col->light[y] = t * 4.0f;
         col->depth[y] = t;
     }
 }
@@ -394,28 +397,38 @@ static void draw_floor(Column* col)
 static void draw_walls(Column* col)
 {
     // Raycast against the map.
-    const float depth = raycast(col->px, col->py, col->dx, col->dy);
-    const float y0 = FRAME_H * 0.5f + 0.5f - WALL_HEIGHT / depth;
-    const float y1 = FRAME_H * 0.5f + 0.5f + WALL_HEIGHT / depth;
-    const int y0_clamped = max(0, min(y0, FRAME_H));
-    const int y1_clamped = max(0, min(y1, FRAME_H));
+    float depth = 0.0f;
+    int limit = player_is_ghost ? 10 : 1;
+    for (int i = 0; i < limit && (depth - 2.0f) * 0.3f < 1.0f; i++) {
+        depth = raycast(col->px, col->py, col->dx, col->dy, depth);
+        const float y0 = FRAME_H * 0.5f + 0.5f - WALL_HEIGHT / depth;
+        const float y1 = FRAME_H * 0.5f + 0.5f + WALL_HEIGHT / depth;
+        const int y0_clamped = max(0, min(y0, FRAME_H));
+        const int y1_clamped = max(0, min(y1, FRAME_H));
+        const float hit_x = col->px + col->dx * depth;
+        const float hit_y = col->py + col->dy * depth;
+        const bool bounds = hit_x > 1e-6f && hit_y > 1e-6f && hit_x < MAP_W && hit_y < MAP_H;
 
-    // Draw walls.
-    for (int y = y0_clamped; y < y1_clamped; y++) {
-        float hit_x = col->px + col->dx * depth;
-        float hit_y = col->py + col->dy * depth;
-        float edge_x = abs(fract(hit_x) - 0.5f);
-        float edge_y = abs(fract(hit_y) - 0.5f);
-        float u = fract(edge_x < edge_y ? hit_x : hit_y);
-        float v = fract(4.0f * (y - y0) / (y1 - y0));
-        col->color[y] = texture_sample(&texture_wall, u, v);
-        col->light[y] = depth;
-        col->depth[y] = depth;
+        // Draw walls.
+        for (int y = y0_clamped; y < y1_clamped; y++) {
+            if (col->depth[y] < depth || (player_is_ghost && dither(col->x, y) > (depth - 2.0f) * 0.3f && bounds))
+                continue;
+            float edge_x = abs(fract(hit_x) - 0.5f);
+            float edge_y = abs(fract(hit_y) - 0.5f);
+            float u = fract(edge_x < edge_y ? hit_x : hit_y);
+            float v = fract(4.0f * (y - y0) / (y1 - y0));
+            col->color[y] = texture_sample(&texture_wall, u, v);
+            col->light[y] = depth;
+            col->depth[y] = depth;
+        }
+
+        // Draw shadows.
+        for (int y = y1_clamped; y < FRAME_H; y++) {
+            if (player_is_ghost && (dither(col->x, y) > (depth - 2.0f) * 0.3f && bounds))
+                continue;
+            col->light[y] = min(col->light[y], depth + 4.0f * min(1.0f, (y - y1) / (y1 - y0)));
+        }
     }
-
-    // Draw shadows.
-    for (int y = y1_clamped; y < FRAME_H; y++)
-        col->light[y] += max(0.0f, 4.0f * min(1.0f, (y - y1) / (y1 - y0)));
 }
 
 static void draw_sprite(Column* col, float sx, float sy, float w, float h, Texture* tex)
@@ -476,7 +489,6 @@ static char* number_to_string(char* buffer, unsigned int value)
     return buffer + 1;
 }
 
-// TODO: Dither per frame.
 static void spawn_particles(float x, float y, uint32_t color)
 {
     for (int i = 0; i < 30; i++) {
@@ -484,7 +496,7 @@ static void spawn_particles(float x, float y, uint32_t color)
             Particle* particle = &particle_array[particle_count++];
             particle->x = x + random_float(-0.3f, +0.3f);
             particle->y = y + random_float(-0.3f, +0.3f);
-            particle->z = 1.5f + random_float(-0.3f, +0.3f);
+            particle->z = 1.2f + random_float(-0.3f, +0.3f);
             particle->vx = random_float(-1.0f, +1.0f);
             particle->vy = random_float(-1.0f, +1.0f);
             particle->vz = random_float(+2.0f, +3.0f);
@@ -552,6 +564,22 @@ static void draw_particles(Column* col)
     }
 }
 
+// Convert a timestamp (in seconds) to a nine-character string (including the
+// null-terminator).
+static void time_to_string(char buffer[9], double time)
+{
+    int cents = floor(time * 100.0);
+    buffer[0] = '0' + cents / 60000 % 10; // Tens of minutes.
+    buffer[1] = '0' + cents /  6000 % 10; // Minutes.
+    buffer[2] = ':';
+    buffer[3] = '0' + cents / 1000 % 6 % 10; // Tens of seconds.
+    buffer[4] = '0' + cents /  100 % 10; // Seconds.
+    buffer[5] = ':';
+    buffer[6] = '0' + cents / 10 % 10; // Tenths of a second.
+    buffer[7] = '0' + cents /  1 % 10; // Hundredths of a second.
+    buffer[8] = '\0';
+}
+
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
 void* draw(double timestamp)
@@ -560,6 +588,14 @@ void* draw(double timestamp)
     static double prev_timestamp;
     float dt = (timestamp - prev_timestamp) / 1000.0;
     prev_timestamp = timestamp;
+
+    // Measure elapsed time.
+    if (start_time == 0.0)
+        start_time = timestamp;
+    elapsed_time = (timestamp - start_time) / 1000.0;
+
+    // Track frame numbers.
+    frame_number++;
 
     // Handle player movement.
     const float rotate_speed = 2.5f * dt;
@@ -574,32 +610,40 @@ void* draw(double timestamp)
     player_x += run_speed * (run_f * cosf(player_angle) - run_s * sinf(player_angle));
     player_y += run_speed * (run_f * sinf(player_angle) + run_s * cosf(player_angle));
 
-    // Do collision detection.
-    const float half = HITBOX_SIZE * 0.5f;
-    const int ix = floor(player_x);
-    const int iy = floor(player_y);
-    for (int ty = iy - 1; ty <= iy + 1; ty++)
-    for (int tx = ix - 1; tx <= ix + 1; tx++) {
-        float dx = tx + 0.5f - player_x;
-        float dy = ty + 0.5f - player_y;
-        if (abs(dx) < 0.5f + half && abs(dy) < 0.5f + half && is_wall(tx, ty)) {
-            if (!is_wall(tx - sign(dx), ty) && abs(dx) > abs(dy))
-                player_x = tx + (dx < 0.0f) - half * sign(dx);
-            if (!is_wall(tx, ty - sign(dy)) && abs(dx) < abs(dy))
-                player_y = ty + (dy < 0.0f) - half * sign(dy);
+    // Do collision detection against walls.
+    if (!player_is_ghost) {
+        const float half = HITBOX_SIZE * 0.5f;
+        const int ix = floor(player_x);
+        const int iy = floor(player_y);
+        for (int ty = iy - 1; ty <= iy + 1; ty++)
+        for (int tx = ix - 1; tx <= ix + 1; tx++) {
+            float dx = tx + 0.5f - player_x;
+            float dy = ty + 0.5f - player_y;
+            if (abs(dx) < 0.5f + half && abs(dy) < 0.5f + half && is_wall(tx, ty)) {
+                if (!is_wall(tx - sign(dx), ty) && abs(dx) > abs(dy))
+                    player_x = tx + (dx < 0.0f) - half * sign(dx);
+                if (!is_wall(tx, ty - sign(dy)) && abs(dx) < abs(dy))
+                    player_y = ty + (dy < 0.0f) - half * sign(dy);
+            }
         }
     }
 
+    // Do collision detection against the bounds of the map.
+    player_x = max(0.5f, min(player_x, MAP_W - 0.5f));
+    player_y = max(0.5f, min(player_y, MAP_H - 0.5f));
+
     // Collect gems when touching them.
+    if (!player_is_ghost) {
 #define PLAYER_REACH 1.0f
-    for (int i = 0; i < gem_count; i++) {
-        Gem* gem = &gem_array[i];
-        float dx = player_x - gem->x;
-        float dy = player_y - gem->y;
-        if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
-            spawn_particles(gem->x, gem->y, gem->color);
-            score_shake = 0.2f;
-            gem_array[i--] = gem_array[--gem_count];
+        for (int i = 0; i < gem_count; i++) {
+            Gem* gem = &gem_array[i];
+            float dx = player_x - gem->x;
+            float dy = player_y - gem->y;
+            if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
+                spawn_particles(gem->x, gem->y, gem->color);
+                score_shake = 0.2f;
+                gem_array[i--] = gem_array[--gem_count];
+            }
         }
     }
 
@@ -632,7 +676,7 @@ void* draw(double timestamp)
         // Draw gems.
         for (int i = 0; i < gem_count; i++) {
             Gem* gem = &gem_array[i];
-            float h = 1.0f + sinf(timestamp * 0.002f + gem->phase) * 0.1f;
+            float h = 0.5f + sinf(timestamp * 0.002f + gem->phase) * 0.1f;
             draw_sprite(&col, gem->x, gem->y, 1, h, gem->tex);
         }
 
@@ -645,7 +689,7 @@ void* draw(double timestamp)
     }
 
     // Draw the gem count.
-    char text[100] = {0};
+    char text[16];
     char* next = number_to_string(text, MAX_GEMS - gem_count);
     int x = 23;
     int y = 182 + 10.0f * score_shake * sinf(timestamp * 0.08f);
@@ -655,16 +699,8 @@ void* draw(double timestamp)
     texture_draw(&texture_gem[1], 5, 180);
 
     // Draw a timer.
-    static double elapsed;
-    elapsed += dt;
-    int cents = floor(elapsed * 100.0);
-    text[0] = '0' + cents / 1000 % 10;
-    text[1] = '0' + cents /  100 % 10;
-    text[2] = ':';
-    text[3] = '0' + cents /   10 % 10;
-    text[4] = '0' + cents /    1 % 10;
-    text[5] = '\0';
-    x = FRAME_W - 40;
+    time_to_string(text, elapsed_time);
+    x = FRAME_W - 55;
     y = 182;
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
