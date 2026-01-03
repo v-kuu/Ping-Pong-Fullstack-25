@@ -35,6 +35,176 @@ input[type="password"]::placeholder {
   );
 }
 
+.fresh-gradient3 {
+  animation-name: back;
+  animation-duration: 12s;
+  animation-iteration-count: infinite;
+  animation-timing-function: steps(100, end);
+}
+
+@keyframes back {
+  0% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(120, 127, 108),
+      rgb(2, 2, 1)
+    );
+  }
+  5% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(100, 127, 108),
+      rgb(2, 2, 20)
+    );
+  }
+  10% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(80, 127, 108),
+      rgb(2, 2, 40)
+    );
+  }
+  15% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(60, 127, 108),
+      rgb(2, 2, 60)
+    );
+  }
+  20% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(40, 127, 108),
+      rgb(2, 2, 80)
+    );
+  }
+  25% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(200, 234, 254),
+      rgb(20, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  30% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(70, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  35% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(120, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  40% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(170, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  45% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(220, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  50% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(255, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  55% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(220, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  60% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(170, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  65% {
+    background-image: linear-gradient(
+      to right,
+      rgb(200, 234, 254),
+      rgb(120, 127, 108),
+      rgb(2, 2, 100)
+    );
+  }
+  70% {
+    background-image: linear-gradient(
+      to right,
+      rgb(255, 234, 254),
+      rgb(70, 127, 108),
+      rgb(2, 2, 80)
+    );
+  }
+  75% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(30, 127, 108),
+      rgb(2, 2, 60)
+    );
+  }
+  85% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(255, 234, 254),
+      rgb(60, 127, 108),
+      rgb(2, 2, 60)
+    );
+  }
+  90% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(256, 234, 254),
+      rgb(80, 127, 108),
+      rgb(2, 2, 40)
+    );
+  }
+  95% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(256, 234, 254),
+      rgb(100, 127, 108),
+      rgb(2, 2, 20)
+    );
+  }
+  100% {
+    background-image: linear-gradient(
+      to right bottom,
+      rgb(256, 234, 254),
+      rgb(120, 127, 108),
+      rgb(2, 2, 1)
+    );
+  }
+}
+
 .vt323-regular {
   font-family: "VT323", monospace;
   font-weight: 400;

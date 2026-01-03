@@ -1,6 +1,11 @@
 import NavigationBar from "./NavBar.tsx";
+import exportedSignal from "../utils/game.ts";
 
-export default function Header(props: { title: string; active: string; user?: { username: string } | null }) {
+export default function Header(props: {
+  title: string;
+  active: string;
+  user?: { username: string } | null;
+}) {
   const isHome = props.active === "/";
 
   return (
@@ -8,19 +13,42 @@ export default function Header(props: { title: string; active: string; user?: { 
       <div class="navbar bg-base-100 shadow-sm">
         {!isHome && (
           <div class="flex-1 menu menu-horizontal">
+            <Home />
             <Logo />
             <GameLogo />
           </div>
         )}
-        <NavigationBar class="flex-none" active={props.active} user={props.user} />
+        <NavigationBar class="" active={props.active} user={props.user} />
       </div>
     </header>
   );
 }
 
-export function Logo() {
+function Home() {
   return (
     <a href="/" class="flex mr-3 items-center shrink-0" aria-label="Top Page">
+      <img src="/home.svg" alt="Nice house" width={40} height={40} />
+      <svg
+        preserveAspectRatio="xMinYMin"
+        class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-white dark:fill-white"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 250 75"
+      >
+        <path d="M0 44.25Q0.65 40.80 1.28 37.42Q1.90 34.05 2.55 30.70Q3.25 26.55 3.88 22.90Q4.50 19.25 5.13 15.65Q5.75 12.05 6.35 8.10L14.45 7.55Q13.60 11.05 12.78 14.85Q11.95 18.65 11.25 22.25L16.20 21.70Q16.55 19.95 16.88 18.22Q17.20 16.50 17.45 14.80Q17.70 13.15 18.08 11.42Q18.45 9.70 18.90 7.95Q20.70 7.65 22.55 7.47Q24.40 7.30 25.65 7.22Q26.90 7.15 26.90 7.15Q26.25 9.15 25.60 11.85Q24.95 14.55 24.35 17.55Q23.75 20.55 23.20 23.52Q22.65 26.50 22.20 29.05Q21.65 32.25 21.15 35.47Q20.65 38.70 20.15 42.05L12.35 42.95Q12.70 41.45 12.98 39.98Q13.25 38.50 13.50 37.10Q14.00 34.70 14.53 32.10Q15.05 29.50 15.35 27.65L10.50 28.10Q10.30 29.05 10.13 30.15Q9.95 31.25 9.70 32.50Q9.45 33.75 9.23 34.92Q9.00 36.10 8.80 37.25Q8.55 38.60 8.25 39.95Q7.95 41.30 7.70 42.65L0 44.25ZM30.70 44.35Q27.40 44.35 25.30 41.80Q23.20 39.25 23.20 34.10Q23.20 31.25 23.90 28.10Q24.60 24.95 25.85 21.90Q27.10 18.85 28.75 16.25Q31.40 12.05 34.85 9.40Q38.30 6.75 42.10 6.75Q45.10 6.75 46.73 8.27Q48.35 9.80 49 12.17Q49.65 14.55 49.65 17.10Q49.65 23.05 47.83 28.17Q46 33.30 43.10 36.85Q40.20 40.50 36.93 42.42Q33.65 44.35 30.70 44.35M33.40 36.10Q35.65 36.10 37.38 34.60Q39.10 33.10 40.30 30.77Q41.50 28.45 42.10 25.90Q42.70 23.35 42.70 21.30Q42.70 20.50 42.55 19.57Q42.40 18.65 41.90 17.95Q41.40 17.25 40.35 17.25Q38.05 17.25 36.20 18.92Q34.35 20.60 33.10 23.15Q31.85 25.75 31.25 28.25Q30.65 30.75 30.65 32.80Q30.65 33.85 31.40 34.97Q32.15 36.10 33.40 36.10ZM44.45 43.85Q46.65 37.15 48.65 30.80Q49.50 28.20 50.40 25.25Q51.30 22.30 52.20 19.32Q53.10 16.35 53.90 13.60Q54.70 10.85 55.25 8.70Q58 8.70 60.45 8.40Q61.70 8.25 63.03 8.10Q64.35 7.95 65.75 7.85L65.45 10.30Q65.35 11 65.25 11.72Q65.15 12.45 65.05 13.20Q64.95 13.95 64.80 14.72Q64.65 15.50 64.55 16.30Q64.35 17.85 63.95 20.62Q63.55 23.40 63 26.65L63.65 26.65Q65.10 22.85 66.05 20.32Q67 17.80 67.60 16.20Q68.45 13.85 69.45 11.45Q70.45 9.05 71.10 7.75Q72.30 7.65 73.98 7.42Q75.65 7.20 77.38 6.90Q79.10 6.60 80.35 6.40Q79.65 10.60 79.08 14.87Q78.50 19.15 78.08 23.02Q77.65 26.90 77.35 30Q77.05 33.10 76.80 36.13Q76.55 39.15 76.30 42.10L67.60 43.65Q67.60 43.55 67.75 41.40Q67.90 39.25 68.25 36.05Q68.60 32.85 68.95 29.97Q69.30 27.10 69.65 25.25L69.20 25.25Q67.95 29.05 66.18 33.55Q64.40 38.05 62.70 43.50Q60.95 43.55 59.70 43.63Q58.45 43.70 56.80 43.80L58.40 25.25L57.65 25.25Q57.60 25.80 57.20 27.37Q56.80 28.95 56.25 30.97Q55.70 33 55.10 35Q52.85 42.85 52.70 43.30L44.45 43.85ZM77.30 44.20L83.85 8.65L99.65 7.30Q99.30 8.40 99.05 9.55Q98.80 10.50 98.58 11.52Q98.35 12.55 98.20 13.35Q97.55 13.40 96.35 13.42Q95.15 13.45 93.90 13.47Q92.65 13.50 91.75 13.50Q90.85 13.50 90.80 13.50L89.05 22.45L91.95 22.30Q92.50 22.25 93.08 22.25Q93.65 22.25 94.20 22.25Q94.75 22.25 95.20 22.25Q95.65 22.25 95.90 22.20Q95.80 22.90 95.73 23.57Q95.65 24.25 95.55 24.95L95.10 27.70Q94.85 27.75 94.45 27.75Q94.05 27.75 93.50 27.75Q92.95 27.80 92.35 27.80Q91.75 27.80 91.20 27.85Q90.55 27.90 89.85 27.90Q89.15 27.90 88.35 27.95L86.65 37.15L93.95 36L93.45 41.70L77.30 44.20Z" />
+        vector-effect="non-scaling-stroke"
+      </svg>
+    </a>
+  );
+}
+
+function Logo() {
+  return (
+    <a
+      href="/pong"
+      class="flex mr-3 items-center shrink-0"
+      aria-label="Top Page"
+    >
       <img src="/logo.svg" alt="Paddle logo" width={40} height={40} />
       <svg
         preserveAspectRatio="xMinYMin"
@@ -39,13 +67,15 @@ export function Logo() {
   );
 }
 
-export function GameLogo() {
+function GameLogo() {
   return (
-    <a href="/game" class="flex mr-3 items-center shrink-0" aria-label="Game">
+    <a href="/web3d" class="flex mr-3 items-center shrink-0" aria-label="Game">
       <img src="/web.svg" alt="Web logo" width={40} height={40} />
       <svg
+        preserveAspectRatio="xMinYMin"
         class="h-5 ml-2.5 shrink-0 hidden sm:inline-block fill-white dark:fill-white"
         fill="none"
+        xmlns="http://www.w3.org/2000/svg"
         viewBox="-0.1890123337507248 10.394081115722656 114.6412353515625 38.93424987792969"
       >
         <path
