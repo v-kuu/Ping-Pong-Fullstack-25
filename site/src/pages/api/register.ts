@@ -1,9 +1,7 @@
 import type { APIRoute } from "astro";
 import { db, Users, eq, or } from "astro:db";
-import {
-  validatePassword,
-  validateUsername,
-} from "@/utils/validation";
+import { validatePassword, validateUsername } from "@/utils/validation";
+import { badRequest, conflict, created, internalError } from "@/utils/apiHelpers";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -15,28 +13,21 @@ export const POST: APIRoute = async ({ request }) => {
     const confirmPassword = formData.get("confirmPassword")?.toString();
 
     if (!username || !email || !password || !confirmPassword) {
-      return Response.json({ error: "All fields are required" }, { status: 400 });
+      return badRequest("All fields are required");
     }
 
     if (!validateUsername(username)) {
-      return Response.json({ error: "Invalid username format" }, { status: 400 });
+      return badRequest("Invalid username format");
     }
 
     if (password !== confirmPassword) {
-      return Response.json({ error: "Passwords do not match" }, { status: 400 });
+      return badRequest("Passwords do not match");
     }
 
     if (!validatePassword(password)) {
-      return Response.json(
-        {
-          error:
-            "Password must be at least 12 characters and strong enough",
-        },
-        { status: 400 },
-      );
+      return badRequest("Password must be at least 12 characters and strong enough");
     }
 
-    // Database Check
     const existingUser = await db
       .select()
       .from(Users)
@@ -44,7 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
       .limit(1);
 
     if (existingUser.length > 0) {
-      return Response.json({ error: "Username or email already taken" }, { status: 409 });
+      return conflict("Username or email already taken");
     }
 
     const hashedPassword = await Bun.password.hash(password);
@@ -57,11 +48,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     await db.insert(Users).values(newUser);
 
-    return Response.json(
-      { success: true, message: "Account created successfully" },
-      { status: 201 },
-    );
+    return created({ success: true, message: "Account created successfully" });
   } catch {
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return internalError();
   }
 };

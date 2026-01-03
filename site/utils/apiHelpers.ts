@@ -10,6 +10,10 @@ export function notFound(message = "Not found"): Response {
   return Response.json({ error: message }, { status: 404 });
 }
 
+export function conflict(message = "Conflict"): Response {
+  return Response.json({ error: message }, { status: 409 });
+}
+
 export function badRequest(message = "Bad request"): Response {
   return Response.json({ error: message }, { status: 400 });
 }

@@ -6,3 +6,5 @@ dist/
 *.wasm
 !web3d/src/*.c
 !web3d/web3d.h
+public/avatars/*
+!public/avatars/.gitkeep

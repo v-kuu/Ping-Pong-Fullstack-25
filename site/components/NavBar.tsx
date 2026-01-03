@@ -1,6 +1,7 @@
 import ThemeToggle from "@/islands/ThemeToggle.tsx";
 import { UserCircle } from "./Icons.tsx";
 import clsx from "clsx";
+import type { ComponentChildren } from "preact";
 
 interface NavItem {
   name: string;
@@ -21,6 +22,7 @@ export default function NavigationBar(props: {
   active: string;
   class?: string;
   user?: { username: string } | null;
+  avatarSlot?: ComponentChildren;
 }) {
   const items = props.user ? loggedInItems : loggedOutItems;
 
@@ -30,9 +32,11 @@ export default function NavigationBar(props: {
       <div class="dropdown dropdown-end">
         <div tabIndex={0} role="button" class="btn btn-ghost btn-circle avatar">
           {props.user ? (
-            <div class="w-10 rounded-full overflow-hidden">
-              <img src="/avatar.png" alt="Avatar" />
-            </div>
+            props.avatarSlot || (
+              <div class="w-10 h-10 rounded-full overflow-hidden">
+                <img src="/avatar.png" alt="Avatar" class="w-full h-full object-cover" />
+              </div>
+            )
           ) : (
             <div class="icon w-6 h-6">
               <UserCircle />

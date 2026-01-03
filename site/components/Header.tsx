@@ -1,6 +1,12 @@
 import NavigationBar from "./NavBar.tsx";
+import type { ComponentChildren } from "preact";
 
-export default function Header(props: { title: string; active: string; user?: { username: string } | null }) {
+export default function Header(props: { 
+  title: string; 
+  active: string; 
+  user?: { username: string } | null;
+  children?: ComponentChildren;
+}) {
   const isHome = props.active === "/";
 
   return (
@@ -12,7 +18,12 @@ export default function Header(props: { title: string; active: string; user?: { 
             <GameLogo />
           </div>
         )}
-        <NavigationBar class="flex-none" active={props.active} user={props.user} />
+        <NavigationBar 
+          class="flex-none" 
+          active={props.active} 
+          user={props.user} 
+          avatarSlot={props.children} 
+        />
       </div>
     </header>
   );
