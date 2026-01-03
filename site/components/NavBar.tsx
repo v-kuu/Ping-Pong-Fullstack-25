@@ -1,6 +1,3 @@
-import ThemeToggle from "@/islands/ThemeToggle.tsx";
-import { UserCircle } from "./Icons.tsx";
-import clsx from "clsx";
 import type { ComponentChildren } from "preact";
 
 interface NavItem {
@@ -20,52 +17,38 @@ const loggedInItems: NavItem[] = [
 
 export default function NavigationBar(props: {
   active: string;
-  class?: string;
   user?: { username: string } | null;
-  avatarSlot?: ComponentChildren;
+  children?: ComponentChildren;
 }) {
   const items = props.user ? loggedInItems : loggedOutItems;
 
   return (
-    <nav class={clsx("flex items-center gap-2", props.class)}>
-      <ThemeToggle />
-      <div class="dropdown dropdown-end">
-        <div tabIndex={0} role="button" class="btn btn-ghost btn-circle avatar">
-          {props.user ? (
-            props.avatarSlot || (
-              <div class="w-10 h-10 rounded-full overflow-hidden">
-                <img src="/avatar.png" alt="Avatar" class="w-full h-full object-cover" />
-              </div>
-            )
-          ) : (
-            <div class="icon w-6 h-6">
-              <UserCircle />
-            </div>
-          )}
-        </div>
-        <div class="dropdown-end dropdown-content mt-3">
-          <ul
-            tabIndex={-1}
-            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
-          >
-            {items.map((item) => (
-              <li
-                key={item.href}
-                aria-current={props.active === item.href ? "page" : undefined}
-              >
-                <a
-                  href={item.href}
-                  class={`p-1 sm:p-2 ${
-                    props.active === item.href ? "font-bold" : ""
-                  } hover:underline aria-[current]:font-bold`}
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+    <div class="dropdown dropdown-end">
+      <div tabIndex={0} role="button" class="btn btn-ghost btn-circle avatar">
+        {props.children}
       </div>
-    </nav>
+      <div class="dropdown-end dropdown-content mt-3">
+        <ul
+          tabIndex={-1}
+          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+        >
+          {items.map((item) => (
+            <li
+              key={item.href}
+              aria-current={props.active === item.href ? "page" : undefined}
+            >
+              <a
+                href={item.href}
+                class={`p-1 sm:p-2 ${
+                  props.active === item.href ? "font-bold" : ""
+                } hover:underline aria-[current]:font-bold`}
+              >
+                {item.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
