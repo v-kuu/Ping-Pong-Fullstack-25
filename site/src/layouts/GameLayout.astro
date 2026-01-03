@@ -32,15 +32,5 @@ const user = Astro.locals.user ?? null;
     <main class={className}>
       <slot />
     </main>
-    <script>
-      const HEARTBEAT_INTERVAL = 10000;
-      const sendHeartbeat = async () => {
-        try {
-          await fetch("/api/heartbeat", { method: "POST", credentials: "same-origin" });
-        } catch (e) {}
-      };
-      sendHeartbeat();
-      setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
-    </script>
   </body>
 </html>

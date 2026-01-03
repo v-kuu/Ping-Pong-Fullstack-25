@@ -3,20 +3,22 @@ import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
 import type { MatchData, UserProfileData } from "@/utils/types";
 import { UserProfileCard } from "../components/UserProfileCard";
-import { UpdatePassword } from "./Password.tsx";
+import { AccountSettings } from "./AccountSettings.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { FriendsList } from "./Friends";
 
-type Tab = "info" | "pass" | "avatar" | "friends";
+type Tab = "info" | "account" | "avatar" | "friends";
+
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "info";
   const saved = sessionStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "pass", "avatar", "friends"].includes(saved) ? saved : "info";
+  return saved && ["info", "account", "avatar", "friends"].includes(saved) ? saved : "info";
 };
+
 const activeTab = signal<Tab>(getInitialTab());
 
 const showInfo = computed(() => activeTab.value === "info");
-const showPass = computed(() => activeTab.value === "pass");
+const showAccount = computed(() => activeTab.value === "account");
 const showAvatar = computed(() => activeTab.value === "avatar");
 const showFriends = computed(() => activeTab.value === "friends");
 
@@ -42,7 +44,6 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
     setMounted(true);
   }, []);
 
-  // Pre-load avatar to check if custom avatar exists
   useEffect(() => {
     if (!userData?.username) return;
     
@@ -57,7 +58,6 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
     img.src = `${customAvatarUrl}?t=${Date.now()}`;
   }, [userData?.username]);
 
-  // Listen for avatar updates
   useEffect(() => {
     if (!userData?.username) return;
     
@@ -126,30 +126,43 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                   {loading ? (
                     <div class="text-center p-4">Loading...</div>
                   ) : userData ? (
-                    <UserProfileCard
-                      user={userData}
-                      matches={userMatches}
-                      title="User Information"
-                      avatarUrl={avatarUrl}
-                    />
+                    <div class={mounted ? "lg:-ml-64" : ""}>
+                      <UserProfileCard
+                        user={userData}
+                        matches={userMatches}
+                        title="User Information"
+                        avatarUrl={avatarUrl}
+                      />
+                    </div>
                   ) : (
                     <p>Failed to load user information</p>
                   )}
                 </Show>
 
-                <Show when={showPass}>
-                  <UpdatePassword />
+                <Show when={showAccount}>
+                  {userData && (
+                    <div class={mounted ? "lg:-ml-64" : ""}>
+                      <AccountSettings
+                        username={userData.username}
+                        email={userData.email}
+                      />
+                    </div>
+                  )}
                 </Show>
                 <Show when={showAvatar}>
                   {userData && (
-                    <ChangeAvatar
-                      username={userData.username}
-                    />
+                    <div class={mounted ? "lg:-ml-64" : ""}>
+                      <ChangeAvatar
+                        username={userData.username}
+                      />
+                    </div>
                   )}
                 </Show>
 
                 <Show when={showFriends}>
-                  <FriendsList />
+                  <div class={mounted ? "lg:-ml-64" : ""}>
+                    <FriendsList />
+                  </div>
                 </Show>
               </div>
             </div>
@@ -175,10 +188,10 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
             <li>
               <button
                 type="button"
-                onClick={() => (activeTab.value = "pass")}
-                class={activeTab.value === "pass" ? "active" : ""}
+                onClick={() => (activeTab.value = "account")}
+                class={activeTab.value === "account" ? "active" : ""}
               >
-                Password
+                Account Settings
               </button>
             </li>
             <li>

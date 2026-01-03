@@ -10,6 +10,10 @@ export function validateUsername(username: string): boolean {
   return /^[A-Za-z][A-Za-z0-9-]{2,29}$/.test(username);
 }
 
+export function validateEmail(email: string): boolean {
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email);
+}
+
 export function validatePasswordMatch(e: Event) {
   const confirmPasswordInput = document.getElementById(
     "confirmPassword",

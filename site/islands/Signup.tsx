@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { validatePassword } from "../utils/validation";
+import { validatePassword, validateEmail } from "../utils/validation";
 import { SuccessCard } from "../components/SuccessCard";
 
 export function Signup() {
@@ -16,6 +16,11 @@ export function Signup() {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setServerError(null);
+
+    if (!validateEmail(email)) {
+      setServerError("Invalid email format.");
+      return;
+    }
 
     if (!validatePassword(password) || password !== confirm) {
       setServerError(
