@@ -6,10 +6,11 @@ import "@/src/styles.css";
 interface Props {
   title: string;
   active: string;
+  favicon: string;
   class?: string;
 }
 
-const { title, active, class: className } = Astro.props;
+const { title, active, favicon, class: className } = Astro.props;
 const user = Astro.locals.user ?? null;
 ---
 
@@ -24,7 +25,7 @@ const user = Astro.locals.user ?? null;
     <link rel="preload" href="/logo.svg" as="image" />
     <link rel="preload" href="/web.svg" as="image" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" />
+    <link rel="icon" href={favicon} />
     <title>{title}</title>
   </head>
   <body>
