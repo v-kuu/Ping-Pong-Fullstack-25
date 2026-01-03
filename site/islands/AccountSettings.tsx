@@ -155,6 +155,8 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
       <form
         class="flex flex-col gap-4 rounded-box bg-base-200 border border-base-content/20 p-6"
         onSubmit={handleSubmit}
+        action="/api/account"
+        method="POST"
       >
         <h2 class="text-2xl font-bold">Account Settings</h2>
 
