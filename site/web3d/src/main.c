@@ -105,6 +105,9 @@ static Texture texture_wall = { .data = (uint8_t[]) {
 static Texture texture_gems = { .data = (uint8_t[]) {
     #embed "../assets/gems.gif"
 }};
+static Texture texture_barrier = { .data = (uint8_t[]) {
+    #embed "../assets/barrier.gif"
+}};
 static Texture texture_gem[GEM_TYPES];
 
 // Fonts.
@@ -343,6 +346,7 @@ void init(unsigned int rng)
     texture_load(&texture_floor);
     texture_load(&texture_wall);
     texture_load(&texture_gems);
+    texture_load(&texture_barrier);
     font_load(&font_tiny);
     font_load(&font_big);
     for (int i = 0; i < GEM_TYPES; i++)
@@ -430,7 +434,8 @@ static void draw_walls(Column* col)
         const int y1_clamped = max(0, min(y1, FRAME_H));
         const float hit_x = col->px + col->dx * depth;
         const float hit_y = col->py + col->dy * depth;
-        const bool bounds = hit_x > 1e-6f && hit_y > 1e-6f && hit_x < MAP_W && hit_y < MAP_H;
+        const float eps = 1e-5f;
+        const bool bounds = hit_x > eps && hit_y > eps && hit_x < MAP_W - eps && hit_y < MAP_H - eps;
 
         // Draw walls.
         for (int y = y0_clamped; y < y1_clamped; y++) {
@@ -440,7 +445,8 @@ static void draw_walls(Column* col)
             float edge_y = abs(fract(hit_y) - 0.5f);
             float u = fract(edge_x < edge_y ? hit_x : hit_y);
             float v = fract(4.0f * (y - y0) / (y1 - y0));
-            col->color[y] = texture_sample(&texture_wall, u, v);
+            Texture* tex = bounds ? &texture_wall : &texture_barrier;
+            col->color[y] = texture_sample(tex, u, v);
             col->light[y] = depth;
             col->depth[y] = depth;
         }
