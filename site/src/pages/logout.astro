@@ -10,6 +10,7 @@ if (user) {
   if (sessionId) {
     await db.delete(Sessions).where(eq(Sessions.id, sessionId));
     Astro.cookies.delete("session");
+    Astro.locals.user = null;
   }
 }
 ---

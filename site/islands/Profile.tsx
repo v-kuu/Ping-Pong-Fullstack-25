@@ -2,7 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
 import type { MatchData, UserProfileData } from "@/utils/types";
-import { UserProfileCard } from "./UserProfileCard";
+import { UserProfileCard } from "../components/UserProfileCard";
 import { UpdatePassword } from "./Password.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { FriendsList } from "./Friends";
@@ -10,7 +10,7 @@ import { FriendsList } from "./Friends";
 type Tab = "info" | "pass" | "avatar" | "friends";
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "info";
-  const saved = localStorage.getItem("profileTab") as Tab | null;
+  const saved = sessionStorage.getItem("profileTab") as Tab | null;
   return saved && ["info", "pass", "avatar", "friends"].includes(saved) ? saved : "info";
 };
 const activeTab = signal<Tab>(getInitialTab());
@@ -22,7 +22,7 @@ const showFriends = computed(() => activeTab.value === "friends");
 
 if (typeof window !== "undefined") {
   effect(() => {
-    localStorage.setItem("profileTab", activeTab.value);
+    sessionStorage.setItem("profileTab", activeTab.value);
   });
 }
 
@@ -33,15 +33,48 @@ interface ProfileMenuProps {
 
 export function ProfileMenu({ user, matches }: ProfileMenuProps) {
   const [mounted, setMounted] = useState(false);
-  const [userData, setUserData] = useState<UserProfileData | null>(
-    user ?? null,
-  );
+  const [userData, setUserData] = useState<UserProfileData | null>(user);
   const [userMatches, setUserMatches] = useState<MatchData[]>(matches ?? []);
   const [loading, setLoading] = useState(!user);
+  const [avatarUrl, setAvatarUrl] = useState("/avatar.png");
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Pre-load avatar to check if custom avatar exists
+  useEffect(() => {
+    if (!userData?.username) return;
+    
+    const customAvatarUrl = `/avatars/${userData.username}.png`;
+    const img = new Image();
+    img.onload = () => {
+      setAvatarUrl(`${customAvatarUrl}?t=${Date.now()}`);
+    };
+    img.onerror = () => {
+      setAvatarUrl("/avatar.png");
+    };
+    img.src = `${customAvatarUrl}?t=${Date.now()}`;
+  }, [userData?.username]);
+
+  // Listen for avatar updates
+  useEffect(() => {
+    if (!userData?.username) return;
+    
+    const handleAvatarUpdate = () => {
+      const customAvatarUrl = `/avatars/${userData.username}.png`;
+      const img = new Image();
+      img.onload = () => {
+        setAvatarUrl(`${customAvatarUrl}?t=${Date.now()}`);
+      };
+      img.onerror = () => {
+        setAvatarUrl("/avatar.png");
+      };
+      img.src = `${customAvatarUrl}?t=${Date.now()}`;
+    };
+    window.addEventListener("avatar-updated", handleAvatarUpdate);
+    return () => window.removeEventListener("avatar-updated", handleAvatarUpdate);
+  }, [userData?.username]);
 
   useEffect(() => {
     if (user) {
@@ -97,6 +130,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                       user={userData}
                       matches={userMatches}
                       title="User Information"
+                      avatarUrl={avatarUrl}
                     />
                   ) : (
                     <p>Failed to load user information</p>
@@ -107,7 +141,11 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                   <UpdatePassword />
                 </Show>
                 <Show when={showAvatar}>
-                  <ChangeAvatar />
+                  {userData && (
+                    <ChangeAvatar
+                      username={userData.username}
+                    />
+                  )}
                 </Show>
 
                 <Show when={showFriends}>

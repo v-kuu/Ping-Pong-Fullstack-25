@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { db, Sessions, Users, eq } from "astro:db";
 import { validateUsername } from "@/utils/validation";
+import { badRequest, unauthorized, success, internalError } from "@/utils/apiHelpers";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -10,17 +11,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const password = formData.get("password")?.toString();
 
     if (!username || !password) {
-      return Response.json(
-        { error: "Username and password are required" },
-        { status: 400 },
-      );
+      return badRequest("Username and password are required");
     }
 
     if (!validateUsername(username)) {
-      return Response.json(
-        { error: "Invalid username format" },
-        { status: 400 },
-      );
+      return badRequest("Invalid username format");
     }
 
     const user = await db
@@ -34,10 +29,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .limit(1);
 
     if (user.length === 0) {
-      return Response.json(
-        { error: "Invalid username or password" },
-        { status: 401 },
-      );
+      return unauthorized("Invalid username or password");
     }
 
     const foundUser = user[0];
@@ -48,10 +40,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     );
 
     if (!isValidPassword) {
-      return Response.json(
-        { error: "Invalid username or password" },
-        { status: 401 },
-      );
+      return unauthorized("Invalid username or password");
     }
 
     const sessionId = crypto.randomUUID();
@@ -64,11 +53,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       path: "/",
     });
 
-    return Response.json(
-      { success: true, message: "Login successful" },
-      { status: 200 },
-    );
+    return success({ success: true, message: "Login successful" });
   } catch (error) {
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return internalError();
   }
 };

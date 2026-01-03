@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { Check, XMark } from "../components/Icons";
+import { UserAvatar } from "../components/UserAvatar";
 
 interface Friend {
   id: number;
@@ -177,7 +178,7 @@ export function FriendsList() {
                 class="flex items-center justify-between p-3 bg-base-300 rounded-lg"
               >
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-base-100 bg-cover bg-center bg-[url('/avatar.png')]" />
+                  <UserAvatar username={request.username} class="w-10 h-10" />
                   <div>
                     <a
                       href={`/profile/${request.username}`}
@@ -221,7 +222,7 @@ export function FriendsList() {
                 class="flex items-center justify-between p-3 bg-base-300 rounded-lg"
               >
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-full bg-base-100 bg-cover bg-center bg-[url('/avatar.png')]" />
+                  <UserAvatar username={friend.username} />
                   <div>
                     <a
                       href={`/profile/${friend.username}`}
