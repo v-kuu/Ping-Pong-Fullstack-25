@@ -12,5 +12,6 @@ export interface MatchData {
 
 export interface UserProfileData {
   username: string;
+  email: string;
   elo: number;
 }

@@ -50,6 +50,7 @@ export function UserProfileCard({
             )}
             <div>
               <h3 class="text-xl font-bold">{user.username}</h3>
+              <p class="text-sm opacity-70">{user.email}</p>
             </div>
           </div>
           {showAddFriend && onAddFriend && (
