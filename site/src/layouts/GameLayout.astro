@@ -1,6 +1,5 @@
 ---
 import Header from "@/components/Header.tsx";
-import Footer from "@/islands/Footer.tsx";
 import "@/src/styles.css";
 
 interface Props {
@@ -14,7 +13,7 @@ const { title, active, favicon, class: className } = Astro.props;
 const user = Astro.locals.user ?? null;
 ---
 
-<html lang="en" data-theme="synthwave">
+<html lang="en" data-theme="synthwave" class="h-full overflow-hidden">
   <head>
     <script is:inline>
       const savedTheme = localStorage.getItem("theme");
@@ -24,15 +23,24 @@ const user = Astro.locals.user ?? null;
     <meta charset="UTF-8" />
     <link rel="preload" href="/logo.svg" as="image" />
     <link rel="preload" href="/web.svg" as="image" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width" />
     <link rel="icon" href={favicon} />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="h-full m-0">
     <Header active={active} title="ft_transcendence" user={user} client:load />
     <main class={className}>
       <slot />
     </main>
-    <Footer active={active} />
+    <script>
+      const HEARTBEAT_INTERVAL = 10000;
+      const sendHeartbeat = async () => {
+        try {
+          await fetch("/api/heartbeat", { method: "POST", credentials: "same-origin" });
+        } catch (e) {}
+      };
+      sendHeartbeat();
+      setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+    </script>
   </body>
 </html>

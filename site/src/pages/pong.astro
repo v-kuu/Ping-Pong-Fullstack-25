@@ -1,24 +1,8 @@
 ---
-import Header from "@/components/Header";
-import { Game } from "@/islands/Game";
-import "@/src/styles.css";
-
-const { user = null } = Astro.locals;
+import GameLayout from "@/src/layouts/GameLayout.astro";
+import { Game } from "@/islands/Game.tsx";
 ---
 
-<html lang="en" data-theme="dark" class="h-full overflow-hidden">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="preload" href="/logo.svg" as="image" />
-    <link rel="preload" href="/web.svg" as="image" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" />
-    <title>P O N G</title>
-  </head>
-  <body class="h-full m-0">
-    <Header active="/game" title="ft_transcendence" {user} />
-    <main class="flex flex-col h-[calc(100vh-64px)]">
-      <Game client:load />
-    </main>
-  </body>
-</html>
+<GameLayout title="P O N G" active="" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text>" class="px-4 py-8 mx-auto fresh-gradient2">
+  <Game client:load />
+</GameLayout>

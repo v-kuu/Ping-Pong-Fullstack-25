@@ -16,6 +16,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     if (session) {
       locals.user = session.Users;
+
+      // Middleware updates lastSeen on every authenticated request.
+      // This eliminates the need for client-side heartbeat polling.
+      // To revert to explicit heartbeat approach:
+      // 1. Remove this update logic
+      // 2. Restore heartbeat client script in Base.astro
+      // 3. Keep /api/heartbeat endpoint (already exists)
+      await db
+        .update(Users)
+        .set({ lastSeen: new Date() })
+        .where(eq(Users.id, session.Users.id));
     } else {
       locals.user = null;
     }

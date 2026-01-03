@@ -9,6 +9,7 @@ const Users = defineTable({
         createdAt: column.date({ default: NOW }),
         updatedAt: column.date({ default: NOW }),
         elo: column.number({ default: 1000 }),
+        lastSeen: column.date({ optional: true }),
     }
 });
 
@@ -32,6 +33,15 @@ const Sessions = defineTable({
     }
 });
 
+const Friendships = defineTable({
+    columns: {
+        id: column.number({ primaryKey: true, autoIncrement: true }),
+        userId: column.number({ references: () => Users.columns.id }),
+        friendId: column.number({ references: () => Users.columns.id }),
+        status: column.text(),
+    }
+});
+
 export default defineDb({
-    tables: { Users, Matches, Sessions }
+    tables: { Users, Matches, Sessions, Friendships }
 });

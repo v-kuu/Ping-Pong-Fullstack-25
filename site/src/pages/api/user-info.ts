@@ -1,16 +1,13 @@
 import type { APIRoute } from "astro";
-import { getSessionUser } from "@/utils/session";
+import { unauthorized, success } from "@/utils/apiHelpers";
 
-export const GET: APIRoute = async ({ cookies }) => {
-  const user = await getSessionUser(cookies);
-  
-  if (!user) {
-    return new Response(JSON.stringify({ error: "Not logged in" }), { status: 401 });
+export const GET: APIRoute = async ({ locals }) => {
+  if (!locals.user) {
+    return unauthorized();
   }
   
-  return Response.json({
-    username: user.username,
-    email: user.email,
-    elo: user.elo,
+  return success({
+    username: locals.user.username,
+    elo: locals.user.elo,
   });
 };

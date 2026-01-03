@@ -1,3 +1,4 @@
+import ThemeToggle from "@/islands/ThemeToggle.tsx";
 import { UserCircle } from "./Icons.tsx";
 import clsx from "clsx";
 
@@ -24,7 +25,8 @@ export default function NavigationBar(props: {
   const items = props.user ? loggedInItems : loggedOutItems;
 
   return (
-    <nav class={clsx("flex", props.class)}>
+    <nav class={clsx("flex items-center gap-2", props.class)}>
+      <ThemeToggle />
       <div class="dropdown dropdown-end">
         <div tabIndex={0} role="button" class="btn btn-ghost btn-circle avatar">
           {props.user ? (

@@ -16,8 +16,9 @@ export function UpdatePassword() {
   }
 
   return (
-    <div>
-      <h2>Change your password</h2>
+    <div class="w-full max-w-2xl">
+      <div class="card bg-base-200 p-6">
+        <h2 class="text-2xl font-bold mb-6">Change your password</h2>
       <form
         method="POST"
         action="/update"
@@ -107,6 +108,7 @@ export function UpdatePassword() {
           Change Password
         </button>
       </form>
+      </div>
     </div>
   );
 }

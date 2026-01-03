@@ -1,10 +1,9 @@
 ---
 import Base from "@/src/layouts/Base.astro";
 import { ProfileMenu } from "@/islands/Profile.tsx";
-import { getSessionUser } from "@/utils/session";
 import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
 
-const user = await getSessionUser(Astro.cookies);
+const user = Astro.locals.user;
 if (!user) {
   return Astro.redirect("/login");
 }
@@ -26,7 +25,7 @@ const userMatches = await db
   .orderBy(sql`${Matches.startedAt} DESC`)
   .limit(10);
 
-const playerIds = userMatches.length > 0 
+const playerIds = userMatches.length > 0
   ? Array.from(new Set(userMatches.flatMap(m => [m.player1Id, m.player2Id])))
   : [];
 
@@ -53,6 +52,6 @@ const matches = userMatches.map(match => {
 });
 ---
 
-<Base title="Profile" active="/profile">
+<Base title="Profile" active="/profile" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
   <ProfileMenu user={user} matches={matches} client:load />
 </Base>

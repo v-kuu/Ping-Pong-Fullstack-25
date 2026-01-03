@@ -1,8 +1,8 @@
 ---
-import Base from "@/src/layouts/Base.astro";
+import GameLayout from "@/src/layouts/GameLayout.astro";
 import { Home } from "@/islands/Home.tsx";
 ---
 
-<Base title="Welcome" active="" class="px-4 py-8 mx-auto fresh-gradient2 min-h-screen">
+<GameLayout title="P O N G" active="" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text>" class="px-4 py-8 mx-auto fresh-gradient2">
   <Home client:load />
-</Base>
+</GameLayout>
