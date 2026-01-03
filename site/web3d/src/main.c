@@ -1,20 +1,28 @@
 #include "web3d.h"
 
+// Dimensions of the frame buffer.
 #define FRAME_W 360
 #define FRAME_H 200
 
+// Dimensions of the tile map.
 #define MAP_W 29
 #define MAP_H 29
 
 #define FOV 1.1f
 #define WALL_HEIGHT 300
-#define HITBOX_SIZE 0.9f
 
+// Layout of font images.
 #define FONT_GLYPH_MIN ' '
 #define FONT_GLYPH_MAX '~'
 #define FONT_GLYPH_COUNT (FONT_GLYPH_MAX - FONT_GLYPH_MIN + 1)
 #define FONT_GLYPHS_PER_ROW 16
 #define FONT_GLYPHS_PER_COL 6
+
+// How close the player must get to a gem to collect it.
+#define PLAYER_REACH 1.5f
+
+// The physical size of the player when testing for wall collisions.
+#define PLAYER_HITBOX_SIZE 0.9f
 
 enum {
     KEY_FORWARD,
@@ -38,7 +46,7 @@ static bool key_down[KEY_MAX];
 static bool key_held[KEY_MAX];
 
 // Player state.
-static bool player_is_ghost = true;
+static bool player_is_ghost = false;
 static float player_x = 0.5f;
 static float player_y = 0.5f;
 static float player_angle;
@@ -73,7 +81,7 @@ typedef struct {
     float phase;    // Random animation phase.
 } Gem;
 static Gem gem_array[MAX_GEMS];
-static int gem_count = MAX_GEMS;
+static int gem_count;
 
 // Particles.
 #define MAX_PARTICLES 100
@@ -93,9 +101,6 @@ static Texture texture_floor = { .data = (uint8_t[]) {
 }};
 static Texture texture_wall = { .data = (uint8_t[]) {
     #embed "../assets/wall.gif"
-}};
-static Texture texture_apple = { .data = (uint8_t[]) {
-    #embed "../assets/apple.gif"
 }};
 static Texture texture_gems = { .data = (uint8_t[]) {
     #embed "../assets/gems.gif"
@@ -121,11 +126,23 @@ static bool is_out_of_bounds(int x, int y)
     return x < 0 || x >= MAP_W || y < 0 || y >= MAP_H;
 }
 
+static int map_get(int x, int y)
+{
+    return is_out_of_bounds(x, y) ? 0 : map[x + y * MAP_W];
+}
+
+static void map_set(int x, int y, char value)
+{
+    if (!is_out_of_bounds(x, y))
+        map[x + y * MAP_W] = value;
+}
+
 // Check if a map tile is a wall. Coordinates outside of the map are treated as
 // walls.
 static bool is_wall(int x, int y)
 {
-    return is_out_of_bounds(x, y) || map[x + y * MAP_W] == '#';
+    int value = map_get(x, y);
+    return !value || value == '#';
 }
 
 static float raycast(float ax, float ay, float bx, float by, float t)
@@ -296,6 +313,7 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
     }
 }
 
+// Get the average color of a texture, not counting transparent pixels.
 static uint32_t average_color(Texture* tex)
 {
     uint32_t r = 0;
@@ -324,7 +342,6 @@ void init(unsigned int rng)
     // Load assets.
     texture_load(&texture_floor);
     texture_load(&texture_wall);
-    texture_load(&texture_apple);
     texture_load(&texture_gems);
     font_load(&font_tiny);
     font_load(&font_big);
@@ -338,14 +355,20 @@ void init(unsigned int rng)
         rng = rng * 1103515245u + 12345u;
     }
 
-    // Place gems on the map.
-    for (int i = 0; i < gem_count; i++) {
-        Gem* gem = &gem_array[i];
-        gem->x = random_float(0.5f, MAP_W - 0.5f);
-        gem->y = random_float(0.5f, MAP_W - 0.5f);
-        gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
-        gem->phase = random_float(0.0f, TAU);
-        gem->color = average_color(gem->tex);
+    // Place gems on unoccupied map tiles.
+    while (gem_count < MAX_GEMS) {
+        int x = random_int(0, MAP_W - 1);
+        int y = random_int(0, MAP_H - 1);
+        int tile = map_get(x, y);
+        if (tile == ' ') {
+            map_set(x, y, '*');
+            Gem* gem = &gem_array[gem_count++];
+            gem->x = x + 0.5f;
+            gem->y = y + 0.5f;
+            gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
+            gem->phase = random_float(0.0f, TAU);
+            gem->color = average_color(gem->tex);
+        }
     }
 }
 
@@ -355,7 +378,7 @@ static uint32_t apply_fog(uint32_t color, float amount, int x, int y)
     amount = 1.0f - max(0.0f, min(1.0f, 9.0f / (amount + 9.0f)));
     amount += dither(x, y) * 4.0f / 255.0f;
     uint32_t r = min(255.0f, lerp((color >>  0) & 0xff, 255, amount));
-    uint32_t g = min(255.0f, lerp((color >>  8) & 0xff, 205, amount));
+    uint32_t g = min(255.0f, lerp((color >>  8) & 0xff, 215, amount));
     uint32_t b = min(255.0f, lerp((color >> 16) & 0xff, 185, amount));
     return (r << 0) | (g << 8) | (b << 16) | (0xff << 24);
 }
@@ -612,7 +635,7 @@ void* draw(double timestamp)
 
     // Do collision detection against walls.
     if (!player_is_ghost) {
-        const float half = HITBOX_SIZE * 0.5f;
+        const float half = PLAYER_HITBOX_SIZE * 0.5f;
         const int ix = floor(player_x);
         const int iy = floor(player_y);
         for (int ty = iy - 1; ty <= iy + 1; ty++)
@@ -634,7 +657,6 @@ void* draw(double timestamp)
 
     // Collect gems when touching them.
     if (!player_is_ghost) {
-#define PLAYER_REACH 1.0f
         for (int i = 0; i < gem_count; i++) {
             Gem* gem = &gem_array[i];
             float dx = player_x - gem->x;
@@ -690,7 +712,7 @@ void* draw(double timestamp)
 
     // Draw the gem count.
     char text[16];
-    char* next = number_to_string(text, MAX_GEMS - gem_count);
+    number_to_string(text, MAX_GEMS - gem_count);
     int x = 23;
     int y = 182 + 10.0f * score_shake * sinf(timestamp * 0.08f);
     score_shake = max(0.0f, score_shake - dt);
