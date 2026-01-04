@@ -2,6 +2,7 @@
 import Base from "@/src/layouts/Base.astro";
 import { ProfileMenu } from "@/islands/Profile.tsx";
 import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
+import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
 
 const user = Astro.locals.user;
 if (!user) {
@@ -25,31 +26,13 @@ const userMatches = await db
   .orderBy(sql`${Matches.startedAt} DESC`)
   .limit(10);
 
-const playerIds = userMatches.length > 0
-  ? Array.from(new Set(userMatches.flatMap(m => [m.player1Id, m.player2Id])))
-  : [];
+const playerIds = getPlayerIdsFromMatches(userMatches);
 
 const allPlayers = playerIds.length > 0
   ? await db.select().from(Users).where(inArray(Users.id, playerIds))
   : [];
 
-const playerMap = new Map(allPlayers.map(p => [p.id, p]));
-
-const matches = userMatches.map(match => {
-  const opponentId = match.player1Id === userId ? match.player2Id : match.player1Id;
-  const opponent = playerMap.get(opponentId);
-  return {
-    id: match.id,
-    game: match.game,
-    player1Id: match.player1Id,
-    player2Id: match.player2Id,
-    winnerId: match.winnerId,
-    startedAt: match.startedAt?.toISOString() || "",
-    score: match.score,
-    opponentName: opponent?.username || "Unknown",
-    won: match.winnerId === userId,
-  };
-});
+const matches = processMatchData(userMatches, userId, allPlayers);
 ---
 
 <Base title="Profile" active="/profile" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">

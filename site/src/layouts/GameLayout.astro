@@ -1,5 +1,5 @@
 ---
-import Header from "@/components/Header.tsx";
+import Header from "@/components/Header.astro";
 import "@/src/styles.css";
 
 interface Props {
@@ -28,19 +28,9 @@ const user = Astro.locals.user ?? null;
     <title>{title}</title>
   </head>
   <body class="h-full m-0">
-    <Header active={active} title="ft_transcendence" user={user} client:load />
+    <Header active={active} user={user} />
     <main class={className}>
       <slot />
     </main>
-    <script>
-      const HEARTBEAT_INTERVAL = 10000;
-      const sendHeartbeat = async () => {
-        try {
-          await fetch("/api/heartbeat", { method: "POST", credentials: "same-origin" });
-        } catch (e) {}
-      };
-      sendHeartbeat();
-      setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
-    </script>
   </body>
 </html>

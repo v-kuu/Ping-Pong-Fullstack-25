@@ -1,12 +1,12 @@
-import NothingBurger from "./NothingBurger.tsx";
-import { Game } from "./Game.tsx";
-import { Web3D } from "./Web3D.tsx";
 import { Button } from "../components/Button.tsx";
 
 export function Home() {
   return (
     <div class="object-fill flex flex-col items-center justify-center">
-      <NothingBurger />
+      <div class="prose max-w-none items-center">
+        <h1>Hi ya there</h1>
+        <p>Welcome, we have games.</p>
+      </div>
       <br />
       <a href="/pong">
         <Button>Play PONG</Button>

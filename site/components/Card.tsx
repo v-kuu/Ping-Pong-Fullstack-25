@@ -1,5 +1,6 @@
 import type { MatchData, UserProfileData } from "@/utils/types";
 import { IconPlus, Check, Clock } from "../components/Icons";
+import { UserAvatar } from "./Avatar.tsx";
 
 interface SuccessCardProps {
   title: string;
@@ -16,6 +17,9 @@ interface UserProfileCardProps {
   onAddFriend?: () => void;
   title?: string;
   maxWidth?: string;
+  avatarKey?: number;
+  /** Pre-resolved avatar URL (bypasses UserAvatar's onError logic) */
+  avatarUrl?: string;
 }
 
 export function SuccessCard({
@@ -48,6 +52,8 @@ export function UserProfileCard({
   onAddFriend,
   title = "User Information",
   maxWidth = "max-w-4xl",
+  avatarKey,
+  avatarUrl,
 }: UserProfileCardProps) {
   return (
     <div class={`w-full ${maxWidth}`}>
@@ -56,9 +62,24 @@ export function UserProfileCard({
 
         <div class="flex items-center justify-between gap-4 mb-6">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 rounded-full overflow-hidden bg-base-300 bg-cover bg-center bg-[url('/avatar.png')]" />
+            {avatarUrl ? (
+              <div class="w-16 h-16 rounded-full overflow-hidden bg-base-300">
+                <img
+                  src={avatarUrl}
+                  alt={`${user.username}'s avatar`}
+                  class="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <UserAvatar
+                username={user.username}
+                class="w-16 h-16"
+                cacheKey={avatarKey}
+              />
+            )}
             <div>
               <h3 class="text-xl font-bold">{user.username}</h3>
+              <p class="text-sm opacity-70">{user.email}</p>
             </div>
           </div>
           {showAddFriend && onAddFriend && (

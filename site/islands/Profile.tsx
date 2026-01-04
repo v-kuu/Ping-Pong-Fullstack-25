@@ -3,28 +3,30 @@ import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
 import type { MatchData, UserProfileData } from "@/utils/types";
 import { UserProfileCard } from "@/components/Card.tsx";
-import { UpdatePassword } from "./Password.tsx";
+import { AccountSettings } from "./Settings.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { FriendsList } from "./Friends.tsx";
 
-type Tab = "info" | "pass" | "avatar" | "friends";
+type Tab = "info" | "account" | "avatar" | "friends";
+
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "info";
-  const saved = localStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "pass", "avatar", "friends"].includes(saved)
+  const saved = sessionStorage.getItem("profileTab") as Tab | null;
+  return saved && ["info", "account", "avatar", "friends"].includes(saved)
     ? saved
     : "info";
 };
+
 const activeTab = signal<Tab>(getInitialTab());
 
 const showInfo = computed(() => activeTab.value === "info");
-const showPass = computed(() => activeTab.value === "pass");
+const showAccount = computed(() => activeTab.value === "account");
 const showAvatar = computed(() => activeTab.value === "avatar");
 const showFriends = computed(() => activeTab.value === "friends");
 
 if (typeof window !== "undefined") {
   effect(() => {
-    localStorage.setItem("profileTab", activeTab.value);
+    sessionStorage.setItem("profileTab", activeTab.value);
   });
 }
 
@@ -35,15 +37,47 @@ interface ProfileMenuProps {
 
 export function ProfileMenu({ user, matches }: ProfileMenuProps) {
   const [mounted, setMounted] = useState(false);
-  const [userData, setUserData] = useState<UserProfileData | null>(
-    user ?? null,
-  );
+  const [userData, setUserData] = useState<UserProfileData | null>(user);
   const [userMatches, setUserMatches] = useState<MatchData[]>(matches ?? []);
   const [loading, setLoading] = useState(!user);
+  const [avatarUrl, setAvatarUrl] = useState("/avatar.png");
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!userData?.username) return;
+
+    const customAvatarUrl = `/avatars/${userData.username}.png`;
+    const img = new Image();
+    img.onload = () => {
+      setAvatarUrl(`${customAvatarUrl}?t=${Date.now()}`);
+    };
+    img.onerror = () => {
+      setAvatarUrl("/avatar.png");
+    };
+    img.src = `${customAvatarUrl}?t=${Date.now()}`;
+  }, [userData?.username]);
+
+  useEffect(() => {
+    if (!userData?.username) return;
+
+    const handleAvatarUpdate = () => {
+      const customAvatarUrl = `/avatars/${userData.username}.png`;
+      const img = new Image();
+      img.onload = () => {
+        setAvatarUrl(`${customAvatarUrl}?t=${Date.now()}`);
+      };
+      img.onerror = () => {
+        setAvatarUrl("/avatar.png");
+      };
+      img.src = `${customAvatarUrl}?t=${Date.now()}`;
+    };
+    window.addEventListener("avatar-updated", handleAvatarUpdate);
+    return () =>
+      window.removeEventListener("avatar-updated", handleAvatarUpdate);
+  }, [userData?.username]);
 
   useEffect(() => {
     if (user) {
@@ -97,25 +131,41 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                   {loading ? (
                     <div class="text-center p-4">Loading...</div>
                   ) : userData ? (
-                    <UserProfileCard
-                      user={userData}
-                      matches={userMatches}
-                      title="User Information"
-                    />
+                    <div class={mounted ? "lg:-ml-64" : ""}>
+                      <UserProfileCard
+                        user={userData}
+                        matches={userMatches}
+                        title="User Information"
+                        avatarUrl={avatarUrl}
+                      />
+                    </div>
                   ) : (
                     <p>Failed to load user information</p>
                   )}
                 </Show>
 
-                <Show when={showPass}>
-                  <UpdatePassword />
+                <Show when={showAccount}>
+                  {userData && (
+                    <div class={mounted ? "lg:-ml-64" : ""}>
+                      <AccountSettings
+                        username={userData.username}
+                        email={userData.email}
+                      />
+                    </div>
+                  )}
                 </Show>
                 <Show when={showAvatar}>
-                  <ChangeAvatar />
+                  {userData && (
+                    <div class={mounted ? "lg:-ml-64" : ""}>
+                      <ChangeAvatar username={userData.username} />
+                    </div>
+                  )}
                 </Show>
 
                 <Show when={showFriends}>
-                  <FriendsList />
+                  <div class={mounted ? "lg:-ml-64" : ""}>
+                    <FriendsList />
+                  </div>
                 </Show>
               </div>
             </div>
@@ -141,10 +191,10 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
             <li>
               <button
                 type="button"
-                onClick={() => (activeTab.value = "pass")}
-                class={activeTab.value === "pass" ? "active" : ""}
+                onClick={() => (activeTab.value = "account")}
+                class={activeTab.value === "account" ? "active" : ""}
               >
-                Password
+                Account Settings
               </button>
             </li>
             <li>

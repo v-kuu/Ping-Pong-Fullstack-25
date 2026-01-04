@@ -1,6 +1,6 @@
 ---
 import Base from "@/src/layouts/Base.astro";
-import { SuccessCard } from "@/components/SuccessCard.tsx";
+import { SuccessCard } from "@/components/Card.tsx";
 import { db, Sessions, eq } from "astro:db";
 
 const user = Astro.locals.user;
@@ -10,6 +10,7 @@ if (user) {
   if (sessionId) {
     await db.delete(Sessions).where(eq(Sessions.id, sessionId));
     Astro.cookies.delete("session");
+    Astro.locals.user = null;
   }
 }
 ---

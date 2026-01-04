@@ -8,6 +8,7 @@ export const GET: APIRoute = async ({ locals }) => {
   
   return success({
     username: locals.user.username,
+    email: locals.user.email,
     elo: locals.user.elo,
   });
 };
