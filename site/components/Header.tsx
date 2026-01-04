@@ -4,7 +4,6 @@ import NavigationBar from "./NavBar.tsx";
 import { UserCircle, HomeLogo, PingLogo, WebLogo } from "./Icons.tsx";
 
 export default function Header(props: {
-  title: string;
   active: string;
   user?: { username: string } | null;
 }) {

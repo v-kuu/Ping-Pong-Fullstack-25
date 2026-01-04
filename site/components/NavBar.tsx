@@ -1,6 +1,3 @@
-import { ThemeToggle } from "./Button.tsx";
-import { UserCircle } from "./Icons.tsx";
-import clsx from "clsx";
 import type { ComponentChildren } from "preact";
 
 interface NavItem {
