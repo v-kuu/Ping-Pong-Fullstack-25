@@ -205,6 +205,13 @@ input[type="password"]::placeholder {
   }
 }
 
+.pixelify-sans-500 {
+  font-family: "Pixelify Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
 .vt323-regular {
   font-family: "VT323", monospace;
   font-weight: 400;

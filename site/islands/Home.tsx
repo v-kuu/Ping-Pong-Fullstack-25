@@ -2,7 +2,7 @@ import { Button } from "../components/Button.tsx";
 
 export function Home() {
   return (
-    <div class="object-fill flex flex-col items-center justify-center">
+    <div class="object-fill flex flex-col items-center justify-center pixelify-sans-500">
       <div class="prose prose-slate max-w-none">
         <h1>Hi ya there</h1>
         <p>Welcome, we have games.</p>

@@ -21,6 +21,9 @@ const user = Astro.locals.user ?? null;
       const theme = savedTheme === "dracula" ? "dracula" : "synthwave";
       document.documentElement.setAttribute("data-theme", theme);
     </script>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+    </style>
     <meta charset="UTF-8" />
     <link rel="preload" href="/logo.svg" as="image" />
     <link rel="preload" href="/web.svg" as="image" />
