@@ -1,5 +1,5 @@
 ---
-import Header from "@/components/Header.astro";
+import Header from "@/components/Header.tsx";
 import "@/src/styles.css";
 
 interface Props {
@@ -28,7 +28,7 @@ const user = Astro.locals.user ?? null;
     <title>{title}</title>
   </head>
   <body class="h-full m-0">
-    <Header active={active} user={user} />
+    <Header active={active} user={user} client:load />
     <main class={className}>
       <slot />
     </main>

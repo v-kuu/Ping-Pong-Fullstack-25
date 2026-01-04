@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { Check, XMark } from "../components/Icons";
-import { UserAvatar } from "../components/UserAvatar";
+import { UserAvatar } from "../components/Avatar";
 
 interface Friend {
   id: number;

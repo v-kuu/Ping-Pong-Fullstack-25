@@ -2,17 +2,19 @@ import { useEffect, useState } from "preact/hooks";
 import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
 import type { MatchData, UserProfileData } from "@/utils/types";
-import { UserProfileCard } from "../components/UserProfileCard";
-import { AccountSettings } from "./AccountSettings.tsx";
+import { UserProfileCard } from "@/components/Card.tsx";
+import { AccountSettings } from "./Settings.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
-import { FriendsList } from "./Friends";
+import { FriendsList } from "./Friends.tsx";
 
 type Tab = "info" | "account" | "avatar" | "friends";
 
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "info";
   const saved = sessionStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "account", "avatar", "friends"].includes(saved) ? saved : "info";
+  return saved && ["info", "account", "avatar", "friends"].includes(saved)
+    ? saved
+    : "info";
 };
 
 const activeTab = signal<Tab>(getInitialTab());
@@ -46,7 +48,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
   useEffect(() => {
     if (!userData?.username) return;
-    
+
     const customAvatarUrl = `/avatars/${userData.username}.png`;
     const img = new Image();
     img.onload = () => {
@@ -60,7 +62,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
   useEffect(() => {
     if (!userData?.username) return;
-    
+
     const handleAvatarUpdate = () => {
       const customAvatarUrl = `/avatars/${userData.username}.png`;
       const img = new Image();
@@ -73,7 +75,8 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
       img.src = `${customAvatarUrl}?t=${Date.now()}`;
     };
     window.addEventListener("avatar-updated", handleAvatarUpdate);
-    return () => window.removeEventListener("avatar-updated", handleAvatarUpdate);
+    return () =>
+      window.removeEventListener("avatar-updated", handleAvatarUpdate);
   }, [userData?.username]);
 
   useEffect(() => {
@@ -121,7 +124,9 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
           <div class="w-full max-w-4xl flex flex-col items-center gap-6">
             <div class="w-full max-w-2xl flex justify-center">
-              <div class={mounted ? "" : "opacity-0 transition-opacity duration-0"}>
+              <div
+                class={mounted ? "" : "opacity-0 transition-opacity duration-0"}
+              >
                 <Show when={showInfo}>
                   {loading ? (
                     <div class="text-center p-4">Loading...</div>
@@ -152,9 +157,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 <Show when={showAvatar}>
                   {userData && (
                     <div class={mounted ? "lg:-ml-64" : ""}>
-                      <ChangeAvatar
-                        username={userData.username}
-                      />
+                      <ChangeAvatar username={userData.username} />
                     </div>
                   )}
                 </Show>

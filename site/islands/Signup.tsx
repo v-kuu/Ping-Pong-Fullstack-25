@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
-import { validatePassword, validateEmail } from "../utils/validation";
-import { SuccessCard } from "../components/SuccessCard";
+import { validatePassword, validateEmail } from "../utils/validation.ts";
+import { SuccessCard } from "@/components/Card.tsx";
 
 export function Signup() {
   const [username, setUsername] = useState("");

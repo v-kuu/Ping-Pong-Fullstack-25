@@ -1,6 +1,13 @@
 import type { MatchData, UserProfileData } from "@/utils/types";
 import { IconPlus, Check, Clock } from "../components/Icons";
-import { UserAvatar } from "../components/UserAvatar";
+import { UserAvatar } from "./Avatar.tsx";
+
+interface SuccessCardProps {
+  title: string;
+  message: string;
+  buttonText: string;
+  buttonHref: string;
+}
 
 interface UserProfileCardProps {
   user: UserProfileData;
@@ -13,6 +20,28 @@ interface UserProfileCardProps {
   avatarKey?: number;
   /** Pre-resolved avatar URL (bypasses UserAvatar's onError logic) */
   avatarUrl?: string;
+}
+
+export function SuccessCard({
+  title,
+  message,
+  buttonText,
+  buttonHref,
+}: SuccessCardProps) {
+  return (
+    <div class="card text-center py-10 space-y-4">
+      <div class="mx-auto w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center">
+        <Check />
+      </div>
+      <h2 class="text-3xl font-bold text-white">{title}</h2>
+      <p class="text-gray-300">{message}</p>
+      <div class="flex flex-col gap-2 w-full mt-4">
+        <a href={buttonHref} class="btn btn-primary w-full py-3">
+          {buttonText}
+        </a>
+      </div>
+    </div>
+  );
 }
 
 export function UserProfileCard({
@@ -42,9 +71,9 @@ export function UserProfileCard({
                 />
               </div>
             ) : (
-              <UserAvatar 
-                username={user.username} 
-                class="w-16 h-16" 
+              <UserAvatar
+                username={user.username}
+                class="w-16 h-16"
                 cacheKey={avatarKey}
               />
             )}
@@ -55,16 +84,27 @@ export function UserProfileCard({
           </div>
           {showAddFriend && onAddFriend && (
             <button
-              onClick={friendStatus === "none" || friendStatus === "received" ? onAddFriend : undefined}
-              title={friendStatus === "received" ? "Accept Request" : friendStatus === "sent" ? "Request Sent" : "Add Friend"}
-              class={`btn btn-circle btn-lg ${friendStatus === "accepted" || friendStatus === "sent" ? "pointer-events-none" : ""} ${friendStatus === "accepted"
-                ? "btn-success"
-                : friendStatus === "sent"
-                  ? "btn-warning"
-                  : friendStatus === "received"
-                    ? "btn-primary ring-2 ring-primary ring-offset-2 ring-offset-base-100" // Highlight received requests
-                    : "btn-primary"
-                }`}
+              onClick={
+                friendStatus === "none" || friendStatus === "received"
+                  ? onAddFriend
+                  : undefined
+              }
+              title={
+                friendStatus === "received"
+                  ? "Accept Request"
+                  : friendStatus === "sent"
+                    ? "Request Sent"
+                    : "Add Friend"
+              }
+              class={`btn btn-circle btn-lg ${friendStatus === "accepted" || friendStatus === "sent" ? "pointer-events-none" : ""} ${
+                friendStatus === "accepted"
+                  ? "btn-success"
+                  : friendStatus === "sent"
+                    ? "btn-warning"
+                    : friendStatus === "received"
+                      ? "btn-primary ring-2 ring-primary ring-offset-2 ring-offset-base-100" // Highlight received requests
+                      : "btn-primary"
+              }`}
             >
               {friendStatus === "accepted" ? (
                 <Check class="text-black" />
