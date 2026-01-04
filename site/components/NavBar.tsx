@@ -1,4 +1,4 @@
-import ThemeToggle from "@/islands/ThemeToggle.tsx";
+import { ThemeToggle } from "./Button.tsx";
 import { UserCircle } from "./Icons.tsx";
 import clsx from "clsx";
 
