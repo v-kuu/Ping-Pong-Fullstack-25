@@ -29,7 +29,7 @@ const user = Astro.locals.user ?? null;
     <title>{title}</title>
   </head>
   <body>
-    <Header active={active} user={user} />
+    <Header active={active} user={user} client:load />
     <main class={className}>
       <slot />
     </main>
