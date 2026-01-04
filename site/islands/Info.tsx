@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import type { MatchData, UserProfileData } from "@/utils/types";
-import { UserProfileCard } from "./UserProfileCard";
+import { UserProfileCard } from "@/components/Card.tsx";
 
 interface PublicUserInfoProps {
   username: string;
@@ -8,18 +8,26 @@ interface PublicUserInfoProps {
   isLoggedIn?: boolean;
 }
 
-export function PublicUserInfo({ username, isOwnProfile = false, isLoggedIn = false }: PublicUserInfoProps) {
+export function PublicUserInfo({
+  username,
+  isOwnProfile = false,
+  isLoggedIn = false,
+}: PublicUserInfoProps) {
   const [user, setUser] = useState<UserProfileData | null>(null);
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [friendStatus, setFriendStatus] = useState<"none" | "sent" | "received" | "accepted">("none");
+  const [friendStatus, setFriendStatus] = useState<
+    "none" | "sent" | "received" | "accepted"
+  >("none");
   const [requestId, setRequestId] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/public-user/${username}`),
-      isLoggedIn ? fetch(`/api/friendship-status/${username}`) : Promise.resolve(null),
+      isLoggedIn
+        ? fetch(`/api/friendship-status/${username}`)
+        : Promise.resolve(null),
     ])
       .then(async ([userRes, statusRes]) => {
         if (!userRes.ok) {

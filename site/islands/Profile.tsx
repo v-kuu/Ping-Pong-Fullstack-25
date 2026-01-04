@@ -2,16 +2,18 @@ import { useEffect, useState } from "preact/hooks";
 import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
 import type { MatchData, UserProfileData } from "@/utils/types";
-import { UserProfileCard } from "./UserProfileCard";
+import { UserProfileCard } from "@/components/Card.tsx";
 import { UpdatePassword } from "./Password.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
-import { FriendsList } from "./Friends";
+import { FriendsList } from "./Friends.tsx";
 
 type Tab = "info" | "pass" | "avatar" | "friends";
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "info";
   const saved = localStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "pass", "avatar", "friends"].includes(saved) ? saved : "info";
+  return saved && ["info", "pass", "avatar", "friends"].includes(saved)
+    ? saved
+    : "info";
 };
 const activeTab = signal<Tab>(getInitialTab());
 
@@ -88,7 +90,9 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
           <div class="w-full max-w-4xl flex flex-col items-center gap-6">
             <div class="w-full max-w-2xl flex justify-center">
-              <div class={mounted ? "" : "opacity-0 transition-opacity duration-0"}>
+              <div
+                class={mounted ? "" : "opacity-0 transition-opacity duration-0"}
+              >
                 <Show when={showInfo}>
                   {loading ? (
                     <div class="text-center p-4">Loading...</div>
