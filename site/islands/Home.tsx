@@ -7,22 +7,25 @@ export function Home() {
         <h1>Hi ya there</h1>
         <p>Welcome, we have games.</p>
       </div>
-      <br />
-      <a href="/pong">
+      <div class="menu">
+        <a href="/pong">
+          <img src="/pong.gif" alt="Pong Game" />
+        </a>
         <Button>Play PONG</Button>
-      </a>
-      <br />
-      <a href="/game">
+        <a href="/game">
+          <img src="/web3d.gif" alt="Web3D Game" />
+        </a>
         <Button>Play Web3D</Button>
-      </a>
-      <br />
-      <Button>
-        <a href="/login"> Login </a>
-      </Button>
-      <br />
-      <a href="/signup">
-        <Button> Register </Button>
-      </a>
+        <br />
+        <div class="w-full flex justify-center">
+          <a href="/login">
+            <Button>Login</Button>
+          </a>
+          <a href="/signup">
+            <Button> Register </Button>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
