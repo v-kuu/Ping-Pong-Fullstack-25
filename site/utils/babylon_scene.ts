@@ -6,7 +6,9 @@ import {
 	Color4,
 	DirectionalLight,
 	CubeTexture,
+	KeyboardEventTypes,
 } from "@babylonjs/core"
+import { Inspector } from "@babylonjs/inspector"
 import { Control } from "@babylonjs/gui"
 import { setupEntities } from "./babylon_entities.ts"
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
@@ -51,6 +53,8 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 
 	//input setup
 	const keys = {};
+	let inspectorVisible: boolean = false;
+	let togglePAvailable: boolean = true;
 	window.addEventListener("keydown", (e) => keys[e.key] = true);
 	window.addEventListener("keyup", (e) => keys[e.key] = false);
 	scene.onBeforeRenderObservable.add(() => {
@@ -72,6 +76,14 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 		}
 		if (keys["f"]) {
 			canvas.requestFullscreen();
+		}
+		if (keys["p"] && togglePAvailable) {
+			inspectorVisible ? Inspector.Show(scene, {}) : Inspector.Hide();
+			inspectorVisible = !inspectorVisible;
+			togglePAvailable = false;
+		}
+		if (!keys["p"]) {
+			togglePAvailable = true;
 		}
 	});
 
