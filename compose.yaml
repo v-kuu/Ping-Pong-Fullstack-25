@@ -3,7 +3,7 @@ services:
     build: ./site
     container_name: astro
     ports:
-      - "443:3000"
+      - "3000:3000"
     restart: always
     env_file:
       - .env

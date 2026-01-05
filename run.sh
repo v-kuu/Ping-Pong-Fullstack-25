@@ -28,7 +28,6 @@ Setup()
 
     if [ ! -f certs/cert.pem ] || [ ! -f certs/key.pem ]; then
         echo "Generating SSL certificates with mkcert"
-        mkcert -install
         if ! mkcert -cert-file certs/cert.pem -key-file certs/key.pem localhost 127.0.0.1 ::1; then
             echo "Error: Failed to generate certificates"
             return 1
