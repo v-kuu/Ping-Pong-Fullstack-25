@@ -16,8 +16,6 @@ RUN cp /app/.astro/content.db /app/content.db.init
 # Ensure data directories exist
 RUN mkdir -p /app/.astro /app/dist/client/avatars
 
-ENV HOST=0.0.0.0
-ENV PORT=3000
 EXPOSE 3000
 
 CMD ["sh", "-c", "[ -s .astro/content.db ] || cp content.db.init .astro/content.db; bun run ./dist/server/entry.mjs"]
