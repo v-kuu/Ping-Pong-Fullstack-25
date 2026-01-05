@@ -34,6 +34,7 @@
   },
   "scripts": {
     "dev": "bun run build-wasm && bunx --bun astro dev",
+    "dev:ws": "bun run server/websocket.ts",
     "build": "bun run build-wasm && bun run check && bunx --bun astro build",
     "docker": "bun install && bun -b astro build",
     "check": "bunx --bun astro check",
