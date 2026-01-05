@@ -3,8 +3,12 @@ services:
     build: ./site
     container_name: astro
     ports:
-      - "3000:3000"
+      - "443:3000"
     restart: always
-    environment:
-      - PORT=3000
+    env_file:
+      - .env
+    volumes:
+      - ./data/db:/app/.astro
+      - ./data/avatars:/app/dist/client/avatars
+      - ./certs:/certs:ro
 

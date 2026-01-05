@@ -15,7 +15,7 @@ export function UserAvatar({ username, class: className, cacheKey }: UserAvatarP
     }
   };
 
-  const avatarUrl = `/avatars/${username}.png${cacheKey ? `?t=${cacheKey}` : ""}`;
+  const avatarUrl = `/api/avatars/${username}${cacheKey ? `?t=${cacheKey}` : ""}`;
 
   return (
     <div class={clsx("w-12 h-12 rounded-full overflow-hidden bg-base-300", className)}>
