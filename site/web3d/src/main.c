@@ -5,8 +5,8 @@
 #define FRAME_H 200
 
 // Dimensions of the tile map.
-#define MAP_W 29
-#define MAP_H 29
+#define MAP_W 49
+#define MAP_H 49
 
 #define FOV 1.1f
 #define WALL_HEIGHT 300
@@ -340,8 +340,11 @@ static uint32_t average_color(Texture* tex)
 
 // Initialize the game.
 __attribute__((export_name("init")))
-void init(unsigned int rng)
+void init(unsigned int rng_seed)
 {
+    // Seed the random number generator.
+    random_seed(rng_seed);
+
     // Load assets.
     texture_load(&texture_floor);
     texture_load(&texture_wall);
@@ -352,11 +355,19 @@ void init(unsigned int rng)
     for (int i = 0; i < GEM_TYPES; i++)
         texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
 
-    // Generate a random map.
-    for (int y = 0; y < MAP_H; y++)
-    for (int x = 0; x < MAP_W; x++) {
-        map[x + y * MAP_W] = rng % 100 < 3 ? '#' : ' ';
-        rng = rng * 1103515245u + 12345u;
+    // Place rooms pseudorandomly.
+    const float g1 = 0.7548776662466927;
+    const float g2 = 0.5698402909980532;
+    memset(map, ' ', sizeof(map));
+    const int n = random_int(0, 10000);
+    for (int i = 0; i < 20; i++) {
+        int room_x = fract((i + n) * g1) * MAP_W;
+        int room_y = fract((i + n) * g2) * MAP_H;
+        int room_w = random_int(3, 6);
+        int room_h = random_int(3, 6);
+        for (int y = room_y - room_h / 2; y <= room_y + room_h / 2; y++)
+        for (int x = room_x - room_w / 2; x <= room_x + room_w / 2; x++)
+            map_set(x, y, '#');
     }
 
     // Place gems on unoccupied map tiles.
@@ -413,10 +424,19 @@ static void draw_floor(Column* col)
 {
     for (int y = FRAME_H / 2; y < FRAME_H; y++) {
         float t = WALL_HEIGHT / (y - FRAME_H * 0.5f);
-        float u = fract(col->px + col->dx * t);
-        float v = fract(col->py + col->dy * t);
-        col->color[y] = texture_sample(&texture_floor, u, v);
-        col->light[y] = t * 4.0f;
+        float hit_x = col->px + col->dx * t;
+        float hit_y = col->py + col->dy * t;
+        float u = fract(hit_x);
+        float v = fract(hit_y);
+        int tile_x = floor(hit_x);
+        int tile_y = floor(hit_y);
+        if (map_get(tile_x, tile_y) == '#') {
+            col->color[y] = texture_sample(&texture_wall, u, v);
+            col->light[y] = t;
+        } else {
+            col->color[y] = texture_sample(&texture_floor, u, v);
+            col->light[y] = t * 4.0f;
+        }
         col->depth[y] = t;
     }
 }
@@ -434,7 +454,7 @@ static void draw_walls(Column* col)
         const int y1_clamped = max(0, min(y1, FRAME_H));
         const float hit_x = col->px + col->dx * depth;
         const float hit_y = col->py + col->dy * depth;
-        const float eps = 1e-5f;
+        const float eps = 1e-4f;
         const bool bounds = hit_x > eps && hit_y > eps && hit_x < MAP_W - eps && hit_y < MAP_H - eps;
 
         // Draw walls.
