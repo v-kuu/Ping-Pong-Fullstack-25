@@ -1,226 +1,45 @@
----
-// src/pages/ws-test.astro
----
-
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebSocket Test</title>
-    <style>
-      body {
-        font-family: system-ui, -apple-system, sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 2rem;
-        background: #f5f5f5;
-      }
-      h1 { color: #333; }
-      h2 { color: #666; margin-top: 2rem; }
-      .status {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        font-weight: bold;
-      }
-      .connected { background: #d4edda; color: #155724; }
-      .disconnected { background: #f8d7da; color: #721c24; }
-      .controls {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-      }
-      button {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: opacity 0.2s;
-      }
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      button:not(:disabled):hover { opacity: 0.8; }
-      .connect { background: #28a745; color: white; }
-      .disconnect { background: #dc3545; color: white; }
-      .send { background: #007bff; color: white; }
-      #messages {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1rem;
-        height: 400px;
-        overflow-y: auto;
-        background: white;
-      }
-      .message {
-        padding: 0.5rem;
-        margin-bottom: 0.5rem;
-        border-radius: 4px;
-        background: #f8f9fa;
-        border-left: 4px solid #007bff;
-      }
-      .message-time {
-        font-size: 0.8rem;
-        color: #666;
-        margin-bottom: 0.25rem;
-      }
-      .message-content {
-        font-family: monospace;
-        font-size: 0.9rem;
-      }
-      input {
-        flex: 1;
-        padding: 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-      }
-      .info {
-        background: #e7f3ff;
-        border: 1px solid #b3d9ff;
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-      }
-      .info code {
-        background: white;
-        padding: 0.2rem 0.4rem;
-        border-radius: 3px;
-        font-size: 0.9rem;
-      }
-    </style>
-  </head>
+<html>
   <body>
-    <h1>WebSocket Test</h1>
-
-    <div class="info">
-      <strong>Instructions:</strong>
-      <ol>
-        <li>Make sure WebSocket server is running: <code>bun run dev:ws</code></li>
-        <li>Click "Connect" to establish connection</li>
-        <li>Open this page in multiple tabs to test broadcasting</li>
-      </ol>
-    </div>
-
-    <div id="status" class="status disconnected">
-      Disconnected
-    </div>
-
-    <div class="controls">
-      <button id="connect" class="connect">Connect</button>
-      <button id="disconnect" class="disconnect" disabled>Disconnect</button>
-    </div>
-
-    <div class="controls">
-      <input
-        type="text"
-        id="messageInput"
-        placeholder="Type a message..."
-        disabled
-      />
-      <button id="send" class="send" disabled>Send</button>
-    </div>
-
-    <h2>Messages</h2>
-    <div id="messages"></div>
+    <h1>WebSocket Clients</h1>
+    <div id="status">Disconnected</div>
+    <div id="count">Clients: 0</div>
+    <button id="connect">Connect</button>
+    <button id="disconnect" disabled>Disconnect</button>
 
     <script>
-      let ws: WebSocket | null = null;
+      let ws = null;
 
-      const statusDiv = document.getElementById('status')!;
-      const messagesDiv = document.getElementById('messages')!;
-      const connectBtn = document.getElementById('connect') as HTMLButtonElement;
-      const disconnectBtn = document.getElementById('disconnect') as HTMLButtonElement;
-      const sendBtn = document.getElementById('send') as HTMLButtonElement;
-      const messageInput = document.getElementById('messageInput') as HTMLInputElement;
+      const status = document.getElementById("status");
+      const count = document.getElementById("count");
+      const connectBtn = document.getElementById("connect");
+      const disconnectBtn = document.getElementById("disconnect");
 
-      function addMessage(text: string) {
-        const msg = document.createElement('div');
-        msg.className = 'message';
-        const time = new Date().toLocaleTimeString();
-        msg.innerHTML = `
-          <div class="message-time">${time}</div>
-          <div class="message-content">${escapeHtml(text)}</div>
-        `;
-        messagesDiv.appendChild(msg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
-
-      function escapeHtml(text: string) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      function updateStatus(connected: boolean) {
-        if (connected) {
-          statusDiv.textContent = 'Connected';
-          statusDiv.className = 'status connected';
-          connectBtn.disabled = true;
-          disconnectBtn.disabled = false;
-          sendBtn.disabled = false;
-          messageInput.disabled = false;
-        } else {
-          statusDiv.textContent = 'Disconnected';
-          statusDiv.className = 'status disconnected';
-          connectBtn.disabled = false;
-          disconnectBtn.disabled = true;
-          sendBtn.disabled = true;
-          messageInput.disabled = true;
-        }
-      }
-
-      connectBtn.addEventListener('click', () => {
-        ws = new WebSocket('ws://localhost:3001/ws');
+      connectBtn.onclick = () => {
+        ws = new WebSocket("http://localhost:3001/ws");
 
         ws.onopen = () => {
-          updateStatus(true);
-          addMessage('✅ Connected to WebSocket server');
+          status.textContent = "Connected";
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
         };
 
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          addMessage(`📨 ${JSON.stringify(data, null, 2)}`);
-        };
-
-        ws.onerror = (error) => {
-          addMessage(`❌ Error: ${error}`);
+        ws.onmessage = (e) => {
+          const data = JSON.parse(e.data);
+          if (data.type === "count") {
+            count.textContent = "Clients: " + data.clients;
+          }
         };
 
         ws.onclose = () => {
-          updateStatus(false);
-          addMessage('🔌 Disconnected from server');
-          ws = null;
+          status.textContent = "Disconnected";
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
         };
-      });
+      };
 
-      disconnectBtn.addEventListener('click', () => {
-        if (ws) {
-          ws.close();
-        }
-      });
-
-      sendBtn.addEventListener('click', () => {
-        const message = messageInput.value.trim();
-        if (message && ws) {
-          const data = {
-            type: 'test',
-            message: message,
-            timestamp: Date.now()
-          };
-          ws.send(JSON.stringify(data));
-          addMessage(`📤 Sent: ${message}`);
-          messageInput.value = '';
-        }
-      });
-
-      messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          sendBtn.click();
-        }
-      });
+      disconnectBtn.onclick = () => {
+        ws.close();
+      };
     </script>
   </body>
 </html>
