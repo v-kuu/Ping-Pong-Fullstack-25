@@ -3,19 +3,24 @@
     <h1>WebSocket Clients</h1>
     <div id="status">Disconnected</div>
     <div id="count">Clients: 0</div>
+    <div id="position">Position: 0</div>
     <button id="connect">Connect</button>
     <button id="disconnect" disabled>Disconnect</button>
 
     <script>
+import { PositionGizmo } from "@babylonjs/core";
+
       let ws = null;
 
       const status = document.getElementById("status");
       const count = document.getElementById("count");
+      const position = document.getElementById("position");
       const connectBtn = document.getElementById("connect");
       const disconnectBtn = document.getElementById("disconnect");
 
       connectBtn.onclick = () => {
-        ws = new WebSocket("http://localhost:3001/ws");
+        // Use ws:// for WebSocket connections
+        ws = new WebSocket("ws://localhost:3001/ws");
 
         ws.onopen = () => {
           status.textContent = "Connected";
@@ -24,10 +29,15 @@
         };
 
         ws.onmessage = (e) => {
+          console.log("Received message:", e.data);
           const data = JSON.parse(e.data);
           if (data.type === "count") {
+            // Update the count live
             count.textContent = "Clients: " + data.clients;
           }
+          if (data.type === "position")
+            // Update position
+            position.textContent = data.position;
         };
 
         ws.onclose = () => {
