@@ -2,8 +2,6 @@ import {
 	Scene,
 	DefaultRenderingPipeline,
 	SSAORenderingPipeline,
-	SSRRenderingPipeline,
-	Constants,
 	CubeTexture,
 	ColorCurves,
 } from "@babylonjs/core"
@@ -14,8 +12,6 @@ export function enablePostProcess(scene: Scene, envTexture: CubeTexture)
 	enableDefaultPipeline(scene);
 
 	enableAmbientOcclusion(scene);
-
-	//enableScreenSpaceReflections(scene, envTexture);
 }
 
 function enableDefaultPipeline(scene: Scene)
@@ -139,24 +135,4 @@ function enableAmbientOcclusion(scene: Scene)
 		"ssao",
 		scene.activeCamera,
 	);
-}
-
-function enableScreenSpaceReflections(scene: Scene, envTexture: CubeTexture)
-{
-	let ssr = new SSRRenderingPipeline(
-		"ssr",
-		scene,
-		[scene.activeCamera],
-		true,
-		Constants.TEXTURETYPE_UNSIGNED_BYTE
-	);
-
-	ssr.environmentTexture = envTexture;
-	ssr.strength = 1;
-	ssr.reflectionSpecularFalloffExponent = 1.;
-	ssr.enableAutomaticThicknessComputation = true;
-	ssr.thickness = 0;
-	ssr.step = 3;
-	ssr.blurDispersionStrength = 0;
-	ssr.roughnessFactor = 0;
 }

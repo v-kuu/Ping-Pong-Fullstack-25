@@ -100,7 +100,6 @@ function createScoreMesh(scene: Scene, name: string, value: string, color: Color
 	mat.diffuseTexture = tex;
 	mat.opacityTexture = tex;
 	mat.emissiveTexture = tex;
-	mat.roughness = 1;
 
 	let scoreMesh = MeshBuilder.CreateText(
 		name,
