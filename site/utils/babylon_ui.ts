@@ -100,6 +100,7 @@ function createScoreMesh(scene: Scene, name: string, value: string, color: Color
 	mat.diffuseTexture = tex;
 	mat.opacityTexture = tex;
 	mat.emissiveTexture = tex;
+	mat.roughness = 1;
 
 	let scoreMesh = MeshBuilder.CreateText(
 		name,
@@ -113,6 +114,7 @@ function createScoreMesh(scene: Scene, name: string, value: string, color: Color
 	);
 	if (scoreMesh)
 	{
+		scoreMesh.material = mat;
 		scoreMesh.position.z = Globals.mapHeight / 2 + 1;
 		scoreMesh.rotation.x = Tools.ToRadians(45);
 	}
@@ -138,7 +140,9 @@ export function updateScore(scene: Scene, id: number)
 		Globals.score2Mesh.dispose();
 	let name = id === 1 ? "score1" : "score2";
 	let value = id === 1 ? `${Globals.score1}` : `${Globals.score2}`;
-	let color = id === 1 ? FireProceduralTexture.RedFireColors : FireProceduralTexture.BlueFireColors;
+	let color = id === 1 ? FireProceduralTexture.BlueFireColors : FireProceduralTexture.RedFireColors;
 	let mesh = createScoreMesh(scene, name, value, color);
+	if (mesh)
+		mesh.position.x = id === 1 ? Globals.mapWidth / -2 : Globals.mapWidth / 2;
 	id === 1 ? Globals.score1Mesh = mesh : Globals.score2Mesh = mesh;
 }

@@ -15,7 +15,7 @@ export function enablePostProcess(scene: Scene, envTexture: CubeTexture)
 
 	enableAmbientOcclusion(scene);
 
-	enableScreenSpaceReflections(scene, envTexture);
+	//enableScreenSpaceReflections(scene, envTexture);
 }
 
 function enableDefaultPipeline(scene: Scene)
