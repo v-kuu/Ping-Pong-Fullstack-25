@@ -61,10 +61,9 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 				ball.position.y = 0.25;
 				ball.position.z = 0;
 				if (dir > 0)
-					Globals.score1++;
+					updateScore(scene, 1);
 				else
-					Globals.score2++;
-				updateScore();
+					updateScore(scene, 2);
 				setState(GameState.Countdown, scene);
 			}
 			else {
