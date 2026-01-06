@@ -1,8 +1,10 @@
 // server/websocket.ts
 import type { ServerWebSocket } from "bun";
 
-const TICK_RATE = 60;
-const TICK_INTERVAL = 1000 / TICK_RATE;
+interface PlayerData {
+    playerId: string;
+    pos: number;
+}
 
 const clients = new Set<ServerWebSocket<unknown>>();
 
@@ -11,17 +13,28 @@ Bun.serve({
     fetch(req, server) {
         const url = new URL(req.url)
 
-        if (url.pathname === "/ws" && server.upgrade(req, {
-            data: {
-                playerId: "abc123"
-            }
-        })) {
+        if (url.pathname === "/ws") {
+            const playerId = crypto.randomUUID();
+            server.upgrade(req, {
+                data: {
+                    playerId,
+                    pos: 0
+                }
+                })
             return;
         }
         return new Response("WebSocket server");
     },
     websocket: {
-        message(ws) {},
+        message(ws, msg) {
+            const data = JSON.parse(msg);
+            if (data.type === "move")
+                if (data.direction === "up")
+                    ws.data.pos += 5
+                if (data.direction === "down")
+                    ws.data.pos -= 5
+                console.log(`Player ${ws.data.playerId} moved ${data.direction} -> pos=${ws.data.pos}`);
+        },
         open(ws) {
             clients.add(ws)
             console.log("Client connected. Total:", clients.size)
@@ -34,20 +47,26 @@ Bun.serve({
     },
 });
 
+const TICK_RATE = 60;
+const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
-let pos = 0;
 
 function gameTick() {
     const now = Date.now()
     const delta = (now - lastTick) / 1000
     lastTick = now
 
-    pos = (pos + delta) % 100
+    const positions: Record<string, number> = {}
+    // pos = (pos + delta) % 100
+
+    for (const ws of clients) {
+        positions[ws.data.playerId] = ws.data.pos
+    }
 
     for (const ws of clients) {
         try {
             const countMsg = JSON.stringify({ type: "count", clients: clients.size });
-            const posMsg = JSON.stringify({ type: "position", position: pos });
+            const posMsg = JSON.stringify({ type: "positions", positions: positions });
             ws.send(countMsg);
             ws.send(posMsg);
         } catch (e) {
