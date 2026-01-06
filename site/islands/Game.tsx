@@ -30,9 +30,43 @@ export function Game() {
     engine.runRenderLoop(() => scene.render());
     addEventListener("resize", () => engine.resize());
 
+    // Open WebSocket
+    const ws = new WebSocket("ws://localhost:3001/ws");
+
+    ws.onopen = () => {
+        console.log("Connected to server");
+    };
+
+    ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.type === "positions") {
+            for (const [playerId, pos] of Object.entries(data.positions)) {
+                const mesh = scene.getMeshByName(playerId);
+                if (mesh)
+                    mesh.position.y = pos as number;
+            }
+        }
+        if (data.type === "count")
+            console.log("Clients:", data.clients);
+    }
+
+    // Input handling
+    const handleKey = (e: KeyboardEvent) => {
+        if (ws.readyState !== WebSocket.OPEN)
+            return;
+        if (e.key === "w")
+            ws.send(JSON.stringify({ type: "move", direction: "up" }));
+        if (e.key === "s")
+            ws.send(JSON.stringify({ type: "move", direction: "down" }));
+    }
+
+    window.addEventListener("keydown", handleKey);
+
     return () => {
       removeEventListener("resize", () => engine.resize());
+      window.removeEventListener("keydown", handleKey);
       engine.dispose();
+      ws.close()
     };
   }, []);
   return <Canvas />;

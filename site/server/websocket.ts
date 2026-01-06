@@ -1,4 +1,7 @@
 // server/websocket.ts
+
+// Open websocket with "bun run server/websocket.ts"
+
 import type { ServerWebSocket } from "bun";
 
 interface PlayerData {
