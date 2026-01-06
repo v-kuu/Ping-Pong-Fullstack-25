@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import db from "@astrojs/db";
 
 process.env.ASTRO_TELEMETRY_DISABLED = "1";
-process.env.ASTRO_DATABASE_FILE = ".astro/content.db"
+process.env.ASTRO_DATABASE_FILE = ".astro/content.db";
 export default defineConfig({
   devToolbar: { enabled: false },
   integrations: [
@@ -44,6 +44,8 @@ export default defineConfig({
     },
     db(),
   ],
+  srcDir: "astro",
+  pages: "astro/pages",
   output: "server",
   adapter: bun(),
   server: {
