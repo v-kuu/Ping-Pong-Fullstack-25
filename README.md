@@ -1,10 +1,7 @@
-[![CI](https://github.com/v-kuu/Ping-Pong-Fullstack-25/actions/workflows/ci.yml/badge.svg)](https://github.com/v-kuu/Ping-Pong-Fullstack-25/actions/workflows/ci.yml)
-MAX CHANGE (ALMOST) EVERYTHING UNDERNEATH
 # Usage
-Install `npm` and `deno`.
-Goto `site` and run `deno i`. Then either; </br>
- a) `deno task dev` to start development server or, </br>
- b) `deno task build && deno task start` for production build. </br>
+Install `bun` and.
+Goto `site` and run `bun i` and `bun run dev`
+
 Open browser and open address printed to stdout.
 
 ## Team & roles

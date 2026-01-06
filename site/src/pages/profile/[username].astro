@@ -1,0 +1,15 @@
+---
+import Base from "@/src/layouts/Base.astro";
+import { PublicUserInfo } from "@/islands/Info.tsx";
+
+const { username } = Astro.params;
+const currentUser = Astro.locals.user;
+const isOwnProfile = currentUser?.username === username;
+const isLoggedIn = !!currentUser;
+---
+
+<Base title={`${username}'s Profile`} active="/profile" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😎</text>">
+  <div class="flex items-center justify-center min-h-screen bg-gray-900 p-4">
+    <PublicUserInfo client:load username={username ?? ""} isOwnProfile={isOwnProfile} isLoggedIn={isLoggedIn} />
+  </div>
+</Base>

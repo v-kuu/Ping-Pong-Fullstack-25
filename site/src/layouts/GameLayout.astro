@@ -1,0 +1,36 @@
+---
+import Header from "@/components/Header.tsx";
+import "@/src/styles.css";
+
+interface Props {
+  title: string;
+  active: string;
+  favicon: string;
+  class?: string;
+}
+
+const { title, active, favicon, class: className } = Astro.props;
+const user = Astro.locals.user ?? null;
+---
+
+<html lang="en" data-theme="synthwave" class="h-full overflow-hidden">
+  <head>
+    <script is:inline>
+      const savedTheme = localStorage.getItem("theme");
+      const theme = savedTheme === "dracula" ? "dracula" : "synthwave";
+      document.documentElement.setAttribute("data-theme", theme);
+    </script>
+    <meta charset="UTF-8" />
+    <link rel="preload" href="/logo.svg" as="image" />
+    <link rel="preload" href="/web.svg" as="image" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" href={favicon} />
+    <title>{title}</title>
+  </head>
+  <body class="h-full m-0">
+    <Header active={active} user={user} client:load />
+    <main class={className}>
+      <slot />
+    </main>
+  </body>
+</html>

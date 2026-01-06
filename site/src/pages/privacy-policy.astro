@@ -1,0 +1,70 @@
+---
+import Base from "@/src/layouts/Base.astro";
+import { marked } from "marked";
+
+const content = `# Privacy Policy
+
+**Last Updated:** 11.12.2025
+
+This Privacy Policy explains how Pongsite ("we", "us" or "our") collects, uses, and discloses information about you when you use our website and create an account.
+
+We believe in privacy by design. We do not sell your personal data, nor do we collect unnecessary information about you.
+
+## 1. Information We Collect
+
+We only collect information that is strictly necessary to provide our services to you.
+
+### 1.1 Information You Provide to Us
+When you create an account, we collect:
+* **Account Information:** Your username and/or email address and a password (which is stored securely/hashed).
+* **User Content:** The profile picture you voluntarily upload.
+
+### 1.2 Information Collected Automatically
+Like most websites, when you access our service, our servers may automatically log standard technical data, including:
+* **Log Data:** IP address, browser type, and the time of your visit. This is used solely for security and debugging purposes.
+* **Cookies:** We may use essential cookies only to keep you logged in. We do not use third-party tracking cookies or advertising cookies.
+
+## 2. How We Use Your Information
+
+We use the collected information for the following specific purposes:
+* To create and maintain your user account.
+* To display your profile picture on the service as requested by you.
+* To ensure the security of our website (e.g., preventing unauthorized login attempts).
+
+**We do not sell, rent, or trade your personal information to third parties.**
+
+## 3. Data Storage and Security
+
+* **Storage:** Your account information and profile picture are stored on our secure servers located in European Union.
+* **Security:** We take reasonable measures to help protect information about you from loss, theft, misuse, and unauthorized access. However, no internet transmission is completely secure, and we cannot guarantee absolute security.
+
+## 4. Data Retention
+
+We retain your personal information only for as long as your account is active.
+* **If you delete your account:** Your profile picture and personal data are permanently deleted from our active database immediately.
+
+## 5. Your Rights (GDPR and Others)
+
+Depending on your location (including the European Union), you have certain rights regarding your personal data:
+* **Access:** You have the right to request a copy of the information we hold about you.
+* **Correction:** You have the right to correct inaccurate information.
+* **Deletion:** You have the right to delete your account and all associated data at any time directly through the website interface.
+
+## 6. Third-Party Services
+
+We do not use third-party analytics services (like Google Analytics) or advertising networks.
+
+## 7. Changes to This Policy
+
+We may update this Privacy Policy from time to time. If we make changes, we will notify you by revising the date at the top of the policy.
+
+## 8. Contact Us
+
+If you have any questions about this Privacy Policy or our data practices, please contact us at:
+
+**support@joonastuomi.fi**`;
+---
+
+<Base title="Privacy Policy" active="/privacy-policy" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+    <article class="prose max-w-none prose-slate text-center" set:html={marked.parse(content)} />
+</Base>

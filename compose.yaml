@@ -1,0 +1,14 @@
+services:
+  astro:
+    build: ./site
+    container_name: astro
+    ports:
+      - "3000:3000"
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./data/db:/app/.astro
+      - ./data/avatars:/app/dist/client/avatars
+      - ./certs:/certs:ro
+
