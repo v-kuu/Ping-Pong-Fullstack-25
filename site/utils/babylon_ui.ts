@@ -7,6 +7,8 @@ import {
 	Tools,
 	Mesh,
 	Animation,
+	DynamicTexture,
+	Texture,
 } from "@babylonjs/core"
 import { FireProceduralTexture } from "@babylonjs/procedural-textures"
 import { Globals } from "./babylon_globals.ts"
@@ -120,7 +122,13 @@ function createScoreMesh(scene: Scene, name: string, value: string, color: Color
 	return scoreMesh;
 }
 
-export function initScores(scene: Scene)
+export function initUI(scene:Scene)
+{
+	initScores(scene);
+	initAvatars(scene);
+}
+
+function initScores(scene: Scene)
 {
 	Globals.score1Mesh = createScoreMesh(scene, "score1", "0", FireProceduralTexture.BlueFireColors);
 	if (Globals.score1Mesh)
@@ -128,6 +136,48 @@ export function initScores(scene: Scene)
 	Globals.score2Mesh = createScoreMesh(scene, "score2", "0", FireProceduralTexture.RedFireColors);
 	if (Globals.score2Mesh)
 		Globals.score2Mesh.position.x = Globals.mapWidth / 2;
+}
+
+function initAvatars(scene: Scene)
+{
+	createAvatar(scene, 1);
+	createAvatar(scene, 2);
+}
+
+function createAvatar(scene: Scene, id: number)
+{
+	let avatar = MeshBuilder.CreatePlane("avatar", { size: 1 }, scene);
+	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
+	avatar.position.y = 2;
+	
+	let avatarMat = new StandardMaterial("avatarMat", scene);
+	avatarMat.diffuseTexture = new Texture("/avatar.png", scene);
+	avatarMat.diffuseTexture.hasAlpha = true;
+	avatarMat.useAlphaFromDiffuseTexture = true;
+	avatarMat.backFaceCulling = false;
+	avatar.material = avatarMat;
+
+	let labelPlane = MeshBuilder.CreatePlane("label", { width: 1.5, height: 0.4}, scene);
+	labelPlane.billboardMode = Mesh.BILLBOARDMODE_ALL;
+	labelPlane.position.y = 2.8;
+
+	let labelTexture = new DynamicTexture("labelTex", {width: 256, height: 64}, scene);
+	labelTexture.drawText(
+		"name",
+		null,
+		40,
+		"bold 36px Arial",
+		"white",
+		"transparent",
+	);
+
+	let labelMat = new StandardMaterial("labelMat", scene);
+	labelMat.diffuseTexture = labelTexture;
+	labelMat.useAlphaFromDiffuseTexture = true;
+	labelPlane.material = labelMat;
+	labelPlane.parent = avatar;
+
+	avatar.position.x = id === 1 ? Globals.mapWidth / -1 - 1 : Globals.mapWidth / 1 + 1;
 }
 
 export function updateScore(scene: Scene, id: number)
