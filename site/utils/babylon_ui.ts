@@ -48,22 +48,12 @@ function animateCountdown(mesh: Mesh, material: StandardMaterial)
 		new Vector3(1, 1, 1),
 		Animation.ANIMATIONLOOPMODE_CONSTANT
 	);
-
-	Animation.CreateAndStartAnimation(
-		"fadeAnim",
-		material,
-		"alpha",
-		60,
-		60,
-		1,
-		0,
-		Animation.ANIMATIONLOOPMODE_CONSTANT
-	);
 }
 
-export async function startCountdown(scene: Scene, posZ: number, onComplete: () => void)
+export async function startCountdown(scene: Scene, onComplete: () => void)
 {
 	let textMat = new StandardMaterial("text", scene);
+	textMat.diffuseColor = Color3.Black();
 	textMat.emissiveColor = Color3.Gray();
 	const values = ["3", "2", "1", "GO!"];
 
@@ -82,7 +72,7 @@ export async function startCountdown(scene: Scene, posZ: number, onComplete: () 
 		if (countdownMesh)
 		{
 			countdownMesh.material = textMat;
-			countdownMesh.position.z = posZ;
+			countdownMesh.position.z = Globals.mapHeight / 2 + 1.5;
 			countdownMesh.rotation.x = Tools.ToRadians(45);
 			animateCountdown(countdownMesh, textMat);
 			if (value === "GO!")
@@ -145,6 +135,13 @@ function initAvatars(scene: Scene)
 
 function createAvatar(scene: Scene, id: number)
 {
+	const user = Astro.locals.user;
+	let path: string;
+	if (!user || !user.avatar)
+		path = "/avatar.png"
+	else
+		path = user.avatar;
+
 	let avatar = MeshBuilder.CreatePlane("avatar", { size: 2 }, scene);
 	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
 	

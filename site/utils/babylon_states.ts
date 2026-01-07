@@ -16,7 +16,7 @@ export function setState(newState: GameState, scene: Scene)
 	{
 		case GameState.Countdown:
 			Globals.playing = false;
-			startCountdown(scene, Globals.mapHeight / 2 + 1, () => {
+			startCountdown(scene, () => {
 				setState(GameState.Playing, scene);
 			});
 			break ;
