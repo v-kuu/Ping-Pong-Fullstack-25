@@ -7,7 +7,6 @@ import {
 	Tools,
 	Mesh,
 	Animation,
-	DynamicTexture,
 	Texture,
 } from "@babylonjs/core"
 import { FireProceduralTexture } from "@babylonjs/procedural-textures"
@@ -132,10 +131,10 @@ function initScores(scene: Scene)
 {
 	Globals.score1Mesh = createScoreMesh(scene, "score1", "0", FireProceduralTexture.BlueFireColors);
 	if (Globals.score1Mesh)
-		Globals.score1Mesh.position.x = Globals.mapWidth / -2;
+		Globals.score1Mesh.position.x = Globals.mapWidth / -2 + 0.5;
 	Globals.score2Mesh = createScoreMesh(scene, "score2", "0", FireProceduralTexture.RedFireColors);
 	if (Globals.score2Mesh)
-		Globals.score2Mesh.position.x = Globals.mapWidth / 2;
+		Globals.score2Mesh.position.x = Globals.mapWidth / 2 - 0.5;
 }
 
 function initAvatars(scene: Scene)
@@ -146,9 +145,8 @@ function initAvatars(scene: Scene)
 
 function createAvatar(scene: Scene, id: number)
 {
-	let avatar = MeshBuilder.CreatePlane("avatar", { size: 1 }, scene);
+	let avatar = MeshBuilder.CreatePlane("avatar", { size: 2 }, scene);
 	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
-	avatar.position.y = 2;
 	
 	let avatarMat = new StandardMaterial("avatarMat", scene);
 	avatarMat.diffuseTexture = new Texture("/avatar.png", scene);
@@ -156,28 +154,8 @@ function createAvatar(scene: Scene, id: number)
 	avatarMat.useAlphaFromDiffuseTexture = true;
 	avatarMat.backFaceCulling = false;
 	avatar.material = avatarMat;
-
-	let labelPlane = MeshBuilder.CreatePlane("label", { width: 1.5, height: 0.4}, scene);
-	labelPlane.billboardMode = Mesh.BILLBOARDMODE_ALL;
-	labelPlane.position.y = 2.8;
-
-	let labelTexture = new DynamicTexture("labelTex", {width: 256, height: 64}, scene);
-	labelTexture.drawText(
-		"name",
-		null,
-		40,
-		"bold 36px Arial",
-		"white",
-		"transparent",
-	);
-
-	let labelMat = new StandardMaterial("labelMat", scene);
-	labelMat.diffuseTexture = labelTexture;
-	labelMat.useAlphaFromDiffuseTexture = true;
-	labelPlane.material = labelMat;
-	labelPlane.parent = avatar;
-
-	avatar.position.x = id === 1 ? Globals.mapWidth / -1 - 1 : Globals.mapWidth / 1 + 1;
+	avatar.position.x = id === 1 ? Globals.mapWidth / -2 + 2.5 : Globals.mapWidth / 2 - 2.5;
+	avatar.position.z = Globals.mapHeight / 2 + 3;
 }
 
 export function updateScore(scene: Scene, id: number)
@@ -192,6 +170,6 @@ export function updateScore(scene: Scene, id: number)
 	let color = id === 1 ? FireProceduralTexture.BlueFireColors : FireProceduralTexture.RedFireColors;
 	let mesh = createScoreMesh(scene, name, value, color);
 	if (mesh)
-		mesh.position.x = id === 1 ? Globals.mapWidth / -2 : Globals.mapWidth / 2;
+		mesh.position.x = id === 1 ? Globals.mapWidth / -2 + 0.5 : Globals.mapWidth / 2 - 0.5;
 	id === 1 ? Globals.score1Mesh = mesh : Globals.score2Mesh = mesh;
 }
