@@ -133,20 +133,26 @@ function initAvatars(scene: Scene)
 	createAvatar(scene, 2);
 }
 
-function createAvatar(scene: Scene, id: number)
+async function createAvatar(scene: Scene, id: number)
 {
-	const user = Astro.locals.user;
-	let path: string;
-	if (!user || !user.avatar)
-		path = "/avatar.png"
-	else
-		path = user.avatar;
+	let url: string;
+	try
+	{
+		let res = await fetch("/avatar");
+		let json = await res.json();
+		url = json.avatarUrl;
+	}
+	catch (error)
+	{
+		console.error(error)
+		url = "/avatar.png";
+	}
 
 	let avatar = MeshBuilder.CreatePlane("avatar", { size: 2 }, scene);
 	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
 	
 	let avatarMat = new StandardMaterial("avatarMat", scene);
-	avatarMat.diffuseTexture = new Texture("/avatar.png", scene);
+	avatarMat.diffuseTexture = new Texture(url, scene);
 	avatarMat.diffuseTexture.hasAlpha = true;
 	avatarMat.useAlphaFromDiffuseTexture = true;
 	avatarMat.backFaceCulling = false;

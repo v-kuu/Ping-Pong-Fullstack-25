@@ -18,6 +18,7 @@ export interface GlobalState
 	ballVel: Vector3,
 	vel1: Vector3,
 	vel2: Vector3,
+	userName: string | null,
 	score1Mesh: Mesh | null,
 	score2Mesh: Mesh | null
 }
@@ -36,6 +37,7 @@ export const Globals: GlobalState =
 	ballVel: new Vector3(-1, 0, 0),
 	vel1: new Vector3(),
 	vel2: new Vector3(),
+	userName: null,
 	score1Mesh: null,
 	score2Mesh: null,
 };
