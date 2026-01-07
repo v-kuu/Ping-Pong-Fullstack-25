@@ -3,9 +3,6 @@ import GameLayout from "@/astro/layouts/GameLayout.astro";
 import { Game } from "@/islands/Game.tsx";
 
 const user = Astro.locals.user;
-if (!user) {
-	Astro.redirect("/login?redirect=/pong");
-}
 ---
 
 <GameLayout
@@ -13,5 +10,5 @@ if (!user) {
   active=""
   favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" class="px-4 py-8 mx-auto fresh-gradient"
 >
-  <Game username=[user] client:load />
+    <Game username={user} client:load />
 </GameLayout>
