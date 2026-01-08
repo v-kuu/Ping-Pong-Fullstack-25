@@ -91,7 +91,6 @@ function createScoreMesh(
 	let tex = new FireProceduralTexture("name", 1024, scene);
 	tex.fireColors = color;
 	mat.diffuseTexture = tex;
-	mat.opacityTexture = tex;
 	mat.emissiveTexture = tex;
 
 	let scoreMesh = MeshBuilder.CreateText(
@@ -149,13 +148,11 @@ function initAvatars(scene: Scene)
 async function createAvatar(scene: Scene, id: number)
 {
 	let url: string;
-	console.log(Globals.userName.username.username);
 	try
 	{
 		let res = await fetch("/api/avatars/" + Globals.userName.username.username);
-		if (!res.ok) throw new Error("Failed to fetch avatar");
-
-		console.log(res);
+		if (!res.ok)
+			throw new Error("Failed to fetch avatar");
 		url = res.url;
 	}
 	catch (error)
