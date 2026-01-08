@@ -22,10 +22,21 @@ typedef __SIZE_TYPE__ size_t;
 #define floor(...) __builtin_floorf(__VA_ARGS__)
 #define memset(...) __builtin_memset(__VA_ARGS__)
 
+// Dimensions of the tile map.
+#define MAP_W 49
+#define MAP_H 49
+#define MAP_SIZE (MAP_W * MAP_H)
+
 // gif.c
 int gif_get_image_w(const uint8_t* gif);
 int gif_get_image_h(const uint8_t* gif);
 void* gif_get_pixels(const uint8_t* gif, void* pixels);
+
+// map.c
+bool map_inside(int x, int y);
+int map_get(int x, int y);
+void map_set(int x, int y, char value);
+void map_generate(size_t seed);
 
 // math.c
 float min(float x, float y);

@@ -4,10 +4,6 @@
 #define FRAME_W 360
 #define FRAME_H 200
 
-// Dimensions of the tile map.
-#define MAP_W 49
-#define MAP_H 49
-
 #define FOV 1.1f
 #define WALL_HEIGHT 300
 
@@ -36,9 +32,6 @@ enum {
 
 // Frame buffer.
 static uint32_t frame[FRAME_W * FRAME_H];
-
-// Tile map.
-static char map[MAP_W * MAP_H];
 
 // Keyboard state.
 static bool key_up[KEY_MAX];
@@ -108,6 +101,9 @@ static Texture texture_gems = { .data = (uint8_t[]) {
 static Texture texture_barrier = { .data = (uint8_t[]) {
     #embed "../assets/barrier.gif"
 }};
+static Texture texture_ghost = { .data = (uint8_t[]) {
+    #embed "../assets/ghost.gif"
+}};
 static Texture texture_gem[GEM_TYPES];
 
 // Fonts.
@@ -124,28 +120,11 @@ static Font font_big = { .data = (uint8_t[]) {
     #embed "../assets/font_big.gif"
 }};
 
-static bool is_out_of_bounds(int x, int y)
-{
-    return x < 0 || x >= MAP_W || y < 0 || y >= MAP_H;
-}
-
-static int map_get(int x, int y)
-{
-    return is_out_of_bounds(x, y) ? 0 : map[x + y * MAP_W];
-}
-
-static void map_set(int x, int y, char value)
-{
-    if (!is_out_of_bounds(x, y))
-        map[x + y * MAP_W] = value;
-}
-
 // Check if a map tile is a wall. Coordinates outside of the map are treated as
 // walls.
 static bool is_wall(int x, int y)
 {
-    int value = map_get(x, y);
-    return !value || value == '#';
+    return map_get(x, y) > 0;
 }
 
 static float raycast(float ax, float ay, float bx, float by, float t)
@@ -154,16 +133,17 @@ static float raycast(float ax, float ay, float bx, float by, float t)
     int iy = floor(ay), sy = (by > 0.0f) - (by < 0.0f);
     float dx = abs(1 / bx), tx = dx * ((sx > 0) - sx * fract(ax));
     float dy = abs(1 / by), ty = dy * ((sy > 0) - sy * fract(ay));
-    for (;;) {
+    for (int l = 0; l < 100; l++) {
         int axis = !sy || tx < ty;
         int px = ix, py = iy;
         ix += sx * axis;
         iy += sy * !axis;
-        if (min(tx, ty) > t && (is_out_of_bounds(ix, iy) || (is_wall(ix, iy) && !is_wall(px, py))))
+        if (min(tx, ty) > t && (!map_inside(ix, iy) || (is_wall(ix, iy) && !is_wall(px, py))))
             return min(tx, ty);
         tx += dx * axis;
         ty += dy * !axis;
     }
+    return 1e9f;
 }
 
 // Map a KeyboardEvent keyCode number to an input key.
@@ -206,7 +186,7 @@ void keydown(int keycode)
 static void* malloc(size_t size)
 {
     const size_t alignment = 16;
-    static char buffer[1 << 16];
+    static char buffer[1 << 17];
     static size_t position;
     void* result = buffer + position;
     position = (position + size + alignment - 1) & -alignment;
@@ -340,7 +320,7 @@ static uint32_t average_color(Texture* tex)
 
 // Initialize the game.
 __attribute__((export_name("init")))
-void init(unsigned int rng_seed)
+void init(size_t rng_seed)
 {
     // Seed the random number generator.
     random_seed(rng_seed);
@@ -350,33 +330,30 @@ void init(unsigned int rng_seed)
     texture_load(&texture_wall);
     texture_load(&texture_gems);
     texture_load(&texture_barrier);
+    texture_load(&texture_ghost);
     font_load(&font_tiny);
     font_load(&font_big);
     for (int i = 0; i < GEM_TYPES; i++)
         texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
 
-    // Place rooms pseudorandomly.
-    const float g1 = 0.7548776662466927;
-    const float g2 = 0.5698402909980532;
-    memset(map, ' ', sizeof(map));
-    const int n = random_int(0, 10000);
-    for (int i = 0; i < 20; i++) {
-        int room_x = fract((i + n) * g1) * MAP_W;
-        int room_y = fract((i + n) * g2) * MAP_H;
-        int room_w = random_int(3, 6);
-        int room_h = random_int(3, 6);
-        for (int y = room_y - room_h / 2; y <= room_y + room_h / 2; y++)
-        for (int x = room_x - room_w / 2; x <= room_x + room_w / 2; x++)
-            map_set(x, y, '#');
+    map_generate(rng_seed);
+
+    // Move the player to an unoccupied map tile.
+    for (;;) {
+        int x = random_int(0, MAP_W - 1);
+        int y = random_int(0, MAP_H - 1);
+        if (!is_wall(x, y)) {
+            player_x = player_x_smooth = x + 0.5f;
+            player_y = player_y_smooth = y + 0.5f;
+            break;
+        }
     }
 
     // Place gems on unoccupied map tiles.
     while (gem_count < MAX_GEMS) {
         int x = random_int(0, MAP_W - 1);
         int y = random_int(0, MAP_H - 1);
-        int tile = map_get(x, y);
-        if (tile == ' ') {
-            map_set(x, y, '*');
+        if (!is_wall(x, y)) {
             Gem* gem = &gem_array[gem_count++];
             gem->x = x + 0.5f;
             gem->y = y + 0.5f;
@@ -430,7 +407,7 @@ static void draw_floor(Column* col)
         float v = fract(hit_y);
         int tile_x = floor(hit_x);
         int tile_y = floor(hit_y);
-        if (map_get(tile_x, tile_y) == '#') {
+        if (is_wall(tile_x, tile_y)) {
             col->color[y] = texture_sample(&texture_wall, u, v);
             col->light[y] = t;
         } else {
@@ -635,7 +612,7 @@ void* draw(double timestamp)
 {
     // Measure time delta since the previous frame.
     static double prev_timestamp;
-    float dt = (timestamp - prev_timestamp) / 1000.0;
+    float dt = min(0.1, (timestamp - prev_timestamp) / 1000.0);
     prev_timestamp = timestamp;
 
     // Measure elapsed time.
@@ -707,6 +684,7 @@ void* draw(double timestamp)
     Column col;
     col.vx = cosf(player_angle_smooth);
     col.vy = sinf(player_angle_smooth);
+
     for (int x = 0; x < FRAME_W; x++) {
 
         // Determine the direction vector for the ray.
@@ -724,12 +702,18 @@ void* draw(double timestamp)
         // Draw gems.
         for (int i = 0; i < gem_count; i++) {
             Gem* gem = &gem_array[i];
-            float h = 0.5f + sinf(timestamp * 0.002f + gem->phase) * 0.1f;
+            float h = 0.5f + 0.1f * sinf(timestamp * 0.002f + gem->phase);
             draw_sprite(&col, gem->x, gem->y, 1, h, gem->tex);
         }
 
         // Draw particles.
         draw_particles(&col);
+
+        // Draw ghost.
+        Texture ghost_frame;
+        int frame_index = (int) (timestamp * 0.01f) % 7;
+        texture_sub(&ghost_frame, &texture_ghost, frame_index * 30, 0, 30, 37);
+        draw_sprite(&col, 5, 5, 2.0f, 0.5f, &ghost_frame);
 
         // Write out the pixels for this column.
         for (int y = 0; y < FRAME_H; y++)
