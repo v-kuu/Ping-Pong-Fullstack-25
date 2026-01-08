@@ -4,8 +4,8 @@
 #define FRAME_W 360
 #define FRAME_H 200
 
-#define FOV 1.1f
-#define WALL_HEIGHT 300
+#define FOV 1.0f
+#define WALL_HEIGHT 150
 
 // Layout of font images.
 #define FONT_GLYPH_MIN ' '
@@ -15,10 +15,14 @@
 #define FONT_GLYPHS_PER_COL 6
 
 // How close the player must get to a gem to collect it.
-#define PLAYER_REACH 1.5f
+#define PLAYER_REACH 1.0f
 
 // The physical size of the player when testing for wall collisions.
-#define PLAYER_HITBOX_SIZE 0.9f
+#define PLAYER_HITBOX_SIZE 0.5f
+
+// How fast the player character moves.
+#define PLAYER_RUN_SPEED 5.0
+#define PLAYER_TURN_SPEED 2.5
 
 enum {
     KEY_FORWARD,
@@ -39,7 +43,7 @@ static bool key_down[KEY_MAX];
 static bool key_held[KEY_MAX];
 
 // Player state.
-static bool player_is_ghost = false;
+static bool player_is_ghost = true;
 static float player_x = 0.5f;
 static float player_y = 0.5f;
 static float player_angle;
@@ -138,7 +142,7 @@ static float raycast(float ax, float ay, float bx, float by, float t)
         int px = ix, py = iy;
         ix += sx * axis;
         iy += sy * !axis;
-        if (min(tx, ty) > t && (!map_inside(ix, iy) || (is_wall(ix, iy) && !is_wall(px, py))))
+        if (min(tx, ty) > t && (!map_inside(ix, iy) || (is_wall(ix, iy) != is_wall(px, py))))
             return min(tx, ty);
         tx += dx * axis;
         ty += dy * !axis;
@@ -403,8 +407,8 @@ static void draw_floor(Column* col)
         float t = WALL_HEIGHT / (y - FRAME_H * 0.5f);
         float hit_x = col->px + col->dx * t;
         float hit_y = col->py + col->dy * t;
-        float u = fract(hit_x);
-        float v = fract(hit_y);
+        float u = fract(hit_x * 2.0f);
+        float v = fract(hit_y * 2.0f);
         int tile_x = floor(hit_x);
         int tile_y = floor(hit_y);
         if (is_wall(tile_x, tile_y)) {
@@ -436,11 +440,11 @@ static void draw_walls(Column* col)
 
         // Draw walls.
         for (int y = y0_clamped; y < y1_clamped; y++) {
-            if (col->depth[y] < depth || (player_is_ghost && dither(col->x, y) > (depth - 2.0f) * 0.3f && bounds))
+            if (col->depth[y] < depth || (player_is_ghost && dither(col->x, y) > (depth - 1.0f) * 1.5f && bounds))
                 continue;
             float edge_x = abs(fract(hit_x) - 0.5f);
             float edge_y = abs(fract(hit_y) - 0.5f);
-            float u = fract(edge_x < edge_y ? hit_x : hit_y);
+            float u = fract((edge_x < edge_y ? hit_x : hit_y) * 2.0f);
             float v = fract(4.0f * (y - y0) / (y1 - y0));
             Texture* tex = bounds ? &texture_wall : &texture_barrier;
             col->color[y] = texture_sample(tex, u, v);
@@ -450,7 +454,7 @@ static void draw_walls(Column* col)
 
         // Draw shadows.
         for (int y = y1_clamped; y < FRAME_H; y++) {
-            if (player_is_ghost && (dither(col->x, y) > (depth - 2.0f) * 0.3f && bounds))
+            if (player_is_ghost && (dither(col->x, y) > (depth - 1.0f) * 1.5f && bounds))
                 continue;
             col->light[y] = min(col->light[y], depth + 4.0f * min(1.0f, (y - y1) / (y1 - y0)));
         }
@@ -515,20 +519,20 @@ static char* number_to_string(char* buffer, unsigned int value)
     return buffer + 1;
 }
 
-static void spawn_particles(float x, float y, uint32_t color)
+static void spawn_particles(float x, float y, float z, uint32_t color)
 {
     for (int i = 0; i < 30; i++) {
         if (particle_count < MAX_PARTICLES) {
             Particle* particle = &particle_array[particle_count++];
-            particle->x = x + random_float(-0.3f, +0.3f);
-            particle->y = y + random_float(-0.3f, +0.3f);
-            particle->z = 1.2f + random_float(-0.3f, +0.3f);
+            particle->x = x + random_float(-0.2f, +0.2f);
+            particle->y = y + random_float(-0.2f, +0.2f);
+            particle->z = z + random_float(-0.2f, +0.2f);
             particle->vx = random_float(-1.0f, +1.0f);
             particle->vy = random_float(-1.0f, +1.0f);
             particle->vz = random_float(+2.0f, +3.0f);
             particle->lifespan = random_float(0.1f, 0.3f);
             particle->counter = 0.0f;
-            particle->size = random_float(0.1f, 0.4f);
+            particle->size = random_float(0.1f, 0.4f) * 0.8f;
             int brighten = random_int(0, 200);
             uint32_t r = min(255, ((color >>  0) & 0xff) + brighten + random_int(-25, 25));
             uint32_t g = min(255, ((color >>  8) & 0xff) + brighten + random_int(-25, 25));
@@ -624,8 +628,8 @@ void* draw(double timestamp)
     frame_number++;
 
     // Handle player movement.
-    const float rotate_speed = 2.5f * dt;
-    const float run_speed = dt * 10.0f;
+    const float rotate_speed = dt * PLAYER_TURN_SPEED;
+    const float run_speed = dt * PLAYER_RUN_SPEED;
     float run_f = key_held[KEY_FORWARD] - key_held[KEY_BACK];
     float run_s = key_held[KEY_RSTRAFE] - key_held[KEY_LSTRAFE];
     if (run_f != 0.0f && run_s != 0.0f) {
@@ -665,7 +669,7 @@ void* draw(double timestamp)
             float dx = player_x - gem->x;
             float dy = player_y - gem->y;
             if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
-                spawn_particles(gem->x, gem->y, gem->color);
+                spawn_particles(gem->x, gem->y, 0.3f, gem->color);
                 score_shake = 0.2f;
                 gem_array[i--] = gem_array[--gem_count];
             }
@@ -702,8 +706,8 @@ void* draw(double timestamp)
         // Draw gems.
         for (int i = 0; i < gem_count; i++) {
             Gem* gem = &gem_array[i];
-            float h = 0.5f + 0.1f * sinf(timestamp * 0.002f + gem->phase);
-            draw_sprite(&col, gem->x, gem->y, 1, h, gem->tex);
+            float h = 0.3f + 0.05f * sinf(timestamp * 0.002f + gem->phase);
+            draw_sprite(&col, gem->x, gem->y, 0.4f, h, gem->tex);
         }
 
         // Draw particles.

@@ -1,16 +1,18 @@
 #include "web3d.h"
 
 // The range of sizes used when generating rooms.
-#define MIN_ROOM_SIZE 5
-#define MAX_ROOM_SIZE 9
+#define MIN_ROOM_SIZE 3
+#define MAX_ROOM_SIZE 7
 
 // The number of rooms to generate.
-#define ROOM_COUNT 8
+#define ROOM_COUNT 30
 
 // Pathfinding parameters, for tuning the tunnel generation algorithm.
 #define CORNER_COST 100 // Cost of passing through the corner of a room.
 #define TUNNEL_COST   5 // Cost of digging a new tunnel.
 #define DOOR_COST    10 // Cost of making a new room entrance.
+
+#define INT_MAX 0x7fffffff
 
 // Tile map data.
 static char map[MAP_W * MAP_H];
@@ -22,9 +24,6 @@ typedef struct {
     uint64_t g: 24; // g(n) score for pathfinding.
     uint64_t f: 24; // f(n) score for pathfinding.
 } Node;
-
-// Tile map.
-static char map[MAP_W * MAP_H];
 
 bool map_inside(int x, int y)
 {
@@ -122,13 +121,11 @@ static void make_path(int x0, int y0, int x1, int y1)
     backtrack(prev, x1, y1, x0, y0);
 }
 
-#define MAP_DIVISOR 2
-
 // Get the x-coordinate of the center of a room.
 static int get_room_x(size_t room_index)
 {
     const int map_x = MAX_ROOM_SIZE / 2 - 1;
-    const int map_w = MAP_W / MAP_DIVISOR - MAX_ROOM_SIZE / 2 - 1;
+    const int map_w = MAP_W - MAX_ROOM_SIZE / 2 - 1;
     const int g1 = map_w * 0.7548776662466927;
     return room_index * g1 % map_w + map_x;
 }
@@ -137,7 +134,7 @@ static int get_room_x(size_t room_index)
 static int get_room_y(size_t room_index)
 {
     const int map_y = MAX_ROOM_SIZE / 2 - 1;
-    const int map_h = MAP_H / MAP_DIVISOR - MAX_ROOM_SIZE / 2 - 1;
+    const int map_h = MAP_H - MAX_ROOM_SIZE / 2 - 1;
     const int g2 = map_h * 0.5698402909980532;
     return room_index * g2 % map_h + map_y;
 }
@@ -178,7 +175,7 @@ static void make_room(size_t index)
 static int get_closest_room(int i, size_t seed)
 {
     int closest_index = i;
-    int closest_dist = 0x7fffffff;
+    int closest_dist = INT_MAX;
     int ix = get_room_x(i + seed);
     int iy = get_room_y(i + seed);
     for (int j = 0; j < ROOM_COUNT; j++) {
@@ -219,11 +216,4 @@ void map_generate(size_t seed)
         int next_x = get_room_x(j + seed), next_y = get_room_y(j + seed);
         make_path(this_x, this_y, next_x, next_y);
     }
-
-    // Rescale the map to its full size.
-    #define MINI_W (MAP_W / MAP_DIVISOR)
-    #define MINI_H (MAP_H / MAP_DIVISOR)
-    for (int y = MINI_H - 1; y >= 0; y--)
-    for (int x = MINI_W - 1; x >= 0; x--)
-        fill_rect(x * MAP_DIVISOR, y + MAP_DIVISOR, (x + 1) * MAP_DIVISOR - 1, (y + 1) * MAP_DIVISOR - 1, map_get(x, y));
 }

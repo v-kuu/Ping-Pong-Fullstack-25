@@ -23,8 +23,8 @@ typedef __SIZE_TYPE__ size_t;
 #define memset(...) __builtin_memset(__VA_ARGS__)
 
 // Dimensions of the tile map.
-#define MAP_W 49
-#define MAP_H 49
+#define MAP_W 25
+#define MAP_H 25
 #define MAP_SIZE (MAP_W * MAP_H)
 
 // gif.c
