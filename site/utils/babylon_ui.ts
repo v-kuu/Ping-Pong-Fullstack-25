@@ -129,6 +129,7 @@ function initScores(scene: Scene)
 	);
 	if (Globals.score1Mesh)
 		Globals.score1Mesh.position.x = Globals.mapWidth / -2 + 0.5;
+
 	Globals.score2Mesh = createScoreMesh(
 		scene,
 		"score2",
@@ -180,8 +181,10 @@ async function createAvatar(scene: Scene, id: number)
 export function updateScore(scene: Scene, id: number)
 {
 	id === 1 ? Globals.score1++ : Globals.score2++;
-	if (id === 1 && Globals.score1Mesh) Globals.score1Mesh.dispose();
-	else if (Globals.score2Mesh) Globals.score2Mesh.dispose();
+	if (id === 1 && Globals.score1Mesh)
+		Globals.score1Mesh.dispose();
+	else if (Globals.score2Mesh)
+		Globals.score2Mesh.dispose();
 	let name = id === 1 ? "score1" : "score2";
 	let value = id === 1 ? `${Globals.score1}` : `${Globals.score2}`;
 	let color =
