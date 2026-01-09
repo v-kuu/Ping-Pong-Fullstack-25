@@ -1,13 +1,13 @@
 import {
-  Scene,
-  StandardMaterial,
-  MeshBuilder,
-  Color3,
-  Vector3,
-  Tools,
-  Mesh,
-  Animation,
-  Texture,
+	Scene,
+	StandardMaterial,
+	MeshBuilder,
+	Color3,
+	Vector3,
+	Tools,
+	Mesh,
+	Animation,
+	Texture,
 } from "@babylonjs/core";
 import { FireProceduralTexture } from "@babylonjs/procedural-textures";
 import { Globals } from "./babylon_globals.ts";
@@ -58,14 +58,14 @@ export async function startCountdown(scene: Scene, onComplete: () => void)
 	for (const value of values)
 	{
 		let countdownMesh = MeshBuilder.CreateText(
-			  "countdown",
-			  value,
-			  fontData,
-			  {
-				  size: value === "GO!" ? 2.5 : 2,
-				  depth: 0.5,
-			  },
-			  scene,
+			"countdown",
+			value,
+			fontData,
+			{
+				size: value === "GO!" ? 2.5 : 2,
+				depth: 0.5,
+			},
+			scene,
 		);
 		if (countdownMesh)
 		{
