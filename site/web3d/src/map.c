@@ -4,15 +4,10 @@
 #define MIN_ROOM_SIZE 3
 #define MAX_ROOM_SIZE 7
 
-// The number of rooms to generate.
-#define ROOM_COUNT 30
-
 // Pathfinding parameters, for tuning the tunnel generation algorithm.
 #define CORNER_COST 100 // Cost of passing through the corner of a room.
 #define TUNNEL_COST   5 // Cost of digging a new tunnel.
 #define DOOR_COST    10 // Cost of making a new room entrance.
-
-#define INT_MAX 0x7fffffff
 
 // Tile map data.
 static char map[MAP_W * MAP_H];
@@ -25,17 +20,22 @@ typedef struct {
     uint64_t f: 24; // f(n) score for pathfinding.
 } Node;
 
+// Check if map coordinates (x, y) lie inside of the map.
 bool map_inside(int x, int y)
 {
     return 0 <= x && x < MAP_W
         && 0 <= y && y < MAP_H;
 }
 
+// Get the tile value at map coordinates (x, y). Returns -1 for coordinates that
+// lie outside of the map.
 int map_get(int x, int y)
 {
     return map_inside(x, y) ? map[x + y * MAP_W] : -1;
 }
 
+// Set the tile value at map coordinates (x, y). Coordinates outside the map are
+// silently ignored.
 void map_set(int x, int y, char value)
 {
     if (map_inside(x, y))
@@ -121,22 +121,46 @@ static void make_path(int x0, int y0, int x1, int y1)
     backtrack(prev, x1, y1, x0, y0);
 }
 
-// Get the x-coordinate of the center of a room.
-static int get_room_x(size_t room_index)
+// Get the x-coordinate an evenly distributed pseudorandom point.
+static int get_random_x(size_t index, size_t min, size_t max)
 {
-    const int map_x = MAX_ROOM_SIZE / 2 - 1;
-    const int map_w = MAP_W - MAX_ROOM_SIZE / 2 - 1;
-    const int g1 = map_w * 0.7548776662466927;
-    return room_index * g1 % map_w + map_x;
+    const int range = max - min + 1;
+    const int hash = range * 0.7548776662466927;
+    return min + index * hash % range;
 }
 
-// Get the y-coordinate of the center of a room.
-static int get_room_y(size_t room_index)
+// Get the y-coordinate an evenly distributed pseudorandom point.
+static int get_random_y(size_t index, size_t min, size_t max)
 {
-    const int map_y = MAX_ROOM_SIZE / 2 - 1;
-    const int map_h = MAP_H - MAX_ROOM_SIZE / 2 - 1;
-    const int g2 = map_h * 0.5698402909980532;
-    return room_index * g2 % map_h + map_y;
+    const int range = max - min + 1;
+    const int hash = range * 0.5698402909980532;
+    return min + index * hash % range;
+}
+
+// Get the x-coordinate of the top/left corner of a room.
+static int get_room_x0(size_t room_index)
+{
+    return get_random_x(room_index, 0, MAP_W - MAX_ROOM_SIZE / 2 - 1);
+}
+
+// Get the y-coordinate of the top/left corner of a room.
+static int get_room_y0(size_t room_index)
+{
+    return get_random_y(room_index, 0, MAP_H - MAX_ROOM_SIZE / 2 - 1);
+}
+
+// Get the x-coordinate of the bottom/right corner of a room.
+static int get_room_x1(size_t room_index)
+{
+    int w = get_random_x(room_index, MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+    return get_room_x0(room_index) + w;
+}
+
+// Get the x-coordinate of the bottom/right corner of a room.
+static int get_room_y1(size_t room_index)
+{
+    int h = get_random_y(room_index, MIN_ROOM_SIZE, MAX_ROOM_SIZE);
+    return get_room_y0(room_index) + h;
 }
 
 // Fill the rectangle bounded by (x0, y0) at one corner and (x1, y1) at the
@@ -148,23 +172,27 @@ static void fill_rect(int x0, int y0, int x1, int y1, char value)
         map_set(x, y, value);
 }
 
-static void make_room(size_t index)
+// Generate empty tiles for the floor of a room.
+static void make_room_floor(size_t index)
 {
-    // Get the range of coordinates bounding the room.
-    int w = random_int(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-    int h = random_int(MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-    int x0 = get_room_x(index) - w / 2, x1 = x0 + w - 1;
-    int y0 = get_room_y(index) - h / 2, y1 = y0 + h - 1;
-
-    // Fill the walls with relatively expensive tiles, to encourage the
-    // pathfinder to make few entrances.
-    fill_rect(x0, y0, x1, y1, DOOR_COST);
-
-    // Fill the center of the room with cheaper tiles.
+    int x0 = get_room_x0(index), x1 = get_room_x1(index);
+    int y0 = get_room_y0(index), y1 = get_room_y1(index);
     fill_rect(x0 + 1, y0 + 1, x1 - 1, y1 - 1, 0);
+}
 
-    // Fill the corners with more expensive tiles, to discourage the pathfinder
-    // from making entrances there.
+// Generate slightly higher cost tiles for the walls of a room.
+static void make_room_walls(size_t index)
+{
+    int x0 = get_room_x0(index), x1 = get_room_x1(index);
+    int y0 = get_room_y0(index), y1 = get_room_y1(index);
+    fill_rect(x0, y0, x1, y1, DOOR_COST);
+}
+
+// Generate very high cost tiles for the corners of a room.
+static void make_room_corners(size_t index)
+{
+    int x0 = get_room_x0(index), x1 = get_room_x1(index);
+    int y0 = get_room_y0(index), y1 = get_room_y1(index);
     map_set(x0, y0, CORNER_COST);
     map_set(x1, y0, CORNER_COST);
     map_set(x0, y1, CORNER_COST);
@@ -176,11 +204,11 @@ static int get_closest_room(int i, size_t seed)
 {
     int closest_index = i;
     int closest_dist = INT_MAX;
-    int ix = get_room_x(i + seed);
-    int iy = get_room_y(i + seed);
-    for (int j = 0; j < ROOM_COUNT; j++) {
-        int jx = get_room_x(j + seed), dx = jx - ix;
-        int jy = get_room_y(j + seed), dy = jy - iy;
+    int ix = map_room_x(i + seed);
+    int iy = map_room_y(i + seed);
+    for (int j = 0; j < MAP_ROOMS; j++) {
+        int jx = map_room_x(j + seed), dx = jx - ix;
+        int jy = map_room_y(j + seed), dy = jy - iy;
         int dist = dx * dx + dy * dy;
         if (i != j && dist < closest_dist) {
             closest_dist = dist;
@@ -190,30 +218,52 @@ static int get_closest_room(int i, size_t seed)
     return closest_index;
 }
 
+// Get the x-coordinate of the center of a room.
+int map_room_x(size_t room_index)
+{
+    return (get_room_x0(room_index) + get_room_x1(room_index)) / 2;
+}
+
+// Get the y-coordinate of the center of a room.
+int map_room_y(size_t room_index)
+{
+    return (get_room_y0(room_index) + get_room_y1(room_index)) / 2;
+}
+
+// Generate a random map from an RNG seed.
 void map_generate(size_t seed)
 {
-    // Clear the map.
+    // Fill the map with solid tiles.
     memset(map, TUNNEL_COST, sizeof(map));
 
-    // Generate random rooms.
-    for (int i = 0; i < ROOM_COUNT; i++)
-        make_room(i + seed);
+    // Generate random rooms. It's important to create all room walls before the
+    // floors are generated; otherwise disconnected "islands" can be created
+    // where rooms overlap.
+    for (size_t i = 0; i < MAP_ROOMS; i++)
+        make_room_walls(i + seed);
+    for (size_t i = 0; i < MAP_ROOMS; i++)
+        make_room_corners(i + seed);
+    for (size_t i = 0; i < MAP_ROOMS; i++)
+        make_room_floor(i + seed);
 
-    // Connect each room to its closest neighbor.
-    for (int i = 0; i < ROOM_COUNT; i++) {
+    // Connect each room to its closest neighbor. This creates tunnels taking
+    // the shortest and most natural path between rooms.
+    for (size_t i = 0; i < MAP_ROOMS; i++) {
         int next = get_closest_room(i, seed);
-        int this_x = get_room_x(i + seed);
-        int this_y = get_room_y(i + seed);
-        int next_x = get_room_x(next + seed);
-        int next_y = get_room_y(next + seed);
+        int this_x = map_room_x(i + seed);
+        int this_y = map_room_y(i + seed);
+        int next_x = map_room_x(next + seed);
+        int next_y = map_room_y(next + seed);
         make_path(this_x, this_y, next_x, next_y);
     }
 
-    // Make sure all rooms are connected, by making a paths between successive
-    // rooms in the sequence.
-    for (int i = 1, j = 0; i < ROOM_COUNT; j = i++) {
-        int this_x = get_room_x(i + seed), this_y = get_room_y(i + seed);
-        int next_x = get_room_x(j + seed), next_y = get_room_y(j + seed);
+    // Make paths connecting all rooms in sequence. This ensures that the entire
+    // map is always connected.
+    for (size_t i = 1, j = 0; i < MAP_ROOMS; j = i++) {
+        int this_x = map_room_x(i + seed);
+        int this_y = map_room_y(i + seed);
+        int next_x = map_room_x(j + seed);
+        int next_y = map_room_y(j + seed);
         make_path(this_x, this_y, next_x, next_y);
     }
 }

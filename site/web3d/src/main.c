@@ -59,7 +59,6 @@ static float score_shake;
 // Timer.
 static double elapsed_time;
 static double start_time;
-static size_t frame_number;
 
 // Textures.
 typedef struct {
@@ -358,6 +357,7 @@ void init(size_t rng_seed)
         int x = random_int(0, MAP_W - 1);
         int y = random_int(0, MAP_H - 1);
         if (!is_wall(x, y)) {
+            map_set(x, y, 'g'); // Mark this grid cell as occupied.
             Gem* gem = &gem_array[gem_count++];
             gem->x = x + 0.5f;
             gem->y = y + 0.5f;
@@ -366,6 +366,12 @@ void init(size_t rng_seed)
             gem->color = average_color(gem->tex);
         }
     }
+
+    // Clear map tiles where gems were placed.
+    for (int y = 0; y < MAP_H; y++)
+    for (int x = 0; x < MAP_W; x++)
+        if (map_get(x, y) == 'g')
+            map_set(x, y, 0);
 }
 
 // Apply fog to a color.
@@ -624,9 +630,6 @@ void* draw(double timestamp)
         start_time = timestamp;
     elapsed_time = (timestamp - start_time) / 1000.0;
 
-    // Track frame numbers.
-    frame_number++;
-
     // Handle player movement.
     const float rotate_speed = dt * PLAYER_TURN_SPEED;
     const float run_speed = dt * PLAYER_RUN_SPEED;
@@ -717,7 +720,7 @@ void* draw(double timestamp)
         Texture ghost_frame;
         int frame_index = (int) (timestamp * 0.01f) % 7;
         texture_sub(&ghost_frame, &texture_ghost, frame_index * 30, 0, 30, 37);
-        draw_sprite(&col, 5, 5, 2.0f, 0.5f, &ghost_frame);
+        draw_sprite(&col, 5, 5, 1.5f, 0.0f, &ghost_frame);
 
         // Write out the pixels for this column.
         for (int y = 0; y < FRAME_H; y++)

@@ -11,8 +11,9 @@ typedef __UINT32_TYPE__ uint32_t;
 typedef __UINT64_TYPE__ uint64_t;
 typedef __SIZE_TYPE__ size_t;
 
-// Yeah, I need to define this myself.
+// Yeah, I need to define these myself.
 #define NULL ((void*) 0)
+#define INT_MAX 0x7fffffff
 
 // Two times pi.
 #define TAU 6.28318530718f
@@ -26,6 +27,7 @@ typedef __SIZE_TYPE__ size_t;
 #define MAP_W 25
 #define MAP_H 25
 #define MAP_SIZE (MAP_W * MAP_H)
+#define MAP_ROOMS 30
 
 // gif.c
 int gif_get_image_w(const uint8_t* gif);
@@ -36,6 +38,8 @@ void* gif_get_pixels(const uint8_t* gif, void* pixels);
 bool map_inside(int x, int y);
 int map_get(int x, int y);
 void map_set(int x, int y, char value);
+int map_room_x(size_t room_index);
+int map_room_y(size_t room_index);
 void map_generate(size_t seed);
 
 // math.c
