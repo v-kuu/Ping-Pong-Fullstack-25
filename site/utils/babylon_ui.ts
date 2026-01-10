@@ -1,30 +1,147 @@
-import * as GUI from "@babylonjs/gui"
+import {
+	Scene,
+	StandardMaterial,
+	MeshBuilder,
+	Color3,
+	Vector3,
+	Tools,
+	Mesh,
+	Animation,
+} from "@babylonjs/core"
+import { FireProceduralTexture } from "@babylonjs/procedural-textures"
 import { Globals } from "./babylon_globals.ts"
 
-export function createRectangle()
+async function get3dFont() : Promise<any>
 {
-	const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-	let rect1 = new GUI.Rectangle();
-	rect1.width = 0.2;
-	rect1.height = "40px";
-	rect1.cornerRadius = 20;
-	rect1.color = "Orange";
-	rect1.thickness = 4;
-	rect1.background = "green";
+	const url = "https://assets.babylonjs.com/fonts/Droid Sans_Regular.json";
+	try
+	{
+		const response = await fetch(url);
+		if (!response.ok)
+		{
+			throw new Error(`Response status: ${response.status}`);
+		}
+		const result = await response.json();
+		return result;
+	}
+	catch (error)
+	{
+		console.error(error.message);
+		return null;
+	}
+}
+const fontData = await get3dFont();
 
-	Globals.scoreText.color = "white";
-	Globals.scoreText.fontSize = 20;
+function animateCountdown(mesh: Mesh, material: StandardMaterial)
+{
+	mesh.scaling.setAll(0.1);
+	material.alpha = 1;
 
-	Globals.scoreText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-	Globals.scoreText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+	Animation.CreateAndStartAnimation(
+		"scaleAnim",
+		mesh,
+		"scaling",
+		60,
+		60,
+		new Vector3(0.1, 0.1, 0.1),
+		new Vector3(1, 1, 1),
+		Animation.ANIMATIONLOOPMODE_CONSTANT
+	);
 
-	rect1.addControl(Globals.scoreText);
-	advancedTexture.addControl(rect1);
-	updateScore();
-	return rect1;
+	Animation.CreateAndStartAnimation(
+		"fadeAnim",
+		material,
+		"alpha",
+		60,
+		60,
+		1,
+		0,
+		Animation.ANIMATIONLOOPMODE_CONSTANT
+	);
 }
 
-export function updateScore()
+export async function startCountdown(scene: Scene, posZ: number, onComplete: () => void)
 {
-	Globals.scoreText.text = `${Globals.score1} : ${Globals.score2}`;
+	let textMat = new StandardMaterial("text", scene);
+	textMat.emissiveColor = Color3.Gray();
+	const values = ["3", "2", "1", "GO!"];
+
+	for (const value of values)
+	{
+		let countdownMesh = MeshBuilder.CreateText(
+			"countdown",
+			value,
+			fontData,
+			{
+				size: value === "GO!" ? 2.5 : 2,
+				depth: 0.5,
+			},
+			scene
+		);
+		if (countdownMesh)
+		{
+			countdownMesh.material = textMat;
+			countdownMesh.position.z = posZ;
+			countdownMesh.rotation.x = Tools.ToRadians(45);
+			animateCountdown(countdownMesh, textMat);
+			if (value === "GO!")
+				onComplete();
+			await Tools.DelayAsync(1000);
+			countdownMesh.dispose();
+		}
+	}
+}
+
+function createScoreMesh(scene: Scene, name: string, value: string, color: Color3[]) : Mesh | null
+{
+	let mat = new StandardMaterial("name", scene);
+	let tex = new FireProceduralTexture("name", 1024, scene);
+	tex.fireColors = color;
+	mat.diffuseTexture = tex;
+	mat.opacityTexture = tex;
+	mat.emissiveTexture = tex;
+
+	let scoreMesh = MeshBuilder.CreateText(
+		name,
+		value,
+		fontData,
+		{
+			size: 2.5,
+			depth: 0.5,
+		},
+		scene
+	);
+	if (scoreMesh)
+	{
+		scoreMesh.material = mat;
+		scoreMesh.position.z = Globals.mapHeight / 2 + 1;
+		scoreMesh.rotation.x = Tools.ToRadians(45);
+	}
+	return scoreMesh;
+}
+
+export function initScores(scene: Scene)
+{
+	Globals.score1Mesh = createScoreMesh(scene, "score1", "0", FireProceduralTexture.BlueFireColors);
+	if (Globals.score1Mesh)
+		Globals.score1Mesh.position.x = Globals.mapWidth / -2;
+	Globals.score2Mesh = createScoreMesh(scene, "score2", "0", FireProceduralTexture.RedFireColors);
+	if (Globals.score2Mesh)
+		Globals.score2Mesh.position.x = Globals.mapWidth / 2;
+}
+
+export function updateScore(scene: Scene, id: number)
+{
+	id === 1 ? Globals.score1++ : Globals.score2++;
+	if (id === 1 && Globals.score1Mesh)
+		Globals.score1Mesh.dispose();
+	else if (Globals.score2Mesh)
+		Globals.score2Mesh.dispose();
+	let name = id === 1 ? "score1" : "score2";
+	let value = id === 1 ? `${Globals.score1}` : `${Globals.score2}`;
+	let color = id === 1 ? FireProceduralTexture.BlueFireColors : FireProceduralTexture.RedFireColors;
+	let mesh = createScoreMesh(scene, name, value, color);
+	if (mesh)
+		mesh.position.x = id === 1 ? Globals.mapWidth / -2 : Globals.mapWidth / 2;
+	id === 1 ? Globals.score1Mesh = mesh : Globals.score2Mesh = mesh;
 }

@@ -1,5 +1,5 @@
 import { Globals } from "./babylon_globals.ts"
-import { startCountdown } from "./babylon_countdown.ts"
+import { startCountdown } from "./babylon_ui.ts"
 import { Scene } from "@babylonjs/core"
 
 export enum GameState
