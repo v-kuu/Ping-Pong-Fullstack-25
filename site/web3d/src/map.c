@@ -11,6 +11,7 @@
 
 // Tile map data.
 static char map[MAP_W * MAP_H];
+static size_t map_seed;
 
 // Node type used by the pathfinding algorithm.
 typedef struct {
@@ -126,7 +127,7 @@ static int get_random_x(size_t index, size_t min, size_t max)
 {
     const int range = max - min + 1;
     const int hash = range * 0.7548776662466927;
-    return min + index * hash % range;
+    return min + (index + map_seed) * hash % range;
 }
 
 // Get the y-coordinate an evenly distributed pseudorandom point.
@@ -134,7 +135,7 @@ static int get_random_y(size_t index, size_t min, size_t max)
 {
     const int range = max - min + 1;
     const int hash = range * 0.5698402909980532;
-    return min + index * hash % range;
+    return min + (index + map_seed) * hash % range;
 }
 
 // Get the x-coordinate of the top/left corner of a room.
@@ -200,15 +201,15 @@ static void make_room_corners(size_t index)
 }
 
 // For a room index, find the index of the closest room in the sequence.
-static int get_closest_room(int i, size_t seed)
+static int get_closest_room(int i)
 {
     int closest_index = i;
     int closest_dist = INT_MAX;
-    int ix = map_room_x(i + seed);
-    int iy = map_room_y(i + seed);
+    int ix = map_room_x(i);
+    int iy = map_room_y(i);
     for (int j = 0; j < MAP_ROOMS; j++) {
-        int jx = map_room_x(j + seed), dx = jx - ix;
-        int jy = map_room_y(j + seed), dy = jy - iy;
+        int jx = map_room_x(j), dx = jx - ix;
+        int jy = map_room_y(j), dy = jy - iy;
         int dist = dx * dx + dy * dy;
         if (i != j && dist < closest_dist) {
             closest_dist = dist;
@@ -233,6 +234,9 @@ int map_room_y(size_t room_index)
 // Generate a random map from an RNG seed.
 void map_generate(size_t seed)
 {
+    // Set the seed used for randomizing the rooms.
+    map_seed = seed;
+
     // Fill the map with solid tiles.
     memset(map, TUNNEL_COST, sizeof(map));
 
@@ -240,30 +244,30 @@ void map_generate(size_t seed)
     // floors are generated; otherwise disconnected "islands" can be created
     // where rooms overlap.
     for (size_t i = 0; i < MAP_ROOMS; i++)
-        make_room_walls(i + seed);
+        make_room_walls(i);
     for (size_t i = 0; i < MAP_ROOMS; i++)
-        make_room_corners(i + seed);
+        make_room_corners(i);
     for (size_t i = 0; i < MAP_ROOMS; i++)
-        make_room_floor(i + seed);
+        make_room_floor(i);
 
     // Connect each room to its closest neighbor. This creates tunnels taking
     // the shortest and most natural path between rooms.
     for (size_t i = 0; i < MAP_ROOMS; i++) {
-        int next = get_closest_room(i, seed);
-        int this_x = map_room_x(i + seed);
-        int this_y = map_room_y(i + seed);
-        int next_x = map_room_x(next + seed);
-        int next_y = map_room_y(next + seed);
+        int next = get_closest_room(i);
+        int this_x = map_room_x(i);
+        int this_y = map_room_y(i);
+        int next_x = map_room_x(next);
+        int next_y = map_room_y(next);
         make_path(this_x, this_y, next_x, next_y);
     }
 
     // Make paths connecting all rooms in sequence. This ensures that the entire
     // map is always connected.
     for (size_t i = 1, j = 0; i < MAP_ROOMS; j = i++) {
-        int this_x = map_room_x(i + seed);
-        int this_y = map_room_y(i + seed);
-        int next_x = map_room_x(j + seed);
-        int next_y = map_room_y(j + seed);
+        int this_x = map_room_x(i);
+        int this_y = map_room_y(i);
+        int next_x = map_room_x(j);
+        int next_y = map_room_y(j);
         make_path(this_x, this_y, next_x, next_y);
     }
 }

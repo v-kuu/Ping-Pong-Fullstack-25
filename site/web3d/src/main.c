@@ -339,31 +339,24 @@ void init(size_t rng_seed)
     for (int i = 0; i < GEM_TYPES; i++)
         texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
 
+    // Generate a random map.
     map_generate(rng_seed);
 
-    // Move the player to an unoccupied map tile.
-    for (;;) {
-        int x = random_int(0, MAP_W - 1);
-        int y = random_int(0, MAP_H - 1);
-        if (!is_wall(x, y)) {
-            player_x = player_x_smooth = x + 0.5f;
-            player_y = player_y_smooth = y + 0.5f;
-            break;
-        }
-    }
-
     // Place gems on unoccupied map tiles.
-    while (gem_count < MAX_GEMS) {
-        int x = random_int(0, MAP_W - 1);
-        int y = random_int(0, MAP_H - 1);
-        if (!is_wall(x, y)) {
-            map_set(x, y, 'g'); // Mark this grid cell as occupied.
-            Gem* gem = &gem_array[gem_count++];
-            gem->x = x + 0.5f;
-            gem->y = y + 0.5f;
-            gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
-            gem->phase = random_float(0.0f, TAU);
-            gem->color = average_color(gem->tex);
+    for (int i = 0; i < MAX_GEMS; i++) {
+        for (int j = 0; j < 100; j++) { // Try 100 different positions.
+            int x = random_int(0, MAP_W - 1);
+            int y = random_int(0, MAP_H - 1);
+            if (!is_wall(x, y)) {
+                map_set(x, y, 'g'); // Mark this grid cell as occupied.
+                Gem* gem = &gem_array[gem_count++];
+                gem->x = x + 0.5f;
+                gem->y = y + 0.5f;
+                gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
+                gem->phase = random_float(0.0f, TAU);
+                gem->color = average_color(gem->tex);
+                break;
+            }
         }
     }
 
@@ -372,6 +365,11 @@ void init(size_t rng_seed)
     for (int x = 0; x < MAP_W; x++)
         if (map_get(x, y) == 'g')
             map_set(x, y, 0);
+
+    // Place the player in a random room.
+    int player_room = random_int(0, MAP_ROOMS - 1);
+    player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
+    player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
 }
 
 // Apply fog to a color.

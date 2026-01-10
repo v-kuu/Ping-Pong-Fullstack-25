@@ -27,7 +27,7 @@ typedef __SIZE_TYPE__ size_t;
 #define MAP_W 25
 #define MAP_H 25
 #define MAP_SIZE (MAP_W * MAP_H)
-#define MAP_ROOMS 30
+#define MAP_ROOMS 20
 
 // gif.c
 int gif_get_image_w(const uint8_t* gif);
