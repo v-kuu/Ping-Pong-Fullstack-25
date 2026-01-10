@@ -43,7 +43,7 @@ static bool key_down[KEY_MAX];
 static bool key_held[KEY_MAX];
 
 // Player state.
-static bool player_is_ghost = true;
+static bool player_is_ghost = false;
 static float player_x = 0.5f;
 static float player_y = 0.5f;
 static float player_angle;
@@ -57,8 +57,9 @@ static float player_y_smooth = 0.5f;
 static float score_shake;
 
 // Timer.
-static double elapsed_time;
-static double start_time;
+static double time_start;   // Timestamp of the first frame.
+static double time_elapsed; // Total time since the start (in seconds).
+static float time_delta;    // Time delta since the last frame (in seconds).
 
 // Textures.
 typedef struct {
@@ -106,6 +107,18 @@ static Texture texture_barrier = { .data = (uint8_t[]) {
 }};
 static Texture texture_ghost = { .data = (uint8_t[]) {
     #embed "../assets/ghost.gif"
+}};
+static Texture texture_guy_back = { .data = (uint8_t[]) {
+    #embed "../assets/guy_back.gif"
+}};
+static Texture texture_guy_front = { .data = (uint8_t[]) {
+    #embed "../assets/guy_front.gif"
+}};
+static Texture texture_guy_left = { .data = (uint8_t[]) {
+    #embed "../assets/guy_left.gif"
+}};
+static Texture texture_guy_right = { .data = (uint8_t[]) {
+    #embed "../assets/guy_right.gif"
 }};
 static Texture texture_gem[GEM_TYPES];
 
@@ -189,7 +202,7 @@ void keydown(int keycode)
 static void* malloc(size_t size)
 {
     const size_t alignment = 16;
-    static char buffer[1 << 17];
+    static char buffer[1 << 18];
     static size_t position;
     void* result = buffer + position;
     position = (position + size + alignment - 1) & -alignment;
@@ -334,6 +347,10 @@ void init(size_t rng_seed)
     texture_load(&texture_gems);
     texture_load(&texture_barrier);
     texture_load(&texture_ghost);
+    texture_load(&texture_guy_front);
+    texture_load(&texture_guy_left);
+    texture_load(&texture_guy_right);
+    texture_load(&texture_guy_back);
     font_load(&font_tiny);
     font_load(&font_big);
     for (int i = 0; i < GEM_TYPES; i++)
@@ -465,7 +482,7 @@ static void draw_walls(Column* col)
     }
 }
 
-static void draw_sprite(Column* col, float sx, float sy, float w, float h, Texture* tex)
+static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, float h)
 {
     const float shadow_scale = 0.8f;
 
@@ -614,28 +631,77 @@ static void time_to_string(char buffer[9], double time)
     buffer[8] = '\0';
 }
 
+static void draw_animation(Column* col, Texture* tex, float x, float y, float w, float h, float rate)
+{
+    Texture frame;
+    int frame_count = tex->w / tex->h;
+    int frame_index = (int) (time_elapsed * rate) % frame_count;
+    int frame_x = frame_index * tex->h;
+    texture_sub(&frame, tex, frame_x, 0, tex->h, tex->h);
+    draw_sprite(col, &frame, x, y, w, h);
+}
+
+static void draw_guy(Column* col, float x, float y, float dx, float dy)
+{
+    Texture* tex = &texture_guy_left;
+    float dp = dx * col->vx + dy * col->vy; // Dot product.
+    float cp = dx * col->vy - dy * col->vx; // Cross product.
+    if (dp > ROOT_HALF)
+        tex = &texture_guy_back;
+    else if (dp < -ROOT_HALF)
+        tex = &texture_guy_front;
+    else if (cp < 0.0f)
+        tex = &texture_guy_right;
+    draw_animation(col, tex, x, y, 1.0f, 0.0f, 10.0f);
+}
+
+static void draw_ghost(Column* col, float x, float y)
+{
+    draw_animation(col, &texture_ghost, x, y, 1.5, 0.0f, 10.0f);
+}
+
+static void draw_user_interface(void)
+{
+    // Draw the gem count.
+    char text[16];
+    number_to_string(text, MAX_GEMS - gem_count);
+    int x = 23;
+    int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
+    score_shake = max(0.0f, score_shake - time_delta);
+    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+    texture_draw(&texture_gem[1], 5, 180);
+
+    // Draw a timer.
+    time_to_string(text, time_elapsed);
+    x = FRAME_W - 55;
+    y = 182;
+    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+}
+
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
 void* draw(double timestamp)
 {
     // Measure time delta since the previous frame.
     static double prev_timestamp;
-    float dt = min(0.1, (timestamp - prev_timestamp) / 1000.0);
+    time_delta = min(0.1, (timestamp - prev_timestamp) / 1000.0);
     prev_timestamp = timestamp;
 
     // Measure elapsed time.
-    if (start_time == 0.0)
-        start_time = timestamp;
-    elapsed_time = (timestamp - start_time) / 1000.0;
+    if (time_start == 0.0)
+        time_start = timestamp;
+    time_elapsed = (timestamp - time_start) / 1000.0;
 
     // Handle player movement.
-    const float rotate_speed = dt * PLAYER_TURN_SPEED;
-    const float run_speed = dt * PLAYER_RUN_SPEED;
+    const float rotate_speed = time_delta * PLAYER_TURN_SPEED;
+    const float run_speed = time_delta * PLAYER_RUN_SPEED;
     float run_f = key_held[KEY_FORWARD] - key_held[KEY_BACK];
     float run_s = key_held[KEY_RSTRAFE] - key_held[KEY_LSTRAFE];
     if (run_f != 0.0f && run_s != 0.0f) {
-        run_f *= __builtin_sqrtf(0.5f);
-        run_s *= __builtin_sqrtf(0.5f);
+        run_f *= ROOT_HALF;
+        run_s *= ROOT_HALF;
     }
     player_angle += rotate_speed * (key_held[KEY_RIGHT] - key_held[KEY_LEFT]);
     player_x += run_speed * (run_f * cosf(player_angle) - run_s * sinf(player_angle));
@@ -678,12 +744,12 @@ void* draw(double timestamp)
     }
 
     // Smooth out player movement.
-    player_angle_smooth = smooth(player_angle_smooth, player_angle, 20.0f * dt);
-    player_x_smooth = smooth(player_x_smooth, player_x, 10.0f * dt);
-    player_y_smooth = smooth(player_y_smooth, player_y, 10.0f * dt);
+    player_angle_smooth = smooth(player_angle_smooth, player_angle, 20.0f * time_delta);
+    player_x_smooth = smooth(player_x_smooth, player_x, 10.0f * time_delta);
+    player_y_smooth = smooth(player_y_smooth, player_y, 10.0f * time_delta);
 
     // Update particle effects.
-    update_particles(dt);
+    update_particles(time_delta);
 
     // Render the frame.
     Column col;
@@ -708,39 +774,23 @@ void* draw(double timestamp)
         for (int i = 0; i < gem_count; i++) {
             Gem* gem = &gem_array[i];
             float h = 0.3f + 0.05f * sinf(timestamp * 0.002f + gem->phase);
-            draw_sprite(&col, gem->x, gem->y, 0.4f, h, gem->tex);
+            draw_sprite(&col, gem->tex, gem->x, gem->y, 0.4f, h);
         }
 
         // Draw particles.
         draw_particles(&col);
 
         // Draw ghost.
-        Texture ghost_frame;
-        int frame_index = (int) (timestamp * 0.01f) % 7;
-        texture_sub(&ghost_frame, &texture_ghost, frame_index * 30, 0, 30, 37);
-        draw_sprite(&col, 5, 5, 1.5f, 0.0f, &ghost_frame);
+        draw_ghost(&col, 7, 7);
+
+        draw_guy(&col, 8, 8, 1, 0);
 
         // Write out the pixels for this column.
         for (int y = 0; y < FRAME_H; y++)
             frame[x + y * FRAME_W] = apply_fog(col.color[y], col.light[y], x, y);
     }
 
-    // Draw the gem count.
-    char text[16];
-    number_to_string(text, MAX_GEMS - gem_count);
-    int x = 23;
-    int y = 182 + 10.0f * score_shake * sinf(timestamp * 0.08f);
-    score_shake = max(0.0f, score_shake - dt);
-    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
-    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
-    texture_draw(&texture_gem[1], 5, 180);
-
-    // Draw a timer.
-    time_to_string(text, elapsed_time);
-    x = FRAME_W - 55;
-    y = 182;
-    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
-    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+    draw_user_interface();
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));

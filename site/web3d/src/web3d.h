@@ -18,6 +18,9 @@ typedef __SIZE_TYPE__ size_t;
 // Two times pi.
 #define TAU 6.28318530718f
 
+// Square root of 0.5.
+#define ROOT_HALF 0.707106781f
+
 // Functions that map directly to builtins.
 #define abs(...) __builtin_fabsf(__VA_ARGS__)
 #define floor(...) __builtin_floorf(__VA_ARGS__)
