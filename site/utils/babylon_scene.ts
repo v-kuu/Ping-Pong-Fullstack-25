@@ -15,7 +15,7 @@ import {
 	GameState,
 	setState
 } from "./babylon_states.ts"
-import { initScores } from "./babylon_ui.ts"
+import { initUI } from "./babylon_ui.ts"
 import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
@@ -50,7 +50,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	setupEntities(light, scene);
 
 	//setup UI
-	initScores(scene);
+	initUI(scene);
 
 	//input setup
 	const keys = {};
