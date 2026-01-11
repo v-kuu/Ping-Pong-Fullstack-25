@@ -11,7 +11,6 @@
 
 // Tile map data.
 static char map[MAP_W * MAP_H];
-static size_t map_seed;
 
 // Node type used by the pathfinding algorithm.
 typedef struct {
@@ -122,46 +121,30 @@ static void make_path(int x0, int y0, int x1, int y1)
     backtrack(prev, x1, y1, x0, y0);
 }
 
-// Get the x-coordinate an evenly distributed pseudorandom point.
-static int get_random_x(size_t index, size_t min, size_t max)
-{
-    const int range = max - min + 1;
-    const int hash = range * 0.7548776662466927;
-    return min + (index + map_seed) * hash % range;
-}
-
-// Get the y-coordinate an evenly distributed pseudorandom point.
-static int get_random_y(size_t index, size_t min, size_t max)
-{
-    const int range = max - min + 1;
-    const int hash = range * 0.5698402909980532;
-    return min + (index + map_seed) * hash % range;
-}
-
 // Get the x-coordinate of the top/left corner of a room.
 static int get_room_x0(size_t room_index)
 {
-    return get_random_x(room_index, 0, MAP_W - MAX_ROOM_SIZE / 2 - 1);
+    return random_hash_x(room_index, MAP_W - MAX_ROOM_SIZE / 2);
 }
 
 // Get the y-coordinate of the top/left corner of a room.
-static int get_room_y0(size_t room_index)
+static int get_room_y0(size_t room)
 {
-    return get_random_y(room_index, 0, MAP_H - MAX_ROOM_SIZE / 2 - 1);
+    return random_hash_y(room, MAP_H - MAX_ROOM_SIZE / 2);
 }
 
 // Get the x-coordinate of the bottom/right corner of a room.
-static int get_room_x1(size_t room_index)
+static int get_room_x1(size_t room)
 {
-    int w = get_random_x(room_index, MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-    return get_room_x0(room_index) + w;
+    int w = MIN_ROOM_SIZE + random_hash_x(room, MAX_ROOM_SIZE - MIN_ROOM_SIZE);
+    return get_room_x0(room) + w;
 }
 
 // Get the x-coordinate of the bottom/right corner of a room.
-static int get_room_y1(size_t room_index)
+static int get_room_y1(size_t room)
 {
-    int h = get_random_y(room_index, MIN_ROOM_SIZE, MAX_ROOM_SIZE);
-    return get_room_y0(room_index) + h;
+    int h = MIN_ROOM_SIZE + random_hash_y(room, MAX_ROOM_SIZE - MIN_ROOM_SIZE);
+    return get_room_y0(room) + h;
 }
 
 // Fill the rectangle bounded by (x0, y0) at one corner and (x1, y1) at the
@@ -234,9 +217,6 @@ int map_room_y(size_t room_index)
 // Generate a random map from an RNG seed.
 void map_generate(size_t seed)
 {
-    // Set the seed used for randomizing the rooms.
-    map_seed = seed;
-
     // Fill the map with solid tiles.
     memset(map, TUNNEL_COST, sizeof(map));
 

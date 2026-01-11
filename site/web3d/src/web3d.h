@@ -58,6 +58,9 @@ float lerp(float x0, float x1, float t);
 float sign(float x);
 
 // random.c
-void random_seed(unsigned int seed);
+void random_seed(size_t seed);
 int random_int(int min, int max);
 float random_float(float min, float max);
+int random_hash(size_t index, size_t range);
+int random_hash_x(size_t index, size_t range);
+int random_hash_y(size_t index, size_t range);

@@ -24,6 +24,9 @@
 #define PLAYER_RUN_SPEED 5.0
 #define PLAYER_TURN_SPEED 2.5
 
+// Fractional bits for a player's position.
+#define FRAC_BITS 11
+
 enum {
     KEY_FORWARD,
     KEY_BACK,
@@ -43,15 +46,25 @@ static bool key_down[KEY_MAX];
 static bool key_held[KEY_MAX];
 
 // Player state.
-static bool player_is_ghost = false;
-static float player_x = 0.5f;
-static float player_y = 0.5f;
+static float player_x;
+static float player_y;
 static float player_angle;
 
 // Smoothed player state.
 static float player_angle_smooth;
-static float player_x_smooth = 0.5f;
-static float player_y_smooth = 0.5f;
+static float player_x_smooth;
+static float player_y_smooth;
+
+// Player state.
+#define MAX_PLAYERS 8
+typedef struct {
+    uint64_t gems;  // Bit mask of collected gems.
+    uint32_t id;    // Unique ID.
+    uint16_t x, y;  // Map position (in fixed point).
+} Player;
+static Player players[MAX_PLAYERS];
+static uint32_t player_self;      // Player ID of the local player.
+static uint32_t player_ghost = 1; // Player ID of the current ghost.
 
 // Shake effect when collecting a gem.
 static float score_shake;
@@ -65,20 +78,20 @@ static float time_delta;    // Time delta since the last frame (in seconds).
 typedef struct {
     uint16_t w, h;  // Size of the texture.
     uint16_t pitch; // Texels per row.
+    uint32_t color; // Average color (used for particle effects).
     void* data;     // GIF file data (before load) or texel data (after load).
 } Texture;
 
 // Gems.
 #define GEM_TYPES 14
-#define MAX_GEMS 100
+#define MAX_GEMS 50
 typedef struct {
     Texture* tex;   // Texture to use for drawing.
-    uint32_t color; // Gem color (used for particle effect).
     float x, y;     // Map position.
     float phase;    // Random animation phase.
 } Gem;
 static Gem gem_array[MAX_GEMS];
-static int gem_count;
+static uint64_t gem_mask = (1ull << MAX_GEMS) - 1;
 
 // Particles.
 #define MAX_PARTICLES 100
@@ -246,6 +259,28 @@ void font_load(Font* font)
     }
 }
 
+// Get the average color of a texture, not counting transparent pixels.
+static uint32_t average_color(Texture* tex)
+{
+    uint32_t r = 0;
+    uint32_t g = 0;
+    uint32_t b = 0;
+    uint8_t (*pixels)[4] = tex->data;
+    for (int y = 0; y < tex->h; y++)
+    for (int x = 0; x < tex->w; x++) {
+        uint8_t* pixel = pixels[x + y * tex->pitch];
+        if (pixel[0] + pixel[1] + pixel[2]) {
+            r += pixel[0];
+            g += pixel[1];
+            b += pixel[2];
+        }
+    }
+    r /= tex->w * tex->h;
+    g /= tex->w * tex->h;
+    b /= tex->w * tex->h;
+    return r | (g << 8) | (b << 16) | (0xff << 24);
+}
+
 // Load a texture from a GIF file.
 void texture_load(Texture* tex)
 {
@@ -312,28 +347,6 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
     }
 }
 
-// Get the average color of a texture, not counting transparent pixels.
-static uint32_t average_color(Texture* tex)
-{
-    uint32_t r = 0;
-    uint32_t g = 0;
-    uint32_t b = 0;
-    uint8_t (*pixels)[4] = tex->data;
-    for (int y = 0; y < tex->h; y++)
-    for (int x = 0; x < tex->w; x++) {
-        uint8_t* pixel = pixels[x + y * tex->pitch];
-        if (pixel[0] + pixel[1] + pixel[2]) {
-            r += pixel[0];
-            g += pixel[1];
-            b += pixel[2];
-        }
-    }
-    r /= tex->w * tex->h;
-    g /= tex->w * tex->h;
-    b /= tex->w * tex->h;
-    return r | (g << 8) | (b << 16) | (0xff << 24);
-}
-
 // Initialize the game.
 __attribute__((export_name("init")))
 void init(size_t rng_seed)
@@ -353,27 +366,25 @@ void init(size_t rng_seed)
     texture_load(&texture_guy_back);
     font_load(&font_tiny);
     font_load(&font_big);
-    for (int i = 0; i < GEM_TYPES; i++)
+    for (int i = 0; i < GEM_TYPES; i++) {
         texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
+        texture_gem[i].color = average_color(&texture_gem[i]);
+    }
 
     // Generate a random map.
     map_generate(rng_seed);
 
     // Place gems on unoccupied map tiles.
-    for (int i = 0; i < MAX_GEMS; i++) {
-        for (int j = 0; j < 100; j++) { // Try 100 different positions.
-            int x = random_int(0, MAP_W - 1);
-            int y = random_int(0, MAP_H - 1);
-            if (!is_wall(x, y)) {
-                map_set(x, y, 'g'); // Mark this grid cell as occupied.
-                Gem* gem = &gem_array[gem_count++];
-                gem->x = x + 0.5f;
-                gem->y = y + 0.5f;
-                gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
-                gem->phase = random_float(0.0f, TAU);
-                gem->color = average_color(gem->tex);
-                break;
-            }
+    for (int i = 0; i < MAX_GEMS;) {
+        int x = random_int(0, MAP_W - 1);
+        int y = random_int(0, MAP_H - 1);
+        if (!is_wall(x, y)) {
+            map_set(x, y, 'g'); // Mark this grid cell as occupied.
+            Gem* gem = &gem_array[i++];
+            gem->x = x + 0.5f;
+            gem->y = y + 0.5f;
+            gem->tex = &texture_gem[random_int(0, GEM_TYPES - 1)];
+            gem->phase = random_float(0.0f, TAU);
         }
     }
 
@@ -387,6 +398,14 @@ void init(size_t rng_seed)
     int player_room = random_int(0, MAP_ROOMS - 1);
     player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
     player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
+
+    // Make some players.
+    for (int i = 0; i < 3; i++) {
+        Player* player = &players[i];
+        player->id = i + 1;
+        player->x = (map_room_x(i) + 0.5f) * (1 << FRAC_BITS);
+        player->y = (map_room_y(i) + 0.5f) * (1 << FRAC_BITS);
+    }
 }
 
 // Apply fog to a color.
@@ -447,7 +466,7 @@ static void draw_walls(Column* col)
 {
     // Raycast against the map.
     float depth = 0.0f;
-    int limit = player_is_ghost ? 10 : 1;
+    int limit = player_self == player_ghost ? 10 : 1;
     for (int i = 0; i < limit && (depth - 2.0f) * 0.3f < 1.0f; i++) {
         depth = raycast(col->px, col->py, col->dx, col->dy, depth);
         const float y0 = FRAME_H * 0.5f + 0.5f - WALL_HEIGHT / depth;
@@ -461,7 +480,7 @@ static void draw_walls(Column* col)
 
         // Draw walls.
         for (int y = y0_clamped; y < y1_clamped; y++) {
-            if (col->depth[y] < depth || (player_is_ghost && dither(col->x, y) > (depth - 1.0f) * 1.5f && bounds))
+            if (col->depth[y] < depth || (player_self == player_ghost && dither(col->x, y) > (depth - 1.0f) * 1.5f && bounds))
                 continue;
             float edge_x = abs(fract(hit_x) - 0.5f);
             float edge_y = abs(fract(hit_y) - 0.5f);
@@ -475,7 +494,7 @@ static void draw_walls(Column* col)
 
         // Draw shadows.
         for (int y = y1_clamped; y < FRAME_H; y++) {
-            if (player_is_ghost && (dither(col->x, y) > (depth - 1.0f) * 1.5f && bounds))
+            if (player_self == player_ghost && (dither(col->x, y) > (depth - 1.0f) * 1.5f && bounds))
                 continue;
             col->light[y] = min(col->light[y], depth + 4.0f * min(1.0f, (y - y1) / (y1 - y0)));
         }
@@ -501,7 +520,7 @@ static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, 
     const int y1_clamped = max(0, min(y1, FRAME_H));
 
     // Draw the shadow.
-    const float radius = w * shadow_scale * 0.5f;
+    const float radius = w * shadow_scale * 0.3f;
     if (-0.707f * shadow_scale < s && s < 0.707f * shadow_scale) {
         for (int y = 0; y < FRAME_H; y++) {
             float hit_t = WALL_HEIGHT / (y - FRAME_H * 0.5f);
@@ -652,7 +671,7 @@ static void draw_guy(Column* col, float x, float y, float dx, float dy)
         tex = &texture_guy_front;
     else if (cp < 0.0f)
         tex = &texture_guy_right;
-    draw_animation(col, tex, x, y, 1.0f, 0.0f, 10.0f);
+    draw_animation(col, tex, x, y, 0.9f, 0.0f, 10.0f);
 }
 
 static void draw_ghost(Column* col, float x, float y)
@@ -660,24 +679,61 @@ static void draw_ghost(Column* col, float x, float y)
     draw_animation(col, &texture_ghost, x, y, 1.5, 0.0f, 10.0f);
 }
 
+static void draw_countdown(double seconds)
+{
+    // Draw a timer.
+    char text[16];
+    time_to_string(text, seconds);
+    int x = (FRAME_W - 35) / 2;
+    int y = (FRAME_H - 30) / 2;
+    int color = ((int) (seconds * 128.0f) % 128 + 127) * 0x010101 | 0xff000000;
+    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+    font_draw(&font_big, x + 0, y + 0, color, text);
+
+    char* small = "GAME STARTS IN";
+    x = (FRAME_W - 53) / 2;
+    y = (FRAME_H - 50) / 2;
+    font_draw(&font_tiny, x + 1, y + 1, 0xff000000, small);
+    font_draw(&font_tiny, x + 0, y + 0, color, small);
+}
+
 static void draw_user_interface(void)
 {
     // Draw the gem count.
     char text[16];
-    number_to_string(text, MAX_GEMS - gem_count);
+    number_to_string(text, MAX_GEMS - __builtin_popcountg(gem_mask));
     int x = 23;
     int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
     score_shake = max(0.0f, score_shake - time_delta);
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
     texture_draw(&texture_gem[1], 5, 180);
+}
 
-    // Draw a timer.
-    time_to_string(text, time_elapsed);
-    x = FRAME_W - 55;
-    y = 182;
-    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
-    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+static void draw_players(Column* col)
+{
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        Player* player = &players[i];
+        if (!player->id || player->id == player_self)
+            continue;
+        float x = (float) player->x / (1 << FRAC_BITS);
+        float y = (float) player->y / (1 << FRAC_BITS);
+        if (player->id == player_ghost)
+            draw_ghost(col, x, y);
+        else
+            draw_guy(col, x, y, 1, 0);
+    }
+}
+
+static void draw_gems(Column* col)
+{
+    for (int i = 0; i < MAX_GEMS; i++) {
+        if (gem_mask & (1ull << i)) {
+            Gem* gem = &gem_array[i];
+            float height = 0.3f + 0.05f * sinf(time_elapsed * 2.0f + gem->phase);
+            draw_sprite(col, gem->tex, gem->x, gem->y, 0.4f, height);
+        }
+    }
 }
 
 // Render the next frame of the game.
@@ -708,7 +764,7 @@ void* draw(double timestamp)
     player_y += run_speed * (run_f * sinf(player_angle) + run_s * cosf(player_angle));
 
     // Do collision detection against walls.
-    if (!player_is_ghost) {
+    if (player_self != player_ghost) {
         const float half = PLAYER_HITBOX_SIZE * 0.5f;
         const int ix = floor(player_x);
         const int iy = floor(player_y);
@@ -730,15 +786,17 @@ void* draw(double timestamp)
     player_y = max(0.5f, min(player_y, MAP_H - 0.5f));
 
     // Collect gems when touching them.
-    if (!player_is_ghost) {
-        for (int i = 0; i < gem_count; i++) {
-            Gem* gem = &gem_array[i];
-            float dx = player_x - gem->x;
-            float dy = player_y - gem->y;
-            if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
-                spawn_particles(gem->x, gem->y, 0.3f, gem->color);
-                score_shake = 0.2f;
-                gem_array[i--] = gem_array[--gem_count];
+    if (player_self != player_ghost) {
+        for (int i = 0; i < MAX_GEMS; i++) {
+            if (gem_mask & (1ull << i)) {
+                Gem* gem = &gem_array[i];
+                float dx = player_x - gem->x;
+                float dy = player_y - gem->y;
+                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
+                    spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
+                    score_shake = 0.2f;
+                    gem_mask &= ~(1ull << i);
+                }
             }
         }
     }
@@ -751,39 +809,30 @@ void* draw(double timestamp)
     // Update particle effects.
     update_particles(time_delta);
 
-    // Render the frame.
-    Column col;
-    col.vx = cosf(player_angle_smooth);
-    col.vy = sinf(player_angle_smooth);
+    // Set up state for raycasting.
+    Column col = {
+        .px = player_x_smooth,
+        .py = player_y_smooth,
+        .vx = cosf(player_angle_smooth),
+        .vy = sinf(player_angle_smooth),
+    };
 
+    // Render the frame one vertical slice at a time.
     for (int x = 0; x < FRAME_W; x++) {
 
         // Determine the direction vector for the ray.
         float t = (float) x / (FRAME_W - 1) * 2.0f - 1.0f;
         col.x = x;
-        col.px = player_x_smooth;
-        col.py = player_y_smooth;
         col.dx = col.vx - col.vy * FOV * t;
         col.dy = col.vy + col.vx * FOV * t;
 
+        // Draw all objects.
         draw_sky(&col);
         draw_floor(&col);
         draw_walls(&col);
-
-        // Draw gems.
-        for (int i = 0; i < gem_count; i++) {
-            Gem* gem = &gem_array[i];
-            float h = 0.3f + 0.05f * sinf(timestamp * 0.002f + gem->phase);
-            draw_sprite(&col, gem->tex, gem->x, gem->y, 0.4f, h);
-        }
-
-        // Draw particles.
+        draw_gems(&col);
         draw_particles(&col);
-
-        // Draw ghost.
-        draw_ghost(&col, 7, 7);
-
-        draw_guy(&col, 8, 8, 1, 0);
+        draw_players(&col);
 
         // Write out the pixels for this column.
         for (int y = 0; y < FRAME_H; y++)
@@ -791,6 +840,9 @@ void* draw(double timestamp)
     }
 
     draw_user_interface();
+
+    if (time_elapsed < 5.0f)
+        draw_countdown(5.0f - time_elapsed);
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));
