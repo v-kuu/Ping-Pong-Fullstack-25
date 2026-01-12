@@ -8,8 +8,7 @@ import {
 	DirectionalLight,
 	CascadedShadowGenerator,
 } from "@babylonjs/core"
-import { setupCollisions } from "./babylon_physics_helpers.ts"
-import { Globals } from "./babylon_globals.ts"
+import { Globals } from "../shared/babylon_globals.ts"
 
 export enum Sides
 {
@@ -145,22 +144,4 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	{
 		csm.addShadowCaster(wall);
 	}
-	
-	setupCollisions(player1, player2, wallMeshes, ball, scene);
-	scene.onBeforeRenderObservable.add(() =>
-	{
-		const delta = scene.getEngine().getDeltaTime() / 1e3;
-		if (Globals.playing)
-		{
-			player1.moveWithCollisions(Globals.vel1);
-			player2.moveWithCollisions(Globals.vel2);
-			ball.moveWithCollisions(Globals.ballVel.scale(delta * Globals.ballSpeed));
-		}
-		else
-		{
-			player1.position.z = 0;
-			player2.position.z = 0;
-		}
-
-	});
 }

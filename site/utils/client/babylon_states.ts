@@ -1,4 +1,4 @@
-import { Globals } from "./babylon_globals.ts"
+import { Globals } from "../shared/babylon_globals.ts"
 import { startCountdown } from "./babylon_ui.ts"
 import { Scene } from "@babylonjs/core"
 

@@ -10,7 +10,7 @@ import {
 	Texture,
 } from "@babylonjs/core";
 import { FireProceduralTexture } from "@babylonjs/procedural-textures";
-import { Globals } from "./babylon_globals.ts";
+import { Globals } from "../shared/babylon_globals.ts";
 
 async function get3dFont(): Promise<any>
 {

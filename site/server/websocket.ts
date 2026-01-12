@@ -3,6 +3,7 @@
 // Open websocket with "bun run server/websocket.ts"
 
 import type { ServerWebSocket } from "bun";
+import { NullEngine } from "@babylonjs/core";
 
 interface PlayerData {
     playerId: string;
@@ -10,6 +11,8 @@ interface PlayerData {
 }
 
 const clients = new Set<ServerWebSocket<unknown>>();
+
+var engine = new NullEngine();
 
 Bun.serve({
     port: 3001,

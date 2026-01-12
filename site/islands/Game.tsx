@@ -4,8 +4,8 @@ import earcut from "earcut";
 import { Engine } from "@babylonjs/core";
 import { useEffect } from "preact/hooks";
 import { Canvas } from "../components/Canvas.tsx";
-import { createScene } from "../utils/babylon_scene.ts";
-import { Globals } from "../utils/babylon_globals.ts";
+import { createScene } from "../utils/client/babylon_scene.ts";
+import { Globals } from "../utils/shared/babylon_globals.ts";
 
 export function Game(username: string) {
 	Globals.userName = username;

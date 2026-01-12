@@ -10,7 +10,7 @@ import {
 import { Inspector } from "@babylonjs/inspector"
 import { setupEntities } from "./babylon_entities.ts"
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
-import { Globals } from "./babylon_globals.ts"
+import { Globals } from "../shared/babylon_globals.ts"
 import {
 	GameState,
 	setState
@@ -29,7 +29,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	});
 	if (helper && helper.ground)
 		helper.ground.dispose();
-	scene.collisionsEnabled = true;
 	scene.environmentIntensity = 3.0;
 	scene.clearColor = new Color4(0, 0, 0, 0);
 
