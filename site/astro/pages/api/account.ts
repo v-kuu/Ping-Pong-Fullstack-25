@@ -5,7 +5,9 @@ import { badRequest, unauthorized, conflict, success } from "@/utils/apiHelpers"
 import { join } from "path";
 import { existsSync, renameSync } from "fs";
 
-const AVATARS_DIR = join(process.cwd(), "public", "avatars");
+const AVATARS_DIR = import.meta.env.PROD 
+  ? `${process.cwd()}/dist/client/avatars`
+  : `${process.cwd()}/public/avatars`;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   if (!locals.user) {

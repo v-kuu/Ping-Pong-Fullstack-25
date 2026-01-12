@@ -1,6 +1,6 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import "../src/styles.css";
+import "@/astro/styles.css";
 
 export interface ButtonProps {
   id?: string;

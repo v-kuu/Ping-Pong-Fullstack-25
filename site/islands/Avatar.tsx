@@ -8,7 +8,7 @@ export function NavAvatar({ username }: AvatarProps) {
   const [cacheKey, setCacheKey] = useState(Date.now());
   const [imgSrc, setImgSrc] = useState("/avatar.png");
 
-  const customAvatarUrl = `/avatars/${username}.png`;
+  const customAvatarUrl = `/api/avatars/${username}`;
 
   // Pre-load custom avatar to check if it exists
   useEffect(() => {
@@ -44,7 +44,7 @@ export function NavAvatar({ username }: AvatarProps) {
 }
 
 export function ChangeAvatar({ username }: AvatarProps) {
-  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(`/avatars/${username}.png`);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(`/api/avatars/${username}`);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [hasCustomAvatar, setHasCustomAvatar] = useState(false);

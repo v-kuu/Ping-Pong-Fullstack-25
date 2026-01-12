@@ -43,7 +43,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     return success({ 
       message: "Avatar updated successfully",
-      avatarUrl: `/avatars/${locals.user.username}.png`
+      avatarUrl: `/api/avatars/${locals.user.username}`
     });
   } catch (error) {
     console.error("Failed to upload avatar:", error);
@@ -85,7 +85,7 @@ export const GET: APIRoute = async ({ locals }) => {
   return success({
     hasCustomAvatar,
     avatarUrl: hasCustomAvatar 
-      ? `/avatars/${locals.user.username}.png` 
+      ? `/api/avatars/${locals.user.username}` 
       : "/avatar.png"
   });
 };

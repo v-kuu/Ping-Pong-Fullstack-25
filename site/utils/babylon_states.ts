@@ -1,5 +1,5 @@
 import { Globals } from "./babylon_globals.ts"
-import { startCountdown } from "./babylon_countdown.ts"
+import { startCountdown } from "./babylon_ui.ts"
 import { Scene } from "@babylonjs/core"
 
 export enum GameState
@@ -16,7 +16,7 @@ export function setState(newState: GameState, scene: Scene)
 	{
 		case GameState.Countdown:
 			Globals.playing = false;
-			startCountdown(scene, Globals.mapHeight / 2 + 1, () => {
+			startCountdown(scene, () => {
 				setState(GameState.Playing, scene);
 			});
 			break ;

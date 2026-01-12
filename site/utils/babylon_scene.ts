@@ -7,15 +7,15 @@ import {
 	DirectionalLight,
 	CubeTexture,
 } from "@babylonjs/core"
-import { Control } from "@babylonjs/gui"
+import { Inspector } from "@babylonjs/inspector"
 import { setupEntities } from "./babylon_entities.ts"
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
 import { Globals } from "./babylon_globals.ts"
-import { createRectangle } from "./babylon_ui.ts"
 import {
 	GameState,
 	setState
 } from "./babylon_states.ts"
+import { initUI } from "./babylon_ui.ts"
 import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
@@ -49,12 +49,17 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	//entity setup
 	setupEntities(light, scene);
 
+	//setup UI
+	initUI(scene);
+
 	//input setup
 	const keys = {};
+	let inspectorVisible: boolean = false;
+	let togglePAvailable: boolean = true;
 	window.addEventListener("keydown", (e) => keys[e.key] = true);
 	window.addEventListener("keyup", (e) => keys[e.key] = false);
 	scene.onBeforeRenderObservable.add(() => {
-		const delta = scene.getEngine().getDeltaTime() / 1e3;
+		const delta = engine.getDeltaTime() / 1e3;
 		const distance = Globals.moveSpeed * delta;
 		Globals.vel1 = new Vector3();
 		Globals.vel2 = new Vector3();
@@ -73,10 +78,15 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 		if (keys["f"]) {
 			canvas.requestFullscreen();
 		}
+		if (keys["p"] && togglePAvailable) {
+			inspectorVisible ? Inspector.Show(scene, {}) : Inspector.Hide();
+			inspectorVisible = !inspectorVisible;
+			togglePAvailable = false;
+		}
+		if (!keys["p"]) {
+			togglePAvailable = true;
+		}
 	});
-
-	//gui
-	createRectangle().verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
 
 	enablePostProcess(scene, envTexture);
 	setState(GameState.Countdown, scene);

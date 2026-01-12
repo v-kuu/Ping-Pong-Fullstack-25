@@ -49,7 +49,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
   useEffect(() => {
     if (!userData?.username) return;
 
-    const customAvatarUrl = `/avatars/${userData.username}.png`;
+    const customAvatarUrl = `/api/avatars/${userData.username}`;
     const img = new Image();
     img.onload = () => {
       setAvatarUrl(`${customAvatarUrl}?t=${Date.now()}`);
@@ -64,7 +64,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
     if (!userData?.username) return;
 
     const handleAvatarUpdate = () => {
-      const customAvatarUrl = `/avatars/${userData.username}.png`;
+      const customAvatarUrl = `/api/avatars/${userData.username}`;
       const img = new Image();
       img.onload = () => {
         setAvatarUrl(`${customAvatarUrl}?t=${Date.now()}`);
