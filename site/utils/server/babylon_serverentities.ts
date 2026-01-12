@@ -45,7 +45,7 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.NORTH].position.y = 0.3;
 	walls[Sides.NORTH].position.z = Globals.mapHeight / 2;
 	walls[Sides.NORTH].checkCollisions = true;
-	
+
 	//south
 	walls[Sides.SOUTH] = MeshBuilder.CreateBox(
 		"horizontal", { width: Globals.mapWidth, height: 0.6, depth: 0.3}, scene);
@@ -68,7 +68,7 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.WEST].position.y = 0.3;
 	walls[Sides.WEST].position.x = Globals.mapWidth / -2;
 	walls[Sides.WEST].checkCollisions = true;
-	
+
 	return walls;
 }
 
@@ -78,9 +78,9 @@ export function setupServerEntities(scene: Scene)
 	let player1 = createPlayer(true, scene);
 	let player2 = createPlayer(false, scene);
 	let wallMeshes: Mesh[] = createWalls(scene);
-	
+
 	setupCollisions(player1, player2, wallMeshes, ball, scene);
-	scene.onBeforePhysicsObservable.add(() =>
+	scene.onBeforeRenderObservable.add(() =>
 	{
 		const delta = scene.getEngine().getDeltaTime() / 1e3;
 		if (Globals.playing)

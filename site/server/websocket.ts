@@ -3,7 +3,9 @@
 // Open websocket with "bun run server/websocket.ts"
 
 import type { ServerWebSocket } from "bun";
-import { NullEngine } from "@babylonjs/core";
+import { NullEngine, Scene } from "@babylonjs/core";
+import { createSession } from "../utils/server/babylon_createsession.ts"
+import { Globals } from "../utils/shared/babylon_globals.ts"
 
 interface PlayerData {
     playerId: string;
@@ -13,6 +15,10 @@ interface PlayerData {
 const clients = new Set<ServerWebSocket<unknown>>();
 
 var engine = new NullEngine();
+var scene = createSession(engine);
+engine.runRenderLoop(function (){
+	scene.render();
+});
 
 Bun.serve({
     port: 3001,
@@ -24,7 +30,6 @@ Bun.serve({
             server.upgrade(req, {
                 data: {
                     playerId,
-                    pos: 0
                 }
                 })
             return;
@@ -35,11 +40,13 @@ Bun.serve({
         message(ws, msg) {
             const data = JSON.parse(msg);
             if (data.type === "move")
-                if (data.direction === "up")
-                    ws.data.pos += 5
-                if (data.direction === "down")
-                    ws.data.pos -= 5
-                console.log(`Player ${ws.data.playerId} moved ${data.direction} -> pos=${ws.data.pos}`);
+                if (data.direction === "up") {
+					Globals.playerKeyUp = true;
+				}
+                if (data.direction === "down") {
+					Globals.playerKeyDown = true;
+				}
+                // console.log(`Player ${ws.data.playerId} moved ${data.direction} -> pos=${ws.data.pos}`);
         },
         open(ws) {
             clients.add(ws)
@@ -53,7 +60,7 @@ Bun.serve({
     },
 });
 
-const TICK_RATE = 60;
+const TICK_RATE = 1;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 
@@ -81,6 +88,8 @@ function gameTick() {
     }
 
     setTimeout(gameTick, TICK_INTERVAL)
+
+	console.log("Game state now:", Globals.playerKeyDown)
 }
 
 gameTick();

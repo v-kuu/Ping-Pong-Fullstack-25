@@ -7,7 +7,7 @@ import { Globals } from "../shared/babylon_globals.ts"
 import {
 	setState,
 	GameState,
-} from "../babylon_states.ts"
+} from "./babylon_serverstates.ts"
 
 function bounceOffPlayer(
 	ball: any, player: any, ballVel: Vector3)
