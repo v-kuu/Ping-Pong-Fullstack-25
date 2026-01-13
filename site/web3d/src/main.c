@@ -24,9 +24,6 @@
 #define PLAYER_RUN_SPEED 5.0
 #define PLAYER_TURN_SPEED 2.5
 
-// Fractional bits for a player's position.
-#define FRAC_BITS 11
-
 enum {
     KEY_FORWARD,
     KEY_BACK,
@@ -60,11 +57,15 @@ static float player_y_smooth;
 typedef struct {
     uint64_t gems;  // Bit mask of collected gems.
     uint32_t id;    // Unique ID.
-    uint16_t x, y;  // Map position (in fixed point).
+    float x, y;     // Map position.
+    float vx, vy;   // Visual position.
+    float dx, dy;   // Direction vector.
+    bool moving;    // True if player is in motion.
+    bool active;    // False if player just spawned.
 } Player;
 static Player players[MAX_PLAYERS];
-static uint32_t player_self;      // Player ID of the local player.
-static uint32_t player_ghost = 1; // Player ID of the current ghost.
+static uint32_t player_self;  // Player ID of the local player.
+static uint32_t player_ghost; // Player ID of the current ghost.
 
 // Shake effect when collecting a gem.
 static float score_shake;
@@ -91,7 +92,8 @@ typedef struct {
     float phase;    // Random animation phase.
 } Gem;
 static Gem gem_array[MAX_GEMS];
-static uint64_t gem_mask = (1ull << MAX_GEMS) - 1;
+static uint64_t gem_mask;
+static int gem_count;
 
 // Particles.
 #define MAX_PARTICLES 100
@@ -351,9 +353,6 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
 __attribute__((export_name("init")))
 void init(size_t rng_seed)
 {
-    // Seed the random number generator.
-    random_seed(rng_seed);
-
     // Load assets.
     texture_load(&texture_floor);
     texture_load(&texture_wall);
@@ -371,8 +370,9 @@ void init(size_t rng_seed)
         texture_gem[i].color = average_color(&texture_gem[i]);
     }
 
-    // Generate a random map.
-    map_generate(rng_seed);
+    // Seed the random number generator and generate a random map.
+    random_seed(rng_seed);
+    map_generate();
 
     // Place gems on unoccupied map tiles.
     for (int i = 0; i < MAX_GEMS;) {
@@ -398,14 +398,6 @@ void init(size_t rng_seed)
     int player_room = random_int(0, MAP_ROOMS - 1);
     player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
     player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
-
-    // Make some players.
-    for (int i = 0; i < 3; i++) {
-        Player* player = &players[i];
-        player->id = i + 1;
-        player->x = (map_room_x(i) + 0.5f) * (1 << FRAC_BITS);
-        player->y = (map_room_y(i) + 0.5f) * (1 << FRAC_BITS);
-    }
 }
 
 // Apply fog to a color.
@@ -598,6 +590,17 @@ static void update_particles(float dt)
     }
 }
 
+static void update_players(float dt)
+{
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        Player* player = &players[i];
+        if (!player->id || player->id == player_self)
+            continue;
+        player->vx = smooth(player->vx, player->x, 10.0f * dt);
+        player->vy = smooth(player->vy, player->y, 10.0f * dt);
+    }
+}
+
 static void draw_particles(Column* col)
 {
     for (int i = 0; i < particle_count; i++) {
@@ -660,7 +663,7 @@ static void draw_animation(Column* col, Texture* tex, float x, float y, float w,
     draw_sprite(col, &frame, x, y, w, h);
 }
 
-static void draw_guy(Column* col, float x, float y, float dx, float dy)
+static void draw_guy(Column* col, float x, float y, float dx, float dy, bool animate)
 {
     Texture* tex = &texture_guy_left;
     float dp = dx * col->vx + dy * col->vy; // Dot product.
@@ -671,7 +674,8 @@ static void draw_guy(Column* col, float x, float y, float dx, float dy)
         tex = &texture_guy_front;
     else if (cp < 0.0f)
         tex = &texture_guy_right;
-    draw_animation(col, tex, x, y, 0.9f, 0.0f, 10.0f);
+    float rate = animate * 10.0f;
+    draw_animation(col, tex, x, y, 0.9f, 0.0f, rate);
 }
 
 static void draw_ghost(Column* col, float x, float y)
@@ -701,7 +705,7 @@ static void draw_user_interface(void)
 {
     // Draw the gem count.
     char text[16];
-    number_to_string(text, MAX_GEMS - __builtin_popcountg(gem_mask));
+    number_to_string(text, gem_count);
     int x = 23;
     int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
     score_shake = max(0.0f, score_shake - time_delta);
@@ -716,19 +720,17 @@ static void draw_players(Column* col)
         Player* player = &players[i];
         if (!player->id || player->id == player_self)
             continue;
-        float x = (float) player->x / (1 << FRAC_BITS);
-        float y = (float) player->y / (1 << FRAC_BITS);
         if (player->id == player_ghost)
-            draw_ghost(col, x, y);
+            draw_ghost(col, player->vx, player->vy);
         else
-            draw_guy(col, x, y, 1, 0);
+            draw_guy(col, player->vx, player->vy, player->dx, player->dy, player->moving);
     }
 }
 
 static void draw_gems(Column* col)
 {
     for (int i = 0; i < MAX_GEMS; i++) {
-        if (gem_mask & (1ull << i)) {
+        if (!(gem_mask & (1ull << i))) {
             Gem* gem = &gem_array[i];
             float height = 0.3f + 0.05f * sinf(time_elapsed * 2.0f + gem->phase);
             draw_sprite(col, gem->tex, gem->x, gem->y, 0.4f, height);
@@ -736,9 +738,82 @@ static void draw_gems(Column* col)
     }
 }
 
+static Player* get_player_by_id(uint32_t id)
+{
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (players[i].id == id)
+            return &players[i];
+    return NULL;
+}
+
+__attribute__((export_name("recvJoin")))
+void recv_join(uint32_t id, uint64_t gems)
+{
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        Player* player = &players[i];
+        if (!player->id) {
+            player->id = id;
+            player->x = 0.0f;
+            player->y = 0.0f;
+            player->gems = 0;
+            player->active = false;
+            break;
+        }
+    }
+    if (!player_self) {
+        player_self = id;
+        gem_mask = gems;
+    }
+}
+
+__attribute__((export_name("recvLeave")))
+void recv_leave(uint32_t id)
+{
+    Player* player = get_player_by_id(id);
+    if (player) {
+        player->id = 0;
+    }
+}
+
+__attribute__((export_name("recvMove")))
+void recv_move(uint32_t id, float x, float y, float dx, float dy)
+{
+    Player* player = get_player_by_id(id);
+    if (player) {
+        player->moving = x != player->x || y != player->y;
+        player->x = x;
+        player->y = y;
+        player->dx = dx;
+        player->dy = dy;
+        if (!player->active) {
+            player->vx = player->x;
+            player->vy = player->y;
+        }
+        player->active = true;
+    }
+}
+
+__attribute__((export_name("recvCollect")))
+void recv_collect(uint32_t id, int gem_index)
+{
+    Gem* gem = &gem_array[gem_index];
+    spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
+    gem_mask |= 1ull << gem_index;
+    if (id == player_self) {
+        score_shake = 0.2f;
+        gem_count++;
+    }
+}
+
+__attribute__((import_module("islands/Web3D"), import_name("sendMove")))
+void send_move(__externref_t socket, float x, float y, float dx, float dy);
+
+__attribute__((import_module("islands/Web3D"), import_name("sendCollect")))
+void send_collect(__externref_t socket, int gem_index);
+
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
-void* draw(double timestamp)
+void* draw(__externref_t socket, double timestamp)
 {
     // Measure time delta since the previous frame.
     static double prev_timestamp;
@@ -785,18 +860,20 @@ void* draw(double timestamp)
     player_x = max(0.5f, min(player_x, MAP_W - 0.5f));
     player_y = max(0.5f, min(player_y, MAP_H - 0.5f));
 
+    // Send the player position.
+    float player_dx = cosf(player_angle);
+    float player_dy = sinf(player_angle);
+    send_move(socket, player_x, player_y, player_dx, player_dy);
+
     // Collect gems when touching them.
     if (player_self != player_ghost) {
         for (int i = 0; i < MAX_GEMS; i++) {
-            if (gem_mask & (1ull << i)) {
+            if (!(gem_mask & (1ull << i))) {
                 Gem* gem = &gem_array[i];
                 float dx = player_x - gem->x;
                 float dy = player_y - gem->y;
-                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH) {
-                    spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
-                    score_shake = 0.2f;
-                    gem_mask &= ~(1ull << i);
-                }
+                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH)
+                    send_collect(socket, i);
             }
         }
     }
@@ -808,6 +885,16 @@ void* draw(double timestamp)
 
     // Update particle effects.
     update_particles(time_delta);
+    update_players(time_delta);
+
+    // Interpolate player positions.
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        Player* player = &players[i];
+        if (!player->id || player->id == player_self)
+            continue;
+        player->vx = smooth(player->vx, player->x, 10.0f * time_delta);
+        player->vy = smooth(player->vy, player->y, 10.0f * time_delta);
+    }
 
     // Set up state for raycasting.
     Column col = {

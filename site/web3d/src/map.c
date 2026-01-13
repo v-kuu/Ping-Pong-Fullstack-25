@@ -214,8 +214,8 @@ int map_room_y(size_t room_index)
     return (get_room_y0(room_index) + get_room_y1(room_index)) / 2;
 }
 
-// Generate a random map from an RNG seed.
-void map_generate(size_t seed)
+// Generate a random map.
+void map_generate(void)
 {
     // Fill the map with solid tiles.
     memset(map, TUNNEL_COST, sizeof(map));

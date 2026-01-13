@@ -43,7 +43,7 @@ int map_get(int x, int y);
 void map_set(int x, int y, char value);
 int map_room_x(size_t room_index);
 int map_room_y(size_t room_index);
-void map_generate(size_t seed);
+void map_generate(void);
 
 // math.c
 float min(float x, float y);

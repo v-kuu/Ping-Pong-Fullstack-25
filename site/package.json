@@ -37,6 +37,7 @@
   },
   "scripts": {
     "dev": "bun run db:push && bun run build-wasm && bunx --bun astro dev",
+    "web3d": "bun run --watch web3d/server.ts",
     "build": "bun run build-wasm && bun run check && bunx --bun astro build",
     "docker": "make -sC web3d native && bun run check && bunx --bun astro build",
     "check": "bunx --bun astro check",
