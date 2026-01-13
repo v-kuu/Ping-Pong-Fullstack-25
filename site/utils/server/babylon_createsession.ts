@@ -31,23 +31,23 @@ export function createSession(engine: NullEngine): Scene
 		if (Globals.player1KeyUp) {
 			Globals.vel1.z = distance;
 			console.log("P1 Up")
-			Globals.player1KeyUp = !Globals.player1KeyUp;
 		}
 		if (Globals.player1KeyDown) {
 			Globals.vel1.z = -distance
 			console.log("P1 Down")
-			Globals.player1KeyDown = !Globals.player1KeyDown;
 		}
 		if (Globals.player2KeyUp) {
 			Globals.vel1.z = distance;
 			console.log("P2 Up")
-			Globals.player2KeyUp = !Globals.player2KeyUp;
 		}
 		if (Globals.player2KeyDown) {
 			Globals.vel1.z = -distance
 			console.log("P2 Down")
-			Globals.player2KeyDown = !Globals.player2KeyDown;
 		}
+		Globals.player1KeyUp = false;
+		Globals.player1KeyDown = false;
+		Globals.player2KeyUp = false;
+		Globals.player2KeyDown = false;
 	});
 
 	setState(GameState.Countdown, scene);

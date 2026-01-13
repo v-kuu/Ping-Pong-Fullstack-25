@@ -92,7 +92,7 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.NORTH].position.y = 0.3;
 	walls[Sides.NORTH].position.z = Globals.mapHeight / 2;
 	walls[Sides.NORTH].checkCollisions = true;
-	
+
 	//south
 	walls[Sides.SOUTH] = MeshBuilder.CreateBox(
 		"horizontal", { width: Globals.mapWidth, height: 0.6, depth: 0.3}, scene);
@@ -115,7 +115,7 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.WEST].position.y = 0.3;
 	walls[Sides.WEST].position.x = Globals.mapWidth / -2;
 	walls[Sides.WEST].checkCollisions = true;
-	
+
 	loadMat("damaged_concrete/vdcnfcd_tier_3.gltf", scene).then(pbrMat =>
 	{
 		for (const wall of walls)
@@ -134,7 +134,7 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	let player1 = createPlayer(true, scene);
 	let player2 = createPlayer(false, scene);
 	let wallMeshes: Mesh[] = createWalls(scene);
-	
+
 	const csm = new CascadedShadowGenerator(4096, light);
 	csm.autoCalcDepthBounds = true;
 	csm.addShadowCaster(ball);
@@ -144,4 +144,26 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	{
 		csm.addShadowCaster(wall);
 	}
+
+	scene.onBeforeRenderObservable.add(() => {
+		// 1. Find the meshes in the scene
+		const ballMesh = scene.getMeshByName("ball");
+		const p1Mesh = scene.getMeshByName("player1");
+		const p2Mesh = scene.getMeshByName("player2");
+
+		// 2. Sync Ball Position
+		if (ballMesh) {
+			// Since Globals.ballVel is updated by the WebSocket onmessage:
+			ballMesh.position.copyFrom(Globals.ballVel);
+		}
+
+		// 3. Sync Player Paddles
+		if (p1Mesh) {
+			// We only care about Z-axis for Pong paddles usually
+			p1Mesh.position.z = Globals.vel1.z;
+		}
+		if (p2Mesh) {
+			p2Mesh.position.z = Globals.vel2.z;
+		}
+	});
 }

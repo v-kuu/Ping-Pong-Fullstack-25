@@ -77,7 +77,7 @@ Bun.serve({
     },
 });
 
-const TICK_RATE = 1;
+const TICK_RATE = 60;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 
@@ -87,18 +87,17 @@ function gameTick() {
     lastTick = now
 
     const positions: Record<string, number> = {}
-    // pos = (pos + delta) % 100
 
-    for (const ws of clients) {
-        positions[ws.data.playerId] = ws.data.pos
-    }
+	const posSyncData = JSON.stringify({
+		type: "physics_sync",
+		ballVel: Globals.ballVel,
+		vel1: Globals.vel1,
+		vel2: Globals.vel2
+	});
 
     for (const ws of clients) {
         try {
-            const countMsg = JSON.stringify({ type: "count", clients: clients.size });
-            const posMsg = JSON.stringify({ type: "positions", positions: positions });
-            ws.send(countMsg);
-            ws.send(posMsg);
+            ws.send(posSyncData);
         } catch (e) {
             console.error("Failed to send message:", e)
         }
@@ -106,7 +105,7 @@ function gameTick() {
 
     setTimeout(gameTick, TICK_INTERVAL)
 
-	console.log("Game state now:", Globals.playerKeyDown)
+	console.log("Ball pos x:", Globals.ballVel._x, ", y: ", Globals.ballVel._y, ", z: ", Globals.ballVel._z)
 }
 
 gameTick();
