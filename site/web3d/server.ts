@@ -12,11 +12,11 @@ interface PlayerData {
 // server state.
 let clientIdCounter = 0; // Counter used for assigning client IDs.
 let gameSeed = Date.now(); // Seed used for the current game.
-let gemMask = 0n;
+let gemMask = 0n; // Bit mask of gems that have been collected.
 const clients = new Array<ServerWebSocket<PlayerData>>(MAX_PLAYERS);
 
-// Broadcast data to all clients.
-const broadcast = message => {
+// Broadcast a message to all clients.
+const broadcastMessage = message => {
     for (const client of clients) {
         if (client !== undefined) {
             try {
@@ -28,15 +28,39 @@ const broadcast = message => {
     }
 };
 
+// Handle a player movement message from a client.
+function handleMoveMessage(message: Buffer) {
+    broadcastMessage(message);
+}
+
+// Handle a gem collect message from a client.
+function handleCollectMessage(message: Buffer) {
+    const gemIndex = message.readUint32BE(8);
+    const gemBit = 1n << BigInt(gemIndex);
+    if (!(gemMask & gemBit)) {
+        gemMask |= gemBit; // Mark the gem as collected.
+        broadcastMessage(message);
+    }
+}
+
+// Handle a message from a client to the server.
+function handleMessage(message: Buffer, playerId: number) {
+    const type = message.readUint32BE(0);
+    message.writeUint32BE(playerId, 4);
+    switch (type) {
+        case 2: return handleMoveMessage(message);
+        case 3: return handleCollectMessage(message);
+        default: return console.log(`Unrecognized message type: ${type}`);
+    }
+}
+
 // Start the WebSocket server.
 const server = Bun.serve({
     port: PORT,
 
     fetch(request, server) {
         if (new URL(request.url).pathname === "/web3d") {
-            server.upgrade(request, {data: {
-                id: ++clientIdCounter,
-            }});
+            server.upgrade(request, {data: {id: ++clientIdCounter}});
             return;
         }
         return new Response("WebSocket server");
@@ -46,23 +70,8 @@ const server = Bun.serve({
 
         // Handle client → server messages.
         message(socket, message) {
-            const index = clients.indexOf(socket);
-            if (index !== -1) {
-                const client = clients[index].data;
-                const type = message.readUint32BE(0);
-                if (type === 2) { // "move" message.
-                    message.writeUint32BE(socket.data.id, 4);
-                    broadcast(message);
-                } else if (type === 3) { // "collect" message.
-                    const gemIndex = message.readUint32BE(8);
-                    const gemBit = 1n << BigInt(gemIndex);
-                    if (!(gemMask & gemBit)) {
-                        gemMask |= gemBit;
-                        message.writeUint32BE(socket.data.id, 4);
-                        broadcast(message);
-                    }
-                }
-            }
+            if (clients.includes(socket))
+                handleMessage(message, socket.data.id);
         },
 
         // Handle client connection.
@@ -111,7 +120,7 @@ const server = Bun.serve({
             const buffer = Buffer.allocUnsafe(8);
             buffer.writeUint32BE(1, 0);
             buffer.writeUint32BE(socket.data.id, 4);
-            broadcast(buffer);
+            broadcastMessage(buffer);
         },
     },
 });
