@@ -9,7 +9,8 @@ import { Globals } from "../utils/shared/babylon_globals.ts"
 
 interface PlayerData {
     playerId: string;
-    pos: number;
+    index?: number;
+	room?: string;
 }
 
 const clients = new Set<ServerWebSocket<unknown>>();
@@ -39,22 +40,38 @@ Bun.serve({
     websocket: {
         message(ws, msg) {
             const data = JSON.parse(msg);
+			const playerIdx = ws.data.index;
+
             if (data.type === "move")
-                if (data.direction === "up") {
-					Globals.playerKeyUp = true;
+                if (playerIdx === 0) {
+					if (data.direction === "up")
+					Globals.player1KeyUp = true;
+					else if (data.direction === "down")
+					Globals.player1KeyDown = true;
 				}
-                if (data.direction === "down") {
-					Globals.playerKeyDown = true;
+                else if (playerIdx === 1) {
+					if (data.direction === "up")
+					Globals.player2KeyUp = true;
+					else if (data.direction === "down")
+					Globals.player2KeyDown = true;
 				}
                 // console.log(`Player ${ws.data.playerId} moved ${data.direction} -> pos=${ws.data.pos}`);
         },
         open(ws) {
             clients.add(ws)
+			if (clients.size === 1)
+				ws.data.index = 0;
+			else if (clients.size === 2)
+				ws.data.index = 1;
+			else
+				ws.data.index = 99;
+
+			console.log(`Player connected at Index: ${ws.data.index}`);
             console.log("Client connected. Total:", clients.size)
-            // console.log(ws.data.playerId)
         },
         close(ws) {
             clients.delete(ws)
+			console.log(`Player disconnected at Index: ${ws.data.index}`);
             console.log("Client disconnected. Total:", clients.size)
         },
     },

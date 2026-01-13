@@ -28,15 +28,25 @@ export function createSession(engine: NullEngine): Scene
 		const distance = Globals.moveSpeed * delta;
 		Globals.vel1 = new Vector3();
 		Globals.vel2 = new Vector3();
-		if (Globals.playerKeyUp) {
+		if (Globals.player1KeyUp) {
 			Globals.vel1.z = distance;
-			console.log("Up")
-			Globals.playerKeyUp = !Globals.playerKeyUp;
+			console.log("P1 Up")
+			Globals.player1KeyUp = !Globals.player1KeyUp;
 		}
-		if (Globals.playerKeyDown) {
+		if (Globals.player1KeyDown) {
 			Globals.vel1.z = -distance
-			console.log("Alas")
-			Globals.playerKeyDown = !Globals.playerKeyDown;
+			console.log("P1 Down")
+			Globals.player1KeyDown = !Globals.player1KeyDown;
+		}
+		if (Globals.player2KeyUp) {
+			Globals.vel1.z = distance;
+			console.log("P2 Up")
+			Globals.player2KeyUp = !Globals.player2KeyUp;
+		}
+		if (Globals.player2KeyDown) {
+			Globals.vel1.z = -distance
+			console.log("P2 Down")
+			Globals.player2KeyDown = !Globals.player2KeyDown;
 		}
 	});
 
