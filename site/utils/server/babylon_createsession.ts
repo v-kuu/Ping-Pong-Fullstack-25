@@ -37,11 +37,11 @@ export function createSession(engine: NullEngine): Scene
 			console.log("P1 Down")
 		}
 		if (Globals.player2KeyUp) {
-			Globals.vel1.z = distance;
+			Globals.vel2.z = distance;
 			console.log("P2 Up")
 		}
 		if (Globals.player2KeyDown) {
-			Globals.vel1.z = -distance
+			Globals.vel2.z = -distance
 			console.log("P2 Down")
 		}
 		Globals.player1KeyUp = false;

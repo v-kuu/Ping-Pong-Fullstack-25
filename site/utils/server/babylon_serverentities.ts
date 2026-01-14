@@ -27,8 +27,9 @@ function createBall(scene: Scene): Mesh
 
 function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 {
+	let playerName = leftPlayer ? "player1" : "player2";
 	let player = MeshBuilder.CreateBox(
-		"player", { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
+		playerName, { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
 	player.position.x = leftPlayer ? -6 : 6;
 	player.position.y = 0.2;
 	player.checkCollisions = true;

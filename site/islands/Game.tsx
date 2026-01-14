@@ -37,7 +37,8 @@ export function Game(username: string) {
 		addEventListener("resize", () => engine.resize());
 
     // Open WebSocket
-    const ws = new WebSocket("ws://localhost:3001/ws");
+    const ws = new WebSocket("ws://" + location.hostname + ":3001/ws");
+    // const ws = new WebSocket("ws://localhost:3001/ws");
 
     ws.onopen = () => {
         console.log("Connected to server");

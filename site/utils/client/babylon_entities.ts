@@ -68,8 +68,9 @@ function createBall(scene: Scene): Mesh
 
 function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 {
+	let playerName = leftPlayer ? "player1" : "player2";
 	let player = MeshBuilder.CreateBox(
-		"player", { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
+		playerName, { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
 	player.position.x = leftPlayer ? -6 : 6;
 	player.position.y = 0.2;
 	const path = leftPlayer
@@ -156,14 +157,14 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 			// Since Globals.ballVel is updated by the WebSocket onmessage:
 			ballMesh.position.copyFrom(Globals.ballVel);
 		}
-
 		// 3. Sync Player Paddles
 		if (p1Mesh) {
-			// We only care about Z-axis for Pong paddles usually
-			p1Mesh.position.z = Globals.vel1.z;
+			// p1Mesh.position._z = Globals.vel1._z;
+			p1Mesh.position.copyFrom(Globals.vel1);
 		}
 		if (p2Mesh) {
-			p2Mesh.position.z = Globals.vel2.z;
+			// p2Mesh.position._z = Globals.vel2._z;
+			p2Mesh.position.copyFrom(Globals.vel2);
 		}
 	});
 }

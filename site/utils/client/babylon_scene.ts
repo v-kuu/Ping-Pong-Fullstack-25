@@ -60,20 +60,20 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	scene.onBeforeRenderObservable.add(() => {
 		const delta = engine.getDeltaTime() / 1e3;
 		const distance = Globals.moveSpeed * delta;
-		Globals.vel1 = new Vector3();
-		Globals.vel2 = new Vector3();
-		if (keys["w"]) {
-			Globals.vel1.z = distance;
-		}
-		if (keys["s"]) {
-			Globals.vel1.z = -distance
-		}
-		if (keys["i"]) {
-			Globals.vel2.z = distance;
-		}
-		if (keys["k"]) {
-			Globals.vel2.z = -distance;
-		}
+		// Globals.vel1 = new Vector3();
+		// Globals.vel2 = new Vector3();
+		// if (keys["w"]) {
+		// 	Globals.vel1.z = distance;
+		// }
+		// if (keys["s"]) {
+		// 	Globals.vel1.z = -distance
+		// }
+		// if (keys["i"]) {
+		// 	Globals.vel2.z = distance;
+		// }
+		// if (keys["k"]) {
+		// 	Globals.vel2.z = -distance;
+		// }
 		if (keys["f"]) {
 			canvas.requestFullscreen();
 		}
