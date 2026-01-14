@@ -7,6 +7,7 @@ import { Canvas } from "../components/Canvas.tsx";
 import { createScene } from "../utils/client/babylon_scene.ts";
 import { Globals } from "../utils/shared/babylon_globals.ts";
 import { updateScore } from "@/utils/client/babylon_ui.ts";
+import { setState } from "../utils/client/babylon_states.ts"
 
 export function Game(username: string) {
 	Globals.userName = username;
@@ -39,7 +40,6 @@ export function Game(username: string) {
 
     // Open WebSocket
     const ws = new WebSocket("ws://" + location.hostname + ":3001/ws");
-    // const ws = new WebSocket("ws://localhost:3001/ws");
 
     ws.onopen = () => {
         console.log("Connected to server");
@@ -70,26 +70,42 @@ export function Game(username: string) {
 				Globals.score2 = data.score2;
 				updateScore(scene, 2);
 			}
+			if (Globals.currentState != data.currentState)
+			{
+				setState(data.currentState, scene);
+			}
         }
     }
 
     // Input handling
-    const handleKey = (e: KeyboardEvent) => {
-        if (ws.readyState !== WebSocket.OPEN)
-            return;
-        if (e.key === "w")
-            ws.send(JSON.stringify({ type: "move", direction: "up" }));
-        if (e.key === "s")
-            ws.send(JSON.stringify({ type: "move", direction: "down" }));
-    }
+	const keys = new Set<string>();
+	const onKeyDown = (e: KeyboardEvent) => {
+		if (e.key === "w" || e.key === "s")
+			keys.add(e.key)
+	}
+	const onKeyUp = (e: KeyboardEvent) => {
+		keys.delete(e.key)
+	}
+	const sendInput = () => {
+		if (ws.readyState !== WebSocket.OPEN)
+			return;
+		ws.send(JSON.stringify({
+			type: "move",
+			keys: Array.from(keys)
+		}))
+	};
 
-    window.addEventListener("keydown", handleKey);
+	window.addEventListener("keydown", onKeyDown);
+	window.addEventListener("keyup", onKeyUp);
+	const inputInterval = setInterval(sendInput, 16);
 
     return () => {
-      removeEventListener("resize", () => engine.resize());
-      window.removeEventListener("keydown", handleKey);
-      engine.dispose();
-      ws.close()
+		removeEventListener("resize", () => engine.resize());
+		window.removeEventListener("keydown", onKeyDown);
+		window.removeEventListener("keyup", onKeyUp);
+		clearInterval(inputInterval);
+		engine.dispose();
+		ws.close()
     };
   }, []);
   return <Canvas />;

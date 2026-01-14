@@ -48,7 +48,7 @@ function animateCountdown(mesh: Mesh, material: StandardMaterial)
 	);
 }
 
-export async function startCountdown(scene: Scene, onComplete: () => void)
+export async function startCountdown(scene: Scene)
 {
 	let textMat = new StandardMaterial("text", scene);
 	textMat.diffuseColor = Color3.Black();
@@ -73,7 +73,6 @@ export async function startCountdown(scene: Scene, onComplete: () => void)
 			countdownMesh.position.z = Globals.mapHeight / 2 + 1.5;
 			countdownMesh.rotation.x = Tools.ToRadians(45);
 			animateCountdown(countdownMesh, textMat);
-			if (value === "GO!") onComplete();
 			await Tools.DelayAsync(1000);
 			countdownMesh.dispose();
 		}

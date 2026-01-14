@@ -3,6 +3,7 @@ import { Scene, Tools } from "@babylonjs/core"
 
 export enum GameState
 {
+	WaitingPlayers,
 	Countdown,
 	Playing,
 }
@@ -10,9 +11,12 @@ export enum GameState
 export function setState(newState: GameState, scene: Scene)
 {
 	Globals.currentState = newState;
-	
+
 	switch (newState)
 	{
+		case GameState.WaitingPlayers:
+			break;
+
 		case GameState.Countdown:
 			Globals.playing = false;
 			Tools.DelayAsync(3000).then(() =>

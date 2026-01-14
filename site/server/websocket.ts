@@ -42,20 +42,16 @@ Bun.serve({
             const data = JSON.parse(msg);
 			const playerIdx = ws.data.index;
 
-            if (data.type === "move")
+            if (data.type === "move") {
                 if (playerIdx === 0) {
-					if (data.direction === "up")
-					Globals.player1KeyUp = true;
-					else if (data.direction === "down")
-					Globals.player1KeyDown = true;
+					Globals.player1KeyUp = data.keys.includes("w");
+					Globals.player1KeyDown = data.keys.includes("s");
 				}
                 else if (playerIdx === 1) {
-					if (data.direction === "up")
-					Globals.player2KeyUp = true;
-					else if (data.direction === "down")
-					Globals.player2KeyDown = true;
+					Globals.player2KeyUp = data.keys.includes("w");
+					Globals.player2KeyDown = data.keys.includes("s");
 				}
-                // console.log(`Player ${ws.data.playerId} moved ${data.direction} -> pos=${ws.data.pos}`);
+			}
         },
         open(ws) {
             clients.add(ws)
@@ -66,13 +62,11 @@ Bun.serve({
 			else
 				ws.data.index = 99;
 
-			console.log(`Player connected at Index: ${ws.data.index}`);
-            console.log("Client connected. Total:", clients.size)
+            console.log("Client connected. Total:", clients.size);
         },
         close(ws) {
             clients.delete(ws)
-			console.log(`Player disconnected at Index: ${ws.data.index}`);
-            console.log("Client disconnected. Total:", clients.size)
+            console.log("Client disconnected. Total:", clients.size);
         },
     },
 });
@@ -91,16 +85,15 @@ function gameTick() {
 	const ballMesh = scene.getMeshByName("ball");
 	const p1Mesh = scene.getMeshByName("player1");
 	const p2Mesh = scene.getMeshByName("player2");
-	const score1 = Globals.score1;
-	const score2 = Globals.score2;
 
 	const posSyncData = JSON.stringify({
 		type: "physics_sync",
 		ballVel: ballMesh?.position,
 		vel1: p1Mesh?.position,
 		vel2: p2Mesh?.position,
-		score1: score1,
-		score2: score2,
+		score1: Globals.score1,
+		score2: Globals.score2,
+		currentState: Globals.currentState,
 	});
 
     for (const ws of clients) {
