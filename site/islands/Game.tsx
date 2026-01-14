@@ -60,17 +60,17 @@ export function Game(username: string) {
 			Globals.vel2._y = data.vel2._y;
 			Globals.vel2._z = data.vel2._z;
 
-			if (Globals.score1 != data.score1)
+			if (Globals.score1 !== data.score1)
 			{
 				Globals.score1 = data.score1;
 				updateScore(scene, 1);
 			}
-			if (Globals.score2 != data.score2)
+			if (Globals.score2 !== data.score2)
 			{
 				Globals.score2 = data.score2;
 				updateScore(scene, 2);
 			}
-			if (Globals.currentState != data.currentState)
+			if (Globals.currentState !== data.currentState)
 			{
 				setState(data.currentState, scene);
 			}

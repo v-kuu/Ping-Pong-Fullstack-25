@@ -80,8 +80,6 @@ function gameTick() {
     const delta = (now - lastTick) / 1000
     lastTick = now
 
-    const positions: Record<string, number> = {}
-
 	const ballMesh = scene.getMeshByName("ball");
 	const p1Mesh = scene.getMeshByName("player1");
 	const p2Mesh = scene.getMeshByName("player2");
