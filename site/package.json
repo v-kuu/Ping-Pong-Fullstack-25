@@ -6,6 +6,7 @@
   "devDependencies": {
     "@types/bun": "^1.3.5",
     "@types/earcut": "^3.0.0",
+    "bun-tasks": "^0.1.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -33,8 +34,7 @@
     "vite-plugin-wasm": "^3.5.0"
   },
   "scripts": {
-    "dev": "bun run build-wasm && bunx --bun astro dev",
-    "dev:ws": "bun run server/websocket.ts",
+    "dev": "bun run build-wasm && bun-tasks bun --bun ./node_modules/.bin/astro dev ::: bun run server/websocket.ts",
     "build": "bun run build-wasm && bun run check && bunx --bun astro build",
     "docker": "bun install && bun -b astro build",
     "check": "bunx --bun astro check",

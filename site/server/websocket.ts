@@ -91,12 +91,16 @@ function gameTick() {
 	const ballMesh = scene.getMeshByName("ball");
 	const p1Mesh = scene.getMeshByName("player1");
 	const p2Mesh = scene.getMeshByName("player2");
+	const score1 = Globals.score1;
+	const score2 = Globals.score2;
 
 	const posSyncData = JSON.stringify({
 		type: "physics_sync",
 		ballVel: ballMesh?.position,
 		vel1: p1Mesh?.position,
-		vel2: p2Mesh?.position
+		vel2: p2Mesh?.position,
+		score1: score1,
+		score2: score2,
 	});
 
     for (const ws of clients) {
@@ -108,7 +112,6 @@ function gameTick() {
     }
 
     setTimeout(gameTick, TICK_INTERVAL)
-
 	// console.log("Ball pos x:", Globals.ballVel._x, ", y: ", Globals.ballVel._y, ", z: ", Globals.ballVel._z)
 	// console.log("P1 paddle pos z:", p1Mesh?.position._z)
 	// console.log("P2 paddle pos z:", p2Mesh?.position._z)
