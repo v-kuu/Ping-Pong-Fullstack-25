@@ -53,7 +53,7 @@ static float player_x_smooth;
 static float player_y_smooth;
 
 // Player state.
-#define MAX_PLAYERS 8
+#define MAX_PLAYERS 64
 typedef struct {
     uint64_t gems;  // Bit mask of collected gems.
     uint32_t id;    // Unique ID.
@@ -64,6 +64,7 @@ typedef struct {
     bool active;    // False if player just spawned.
 } Player;
 static Player players[MAX_PLAYERS];
+static size_t player_count;   // Total number of players.
 static uint32_t player_self;  // Player ID of the local player.
 static uint32_t player_ghost; // Player ID of the current ghost.
 
@@ -592,10 +593,8 @@ static void update_particles(float dt)
 
 static void update_players(float dt)
 {
-    for (int i = 0; i < MAX_PLAYERS; i++) {
+    for (int i = 0; i < player_count; i++) {
         Player* player = &players[i];
-        if (!player->id || player->id == player_self)
-            continue;
         player->vx = smooth(player->vx, player->x, 10.0f * dt);
         player->vy = smooth(player->vy, player->y, 10.0f * dt);
     }
@@ -716,9 +715,9 @@ static void draw_user_interface(void)
 
 static void draw_players(Column* col)
 {
-    for (int i = 0; i < MAX_PLAYERS; i++) {
+    for (int i = 0; i < player_count; i++) {
         Player* player = &players[i];
-        if (!player->id || player->id == player_self)
+        if (player->id == player_self)
             continue;
         if (player->id == player_ghost)
             draw_ghost(col, player->vx, player->vy);
@@ -740,38 +739,35 @@ static void draw_gems(Column* col)
 
 static Player* get_player_by_id(uint32_t id)
 {
-    for (int i = 0; i < MAX_PLAYERS; i++)
+    for (size_t i = 0; i < player_count; i++)
         if (players[i].id == id)
             return &players[i];
     return NULL;
 }
 
 __attribute__((export_name("recvJoin")))
-void recv_join(uint32_t id, uint64_t gems)
+void recv_join(uint32_t id, double gems)
 {
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        Player* player = &players[i];
-        if (!player->id) {
-            player->id = id;
-            player->x = 0.0f;
-            player->y = 0.0f;
-            player->gems = 0;
-            player->active = false;
-            break;
-        }
-    }
+    Player* player = &players[player_count++];
+    player->id = id;
+    player->x = 0.0f;
+    player->y = 0.0f;
+    player->gems = 0;
+    player->active = false;
     if (!player_self) {
         player_self = id;
         gem_mask = gems;
     }
 }
 
-__attribute__((export_name("recvLeave")))
-void recv_leave(uint32_t id)
+__attribute__((export_name("recvQuit")))
+void recv_quit(uint32_t id)
 {
-    Player* player = get_player_by_id(id);
-    if (player) {
-        player->id = 0;
+    for (size_t i = 0; i < player_count; i++) {
+        if (players[i].id == id) {
+            players[i] = players[--player_count];
+            break;
+        }
     }
 }
 

@@ -6,7 +6,7 @@ import {
   draw,
   init,
   recvJoin,
-  recvLeave,
+  recvQuit,
   recvMove,
   recvCollect,
   keydown,
@@ -14,64 +14,63 @@ import {
   memory,
 } from "../web3d/web3d.wasm";
 
-// Send a player movement message from the client to the server.
-export function sendMove(socket, x, y, dx, dy) {
-  if (socket.readyState === 1) {
-    const view = new DataView(new ArrayBuffer(24));
-    view.setUint32(0, 2);
-    view.setFloat32(8, x);
-    view.setFloat32(12, y);
-    view.setFloat32(16, dx);
-    view.setFloat32(20, dy);
-    socket.send(view);
-  }
+enum MessageType {
+    Join = 0,
+    Quit,
+    Move,
+    Collect,
+    Catch,
 }
 
-// Send a gem collect message from the client to the server.
-export function sendCollect(socket, gemIndex) {
-  if (socket.readyState === 1) {
-    const view = new DataView(new ArrayBuffer(12));
-    view.setUint32(0, 3);
-    view.setUint32(8, gemIndex);
-    socket.send(view);
-  }
+// Send a message to the server.
+function sendMessage(socket: WebSocket, ...args: number[]) {
+  if (socket.readyState === 1)
+    socket.send(new Float64Array([...args]));
 }
 
-// Relay a player join message from the server to the client.
-function handleJoinMessage(message: DataView, playerId: number) {
-  const gems = message.getBigUint64(8);
+// Send a player movement message to the server.
+export function sendMove(socket: WebSocket, x: number, y: number, dx: number, dy: number) {
+  sendMessage(socket, MessageType.Move, 0, x, y, dx, dy);
+}
+
+// Send a gem collect message to the server.
+export function sendCollect(socket: WebSocket, gemIndex: number) {
+  sendMessage(socket, MessageType.Collect, 0, gemIndex);
+}
+
+// Handle a player join message from the server.
+function handleJoinMessage(message: Float64Array) {
+  const [_type, playerId, gems] = message;
   recvJoin(playerId, gems);
 }
 
-// Relay a player leave message from the server to the client.
-function handleLeaveMessage(message: DataView, playerId: number) {
-  recvLeave(playerId);
+// Handle a player quit message from the server.
+function handleQuitMessage(message: Float64Array) {
+  const [_type, playerId] = message;
+  recvQuit(playerId);
 }
 
-// Relay a player movement message from the server to the client.
-function handleMoveMessage(message: DataView, playerId: number) {
-  const x = message.getFloat32(8);
-  const y = message.getFloat32(12);
-  const dx = message.getFloat32(16);
-  const dy = message.getFloat32(20);
+// Handle a player movement message from the server.
+function handleMoveMessage(message: Float64Array) {
+  const [_type, playerId, x, y, dx, dy] = message;
   recvMove(playerId, x, y, dx, dy);
 }
 
-// Relay a gem collect message from the server to the client.
-function handleCollectMessage(message: DataView, playerId: number) {
-  const gemIndex = message.getUint32(8);
+// Handle a gem collect message from the server.
+function handleCollectMessage(message: Float64Array) {
+  const [_type, playerId, gemIndex] = message;
   recvCollect(playerId, gemIndex);
 }
 
-// Relay a message from the server to the client.
-function handleMessage(message: DataView) {
-  const type = message.getUint32(0);
-  const playerId = message.getUint32(4);
+// Handle a message from the server.
+function handleMessage(data: ArrayBuffer) {
+  const message = new Float64Array(data);
+  const type = message[0];
   switch (type) {
-    case 0: return handleJoinMessage(message, playerId);
-    case 1: return handleLeaveMessage(message, playerId);
-    case 2: return handleMoveMessage(message, playerId);
-    case 3: return handleCollectMessage(message, playerId);
+    case MessageType.Join: return handleJoinMessage(message);
+    case MessageType.Quit: return handleQuitMessage(message);
+    case MessageType.Move: return handleMoveMessage(message);
+    case MessageType.Collect: return handleCollectMessage(message);
     default: return console.log(`Unrecognized message type ${type}`);
   }
 }
@@ -92,7 +91,7 @@ export function Web3D() {
     // Connect to the game server.
     const socket = new WebSocket("ws://" + location.hostname + ":3002/web3d");
     socket.binaryType = "arraybuffer";
-    socket.onmessage = event => handleMessage(new DataView(event.data));
+    socket.onmessage = event => handleMessage(event.data);
 
     // Make a callback function for updating the frame
     const render = (timestamp: DOMHighResTimeStamp) => {
@@ -103,8 +102,8 @@ export function Web3D() {
     };
 
     // Set up event handlers and render the first frame
-    onkeydown = (event) => keydown(event.keyCode);
-    onkeyup = (event) => keyup(event.keyCode);
+    onkeydown = event => keydown(event.keyCode);
+    onkeyup = event => keyup(event.keyCode);
     canvas.oncontextmenu = (event) => event.preventDefault();
     // init(Date.now()); // FIXME
     init(42069);

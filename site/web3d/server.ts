@@ -1,56 +1,52 @@
 import type { ServerWebSocket } from "bun";
 
-// Server configuration.
-const PORT = 3002; // Port used for the server.
-const MAX_PLAYERS = 8; // Maximum number of connected players.
-
-// Per-client data tracked by the server.
-interface PlayerData {
-    id: number;
+enum MessageType {
+    Join = 0,
+    Quit,
+    Move,
+    Collect,
+    Catch,
 }
 
+// Server configuration.
+const PORT = 3002; // Port used for the server.
+
 // server state.
+const clients = new Set<ServerWebSocket>;
 let clientIdCounter = 0; // Counter used for assigning client IDs.
 let gameSeed = Date.now(); // Seed used for the current game.
 let gemMask = 0n; // Bit mask of gems that have been collected.
-const clients = new Array<ServerWebSocket<PlayerData>>(MAX_PLAYERS);
 
-// Broadcast a message to all clients.
-const broadcastMessage = message => {
-    for (const client of clients) {
-        if (client !== undefined) {
-            try {
-                client.send(message);
-            } catch (exception) {
-                console.error("Failed to send message:", exception)
-            }
-        }
-    }
-};
+// Send a message to a client.
+function sendMessage(socket: ServerWebSocket, ...args: number[]) {
+    socket.sendBinary(new Float64Array([...args]));
+}
+
+// Broadcast a message to all connected clients.
+function broadcastMessage(...args: number[]) {
+    const message = new Float64Array([...args]);
+    for (const client of clients)
+        client.sendBinary(message);
+}
+
+// Repeat a message for all connected clients.
+function repeatMessage(message: Float64Array) {
+    for (const client of clients)
+        client.sendBinary(message);
+}
 
 // Handle a player movement message from a client.
-function handleMoveMessage(message: Buffer) {
-    broadcastMessage(message);
+function handleMoveMessage(message: Float64Array) {
+    repeatMessage(message);
 }
 
 // Handle a gem collect message from a client.
-function handleCollectMessage(message: Buffer) {
-    const gemIndex = message.readUint32BE(8);
-    const gemBit = 1n << BigInt(gemIndex);
+function handleCollectMessage(message: Float64Array) {
+    const gemIndex = message[2];
+    const gemBit = 1n << BigInt(gemIndex)
     if (!(gemMask & gemBit)) {
         gemMask |= gemBit; // Mark the gem as collected.
-        broadcastMessage(message);
-    }
-}
-
-// Handle a message from a client to the server.
-function handleMessage(message: Buffer, playerId: number) {
-    const type = message.readUint32BE(0);
-    message.writeUint32BE(playerId, 4);
-    switch (type) {
-        case 2: return handleMoveMessage(message);
-        case 3: return handleCollectMessage(message);
-        default: return console.log(`Unrecognized message type: ${type}`);
+        repeatMessage(message);
     }
 }
 
@@ -58,9 +54,10 @@ function handleMessage(message: Buffer, playerId: number) {
 const server = Bun.serve({
     port: PORT,
 
-    fetch(request, server) {
+    // Handle connections to the WebSocket endpoint.
+    fetch(request: Request, server) {
         if (new URL(request.url).pathname === "/web3d") {
-            server.upgrade(request, {data: {id: ++clientIdCounter}});
+            server.upgrade(request);
             return;
         }
         return new Response("WebSocket server");
@@ -69,58 +66,36 @@ const server = Bun.serve({
     websocket: {
 
         // Handle client → server messages.
-        message(socket, message) {
-            if (clients.includes(socket))
-                handleMessage(message, socket.data.id);
+        message(socket: ServerWebSocket, data: Buffer) {
+            const message = new Float64Array(data.buffer);
+            const type = message[0];
+            message[1] = socket.id; // Set the playerId.
+            switch (type) {
+                case 2: return handleMoveMessage(message);
+                case 3: return handleCollectMessage(message);
+                default: return console.log(`Unrecognized message type: ${type}`);
+            }
         },
 
         // Handle client connection.
-        open(socket) {
-            for (const index of clients.keys()) {
-                if (clients[index] === undefined) {
-                    clients[index] = socket;
-                    console.log(`Client #${socket.data.id} connected from ${socket.remoteAddress}`)
-
-                    // Send the first "join" message.
-                    const buffer = Buffer.allocUnsafe(16);
-                    buffer.writeUint32BE(0, 0);
-                    buffer.writeUint32BE(socket.data.id, 4);
-                    buffer.writeBigUint64BE(gemMask, 8);
-                    socket.send(buffer);
-
-                    // Send "join" messages for other clients.
-                    for (const other of clients) {
-                        if (other !== socket && other !== undefined) {
-                            const buffer = Buffer.allocUnsafe(16);
-                            buffer.writeUint32BE(0, 0);
-                            buffer.writeUint32BE(other.data.id, 4);
-                            socket.send(buffer);
-
-                            buffer.writeUint32BE(socket.data.id, 4);
-                            other.send(buffer);
-                        }
-                    }
-                    break;
+        open(socket: ServerWebSocket) {
+            socket.id = ++clientIdCounter;
+            console.log("Client", socket.id, "connected from", socket.remoteAddress);
+            clients.add(socket);
+            sendMessage(socket, MessageType.Join, socket.id, Number(gemMask));
+            for (const other of clients) {
+                if (other !== socket) {
+                    sendMessage(socket, MessageType.Join, other.id, 0);
+                    sendMessage(other, MessageType.Join, socket.id, 0);
                 }
             }
-            // TODO: Handle too many clients.
         },
 
         // Handle client disconnection.
-        close(socket) {
-
-            // Remove the client from the array.
-            const index = clients.indexOf(socket);
-            if (index !== -1) {
-                clients[index] = undefined;
-                console.log(`Client #${socket.data.id} disconnected`)
-            }
-
-            // Broadcast a "leave" message to other clients.
-            const buffer = Buffer.allocUnsafe(8);
-            buffer.writeUint32BE(1, 0);
-            buffer.writeUint32BE(socket.data.id, 4);
-            broadcastMessage(buffer);
+        close(socket: ServerWebSocket) {
+            console.log("Client", socket.id, "disconnected");
+            clients.delete(socket);
+            broadcastMessage(MessageType.Quit, socket.id);
         },
     },
 });
