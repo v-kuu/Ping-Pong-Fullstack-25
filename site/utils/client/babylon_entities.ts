@@ -8,8 +8,7 @@ import {
 	DirectionalLight,
 	CascadedShadowGenerator,
 } from "@babylonjs/core"
-import { setupCollisions } from "./babylon_physics_helpers.ts"
-import { Globals } from "./babylon_globals.ts"
+import { Globals } from "../shared/babylon_globals.ts"
 
 export enum Sides
 {
@@ -69,8 +68,9 @@ function createBall(scene: Scene): Mesh
 
 function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 {
+	let playerName = leftPlayer ? "player1" : "player2";
 	let player = MeshBuilder.CreateBox(
-		"player", { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
+		playerName, { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
 	player.position.x = leftPlayer ? -6 : 6;
 	player.position.y = 0.2;
 	const path = leftPlayer
@@ -93,7 +93,7 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.NORTH].position.y = 0.3;
 	walls[Sides.NORTH].position.z = Globals.mapHeight / 2;
 	walls[Sides.NORTH].checkCollisions = true;
-	
+
 	//south
 	walls[Sides.SOUTH] = MeshBuilder.CreateBox(
 		"horizontal", { width: Globals.mapWidth, height: 0.6, depth: 0.3}, scene);
@@ -116,7 +116,7 @@ function createWalls(scene: Scene): Mesh[]
 	walls[Sides.WEST].position.y = 0.3;
 	walls[Sides.WEST].position.x = Globals.mapWidth / -2;
 	walls[Sides.WEST].checkCollisions = true;
-	
+
 	loadMat("damaged_concrete/vdcnfcd_tier_3.gltf", scene).then(pbrMat =>
 	{
 		for (const wall of walls)
@@ -135,7 +135,7 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	let player1 = createPlayer(true, scene);
 	let player2 = createPlayer(false, scene);
 	let wallMeshes: Mesh[] = createWalls(scene);
-	
+
 	const csm = new CascadedShadowGenerator(4096, light);
 	csm.autoCalcDepthBounds = true;
 	csm.addShadowCaster(ball);
@@ -145,22 +145,26 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	{
 		csm.addShadowCaster(wall);
 	}
-	
-	setupCollisions(player1, player2, wallMeshes, ball, scene);
-	scene.onBeforeRenderObservable.add(() =>
-	{
-		const delta = scene.getEngine().getDeltaTime() / 1e3;
-		if (Globals.playing)
-		{
-			player1.moveWithCollisions(Globals.vel1);
-			player2.moveWithCollisions(Globals.vel2);
-			ball.moveWithCollisions(Globals.ballVel.scale(delta * Globals.ballSpeed));
-		}
-		else
-		{
-			player1.position.z = 0;
-			player2.position.z = 0;
-		}
 
+	scene.onBeforeRenderObservable.add(() => {
+		// 1. Find the meshes in the scene
+		const ballMesh = scene.getMeshByName("ball");
+		const p1Mesh = scene.getMeshByName("player1");
+		const p2Mesh = scene.getMeshByName("player2");
+
+		// 2. Sync Ball Position
+		if (ballMesh) {
+			// Since Globals.ballVel is updated by the WebSocket onmessage:
+			ballMesh.position.copyFrom(Globals.ballVel);
+		}
+		// 3. Sync Player Paddles
+		if (p1Mesh) {
+			// p1Mesh.position._z = Globals.vel1._z;
+			p1Mesh.position.copyFrom(Globals.vel1);
+		}
+		if (p2Mesh) {
+			// p2Mesh.position._z = Globals.vel2._z;
+			p2Mesh.position.copyFrom(Globals.vel2);
+		}
 	});
 }

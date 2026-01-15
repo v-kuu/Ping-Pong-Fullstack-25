@@ -10,7 +10,7 @@ import {
 	Texture,
 } from "@babylonjs/core";
 import { FireProceduralTexture } from "@babylonjs/procedural-textures";
-import { Globals } from "./babylon_globals.ts";
+import { Globals } from "../shared/babylon_globals.ts";
 
 async function get3dFont(): Promise<any>
 {
@@ -48,7 +48,7 @@ function animateCountdown(mesh: Mesh, material: StandardMaterial)
 	);
 }
 
-export async function startCountdown(scene: Scene, onComplete: () => void)
+export async function startCountdown(scene: Scene)
 {
 	let textMat = new StandardMaterial("text", scene);
 	textMat.diffuseColor = Color3.Black();
@@ -73,7 +73,6 @@ export async function startCountdown(scene: Scene, onComplete: () => void)
 			countdownMesh.position.z = Globals.mapHeight / 2 + 1.5;
 			countdownMesh.rotation.x = Tools.ToRadians(45);
 			animateCountdown(countdownMesh, textMat);
-			if (value === "GO!") onComplete();
 			await Tools.DelayAsync(1000);
 			countdownMesh.dispose();
 		}
@@ -177,7 +176,6 @@ async function createAvatar(scene: Scene, id: number)
 
 export function updateScore(scene: Scene, id: number)
 {
-	id === 1 ? Globals.score1++ : Globals.score2++;
 	if (id === 1 && Globals.score1Mesh)
 		Globals.score1Mesh.dispose();
 	else if (Globals.score2Mesh)
