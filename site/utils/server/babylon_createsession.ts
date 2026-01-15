@@ -30,24 +30,16 @@ export function createSession(engine: NullEngine): Scene
 		Globals.vel2 = new Vector3();
 		if (Globals.player1KeyUp) {
 			Globals.vel1.z = distance;
-			// console.log("P1 Up")
 		}
 		if (Globals.player1KeyDown) {
-			Globals.vel1.z = -distance
-			// console.log("P1 Down")
+			Globals.vel1.z -= distance;
 		}
 		if (Globals.player2KeyUp) {
 			Globals.vel2.z = distance;
-			// console.log("P2 Up")
 		}
 		if (Globals.player2KeyDown) {
-			Globals.vel2.z = -distance
-			// console.log("P2 Down")
+			Globals.vel2.z -= distance;
 		}
-		Globals.player1KeyUp = false;
-		Globals.player1KeyDown = false;
-		Globals.player2KeyUp = false;
-		Globals.player2KeyDown = false;
 	});
 
 	setState(GameState.Countdown, scene);

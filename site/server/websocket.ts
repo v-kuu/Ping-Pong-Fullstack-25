@@ -103,9 +103,6 @@ function gameTick() {
     }
 
     setTimeout(gameTick, TICK_INTERVAL)
-	// console.log("Ball pos x:", Globals.ballVel._x, ", y: ", Globals.ballVel._y, ", z: ", Globals.ballVel._z)
-	// console.log("P1 paddle pos z:", p1Mesh?.position._z)
-	// console.log("P2 paddle pos z:", p2Mesh?.position._z)
 }
 
 gameTick();

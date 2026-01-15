@@ -48,17 +48,9 @@ export function Game(username: string) {
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
         if (data.type === "physics_sync") {
-			Globals.ballVel._x = data.ballVel._x;
-			Globals.ballVel._y = data.ballVel._y;
-			Globals.ballVel._z = data.ballVel._z;
-
-			Globals.vel1._x = data.vel1._x;
-			Globals.vel1._y = data.vel1._y;
-			Globals.vel1._z = data.vel1._z;
-
-			Globals.vel2._x = data.vel2._x;
-			Globals.vel2._y = data.vel2._y;
-			Globals.vel2._z = data.vel2._z;
+			Globals.ballVel.copyFrom(data.ballVel);
+			Globals.vel1.copyFrom(data.vel1);
+			Globals.vel2.copyFrom(data.vel2);
 
 			if (Globals.score1 !== data.score1)
 			{
