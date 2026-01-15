@@ -3,7 +3,7 @@ import { VideoCard } from "@/components/Card.tsx";
 
 export function Home() {
   return (
-    <div class="justify-center items-center text-center prose max-w-none gap-2">
+    <div class="justify-center items-center text-center prose max-w-none gap-2 pixelify-sans-500">
       <div class="backdrop-blur-3xl">
         <h1>Hi ya there</h1>
         <p>Welcome, we have games.</p>
