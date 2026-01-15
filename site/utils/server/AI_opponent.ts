@@ -1,8 +1,5 @@
 import {
 	Scene,
-	MeshBuilder,
-	Mesh,
-	Vector3,
 } from "@babylonjs/core"
 import { Globals } from "../shared/babylon_globals.ts";
 
@@ -13,7 +10,6 @@ export function AI_moves(scene: Scene) {
 	Globals.player2KeyDown = false;
 	Globals.player2KeyUp = false;
 
-	// console.log("p2: ", p2Mesh?.position._z, "ball: ",  ballMesh?.position._z);
 	if (Math.abs(p2Mesh?.position.z - ballMesh?.position.z) < 0.2)
 		return ;
 
