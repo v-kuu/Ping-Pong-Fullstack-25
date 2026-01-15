@@ -6,18 +6,17 @@
   "devDependencies": {
     "@types/bun": "^1.3.5",
     "@types/earcut": "^3.0.0",
-    "drizzle-kit": "^0.31.8"
-  },
-  "peerDependencies": {
+    "bun-tasks": "^0.1.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.6",
+    "@astrojs/db": "^0.18.3",
     "@astrojs/preact": "^4.1.3",
-    "@babylonjs/core": "^8.42.0",
-    "@babylonjs/gui": "^8.42.0",
-    "@babylonjs/procedural-textures": "^8.42.0",
-    "@libsql/client": "^0.15.15",
+    "@babylonjs/core": "^8.44.0",
+    "@babylonjs/inspector": "^8.44.0",
+    "@babylonjs/loaders": "^8.44.0",
+    "@babylonjs/procedural-textures": "^8.44.0",
     "@nurodev/astro-bun": "^2.1.2",
     "@preact-signals/utils": "^0.23.1",
     "@preact/signals": "^2.5.1",
@@ -28,22 +27,19 @@
     "astro": "^5.16.6",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
-    "drizzle-orm": "^0.45.1",
     "earcut": "^3.0.2",
     "marked": "^17.0.1",
-    "preact": "^10.28.0",
+    "preact": "^10.28.1",
     "tailwindcss": "^4.1.18",
     "vite-plugin-wasm": "^3.5.0"
   },
   "scripts": {
-    "dev": "bun run db:push && bun run build-wasm && bunx --bun astro dev",
+    "dev": "bun run build-wasm && bun-tasks bunx --bun astro dev ::: bun run web3d :: bun run pong",
     "web3d": "bun run --watch web3d/server.ts",
+    "pong": "bun run --watch server/websocket.ts"
     "build": "bun run build-wasm && bun run check && bunx --bun astro build",
-    "docker": "make -sC web3d native && bun run check && bunx --bun astro build",
+    "docker": "bun install && bun -b astro build",
     "check": "bunx --bun astro check",
-    "db:push": "bun drizzle-kit push",
-    "db:generate": "bun drizzle-kit generate",
-    "db:studio": "bun drizzle-kit studio",
     "build-wasm": "make -sC web3d"
   }
 }

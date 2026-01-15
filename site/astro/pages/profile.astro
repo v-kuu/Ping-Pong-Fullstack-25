@@ -1,0 +1,40 @@
+---
+import Base from "@/astro/layouts/Base.astro";
+import { ProfileMenu } from "@/islands/Profile.tsx";
+import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
+import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
+
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect("/login");
+}
+
+const userId = user.id;
+
+const userMatches = await db
+  .select({
+    id: Matches.id,
+    game: Matches.game,
+    player1Id: Matches.player1Id,
+    player2Id: Matches.player2Id,
+    winnerId: Matches.winnerId,
+    startedAt: Matches.startedAt,
+    score: Matches.score,
+  })
+  .from(Matches)
+  .where(or(eq(Matches.player1Id, userId), eq(Matches.player2Id, userId)))
+  .orderBy(sql`${Matches.startedAt} DESC`)
+  .limit(10);
+
+const playerIds = getPlayerIdsFromMatches(userMatches);
+
+const allPlayers = playerIds.length > 0
+  ? await db.select().from(Users).where(inArray(Users.id, playerIds))
+  : [];
+
+const matches = processMatchData(userMatches, userId, allPlayers);
+---
+
+<Base title="Profile" active="/profile" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  <ProfileMenu user={user} matches={matches} client:load />
+</Base>

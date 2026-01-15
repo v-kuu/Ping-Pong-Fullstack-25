@@ -4,13 +4,26 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "baseUrl": ".",
+    "skipLibCheck": true,
     "paths": {
+      "react": ["./node_modules/preact/compat/"],
+      "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"],
+      "react-dom": ["./node_modules/preact/compat/"],
       "@/*": ["./*"],
     },
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["astro/client", "bun-types"],
+    "types": [
+      "astro/client",
+      "bun-types",
+      "@astrojs/db"
+    ],
   },
-  "include": ["src/**/*", "components/**/*", "islands/**/*"],
+  "include": [".astro/types.d.ts",
+    "src/**/*",
+    "components/**/*",
+    "islands/**/*",
+    "db/**/*"
+  ],
   "exclude": ["node_modules", "dist"],
 }

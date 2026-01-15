@@ -1,11 +1,14 @@
 import { useState } from "preact/hooks";
-import { validatePassword } from "../utils/validation";
+import { validatePassword, validateEmail } from "../utils/validation.ts";
+import { SuccessCard } from "@/components/Card.tsx";
 
 export function Signup() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -14,8 +17,25 @@ export function Signup() {
     e.preventDefault();
     setServerError(null);
 
+    if (!validateEmail(email)) {
+      setServerError("Invalid email format.");
+      return;
+    }
+
     if (!validatePassword(password) || password !== confirm) {
-      setServerError("Password must be at least 12 characters and strong enough.");
+      setServerError(
+        "Password must be at least 12 characters and strong enough.",
+      );
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setServerError("You must accept the Terms of Service to register.");
+      return;
+    }
+
+    if (!acceptedPrivacy) {
+      setServerError("You must accept the Privacy Policy to register.");
       return;
     }
 
@@ -43,100 +63,120 @@ export function Signup() {
     }
   };
 
-  return (
-    <>
-      {isSuccess ? (
-        <div class="card text-center py-10 space-y-4">
-          <div class="mx-auto w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-3xl">
-            ✓
-          </div>
-          <h2 class="text-3xl font-bold text-white">Account Created!</h2>
-          <p class="text-gray-300">
-            Your account has been successfully registered.
-          </p>
-          <button
-            class="btn btn-success w-full py-3 mt-4"
-            onClick={() => (window.location.href = "/login")}
+  return isSuccess ? (
+    <SuccessCard
+      title="Account Created!"
+      message="Your account has been successfully registered."
+      buttonText="Go to Login"
+      buttonHref="/login"
+    />
+  ) : (
+    <form
+      class="flex flex-col gap-4 rounded-box bg-base-200 border border-base-content/20 p-6 max-w-md"
+      onSubmit={handleSubmit}
+    >
+      <h1 class="text-3xl font-bold self-center">Gi'mme the Deeds</h1>
+
+      <span class="self-center">
+        Already have an account?&nbsp;
+        <a class="link link-secondary" href="/login">
+          Log in
+        </a>
+      </span>
+
+      {serverError && <div class="alert alert-error">{serverError}</div>}
+
+      <div class="space-y-1">
+        <label class="label-text">Username</label>
+        <input
+          type="text"
+          class="input input-bordered w-full"
+          value={username}
+          onInput={(e: any) => setUsername(e.target.value)}
+          placeholder="AwesomeUser"
+          autoComplete="username"
+          pattern="[A-Za-z][A-Za-z0-9\-]*"
+          minLength={3}
+          maxLength={30}
+          required
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label class="label-text">Email</label>
+        <input
+          type="email"
+          class="input input-bordered w-full"
+          value={email}
+          onInput={(e: any) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
+          required
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label class="label-text">Password</label>
+        <input
+          type="password"
+          class="input input-bordered w-full"
+          value={password}
+          onInput={(e: any) => setPassword(e.target.value)}
+          placeholder="•••••••••"
+          autoComplete="new-password"
+          required
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label class="label-text">Confirm password</label>
+        <input
+          type="password"
+          class="input input-bordered w-full"
+          value={confirm}
+          onInput={(e: any) => setConfirm(e.target.value)}
+          placeholder="•••••••••"
+          autoComplete="new-password"
+          required
+        />
+      </div>
+
+      <label class="label cursor-pointer justify-start gap-2">
+        <input
+          type="checkbox"
+          class="checkbox checkbox-sm"
+          checked={acceptedTerms}
+          onChange={(e: any) => setAcceptedTerms(e.target.checked)}
+        />
+        <span class="label-text text-sm">
+          I accept the{" "}
+          <a
+            href="/terms-of-service"
+            class="link link-secondary"
+            target="_blank"
           >
-            Go to Login
-          </button>
-        </div>
-      ) : (
-        <form
-          class="flex flex-col gap-4 rounded-box bg-base-200 p-6 max-w-md"
-          onSubmit={handleSubmit}
-        >
-          <h1 class="text-3xl font-bold self-center">Gi'mme the Deeds</h1>
+            Terms of Service
+          </a>
+        </span>
+      </label>
+      <label class="label cursor-pointer justify-start gap-2">
+        <input
+          type="checkbox"
+          class="checkbox checkbox-sm"
+          checked={acceptedPrivacy}
+          onChange={(e: any) => setAcceptedPrivacy(e.target.checked)}
+        />
+        <span class="label-text text-sm">
+          I accept the{" "}
+          <a href="/privacy-policy" class="link link-secondary" target="_blank">
+            Privacy Policy
+          </a>
+        </span>
+      </label>
 
-          <span class="self-center">
-            Already have an account?
-            <a class="link link-secondary" href="/login">
-              Log in
-            </a>
-          </span>
-
-          {serverError && <div class="alert alert-error">{serverError}</div>}
-
-          <div class="space-y-1">
-            <label class="label-text">Username</label>
-            <input
-              type="text"
-              class="input input-bordered w-full"
-              value={username}
-              onInput={(e: any) => setUsername(e.target.value)}
-              placeholder="AwesomeUser"
-              autoComplete="username"
-              pattern="[A-Za-z][A-Za-z0-9\-]*"
-              minLength={3}
-              maxLength={30}
-              required
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="label-text">Email</label>
-            <input
-              type="email"
-              class="input input-bordered w-full"
-              value={email}
-              onInput={(e: any) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="label-text">Password</label>
-            <input
-              type="password"
-              class="input input-bordered w-full"
-              value={password}
-              onInput={(e: any) => setPassword(e.target.value)}
-              placeholder="•••••••••"
-              autoComplete="new-password"
-              required
-            />
-          </div>
-
-          <div class="space-y-1">
-            <label class="label-text">Confirm password</label>
-            <input
-              type="password"
-              class="input input-bordered w-full"
-              value={confirm}
-              onInput={(e: any) => setConfirm(e.target.value)}
-              placeholder="•••••••••"
-              autoComplete="new-password"
-              required
-            />
-          </div>
-
-          <button class="btn btn-primary" type="submit">
-            Create
-          </button>
-        </form>
-      )}
-    </>
+      <button class="btn btn-primary" type="submit">
+        Create
+      </button>
+    </form>
   );
 }

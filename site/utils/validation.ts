@@ -6,7 +6,12 @@ export function validatePassword(value: string): boolean {
 }
 
 export function validateUsername(username: string): boolean {
-  return USERNAME_RULES.every((rule) => rule.test(username));
+  // 3-30 chars, starts with letter, only letters/numbers/dash
+  return /^[A-Za-z][A-Za-z0-9-]{2,29}$/.test(username);
+}
+
+export function validateEmail(email: string): boolean {
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(email);
 }
 
 export function validatePasswordMatch(e: Event) {
@@ -21,26 +26,3 @@ export function validatePasswordMatch(e: Event) {
   }
   return true;
 }
-
-// helper
-export function createResponse(
-  body: Record<string, any>,
-  status: number,
-): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-export const USERNAME_RULES = [
-  {
-    label: "3-30 characters",
-    test: (u: string) => u.length >= 3 && u.length <= 30,
-  },
-  { label: "Starts with letter", test: (u: string) => /^[A-Za-z]/.test(u) },
-  {
-    label: "Letters, numbers, dash only",
-    test: (u: string) => /^[A-Za-z][A-Za-z0-9\-]*$/.test(u),
-  },
-];
