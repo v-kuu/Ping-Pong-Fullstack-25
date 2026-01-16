@@ -22,7 +22,6 @@ export interface GlobalState
 	currentState: GameState;
 	ballVel: Vector3;
 	ballDelta: Vector3;
-	updateAvailable: boolean;
 	vel1: Vector3;
 	vel2: Vector3;
 	player1KeyDown: boolean;
@@ -49,7 +48,6 @@ export const Globals: GlobalState =
 	currentState: GameState.Countdown,
 	ballVel: new Vector3(-1, 0, 0),
 	ballDelta: new Vector3(),
-	updateAvailable: false,
 	vel1: new Vector3(),
 	vel2: new Vector3(),
 	player1KeyDown: false,

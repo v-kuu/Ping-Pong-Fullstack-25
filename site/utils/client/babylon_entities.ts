@@ -153,7 +153,7 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	{
 		csm.addShadowCaster(wall);
 	}
-
+	
 	scene.onBeforeRenderObservable.add(() =>
 	{
 		const ballMesh = scene.getMeshByName("ball");
@@ -167,12 +167,8 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 				ballMesh.position.x += Globals.ballDelta.x;
 				ballMesh.position.z += Globals.ballDelta.z;
 			}
-			if (Globals.updateAvailable)
-			{
-				Globals.updateAvailable = false;
-				const error = Globals.ballVel.subtract(ballMesh.position);
-				ballMesh.position.addInPlace(error.scaleInPlace(0.6));
-			}
+			const error = Globals.ballVel.subtract(ballMesh.position);
+			ballMesh.position.addInPlace(error.scaleInPlace(0.6));
 		}
 		if (p1Mesh)
 			p1Mesh.position.copyFrom(Globals.vel1);

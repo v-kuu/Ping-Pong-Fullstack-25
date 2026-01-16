@@ -54,7 +54,7 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 		if (wall) {
 			if (wall.type % 2 === 0) {
 				var dir = wall.type - 1;
-				Globals.ballVel = new Vector3(dir, 0, 0);
+				Globals.ballVel.set(dir, 0, 0);
 				ball.position.x = 0;
 				ball.position.y = 0.25;
 				ball.position.z = 0;
@@ -71,7 +71,6 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 		const player = players.find(p => p.mesh === collidedMesh);
 		if (player) {
 			Globals.ballVel = bounceOffPlayer(ball, player, Globals.ballVel);
-			ball.position.x += Globals.ballVel.x * 0.1;
 			ball.position.y = 0.25;
 		}
 		Globals.ballVel.y = 0;
