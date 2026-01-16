@@ -3,10 +3,9 @@ import {
 	Scene,
 } from "@babylonjs/core"
 import { Sides } from "./babylon_serverentities.ts"
-import { Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals } from "../shared/babylon_globals.ts"
 import {
 	setState,
-	GameState,
 } from "./babylon_serverstates.ts"
 
 function bounceOffPlayer(

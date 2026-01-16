@@ -6,10 +6,9 @@ import {
 } from "@babylonjs/core"
 import { setupServerEntities } from "./babylon_serverentities.ts"
 import {
-	GameState,
 	setState
 } from "./babylon_serverstates.ts"
-import { Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals } from "../shared/babylon_globals.ts"
 
 export function createSession(engine: NullEngine): Scene
 {

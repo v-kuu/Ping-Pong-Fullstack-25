@@ -1,12 +1,5 @@
-import { Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals } from "../shared/babylon_globals.ts"
 import { Scene, Tools } from "@babylonjs/core"
-
-export enum GameState
-{
-	WaitingPlayers,
-	Countdown,
-	Playing,
-}
 
 export function setState(newState: GameState, scene: Scene)
 {

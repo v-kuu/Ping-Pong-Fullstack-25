@@ -72,7 +72,7 @@ Bun.serve({
     },
 });
 
-const TICK_RATE = 60;
+const TICK_RATE = 120;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 
@@ -90,6 +90,7 @@ function gameTick() {
 	const posSyncData = JSON.stringify({
 		type: "physics_sync",
 		ballVel: ballMesh?.position,
+		ballDelta: Globals.ballDelta,
 		vel1: p1Mesh?.position,
 		vel2: p2Mesh?.position,
 		score1: Globals.score1,

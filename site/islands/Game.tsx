@@ -48,7 +48,9 @@ export function Game(username: string) {
     ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
         if (data.type === "physics_sync") {
+			Globals.updateAvailable = true;
 			Globals.ballVel.copyFrom(data.ballVel);
+			Globals.ballDelta.copyFrom(data.ballDelta);
 			Globals.vel1.copyFrom(data.vel1);
 			Globals.vel2.copyFrom(data.vel2);
 
