@@ -4,8 +4,9 @@
 
 import type { ServerWebSocket } from "bun";
 import { NullEngine, Scene } from "@babylonjs/core";
-import { createSession } from "../utils/server/babylon_createsession.ts"
-import { Globals } from "../utils/shared/babylon_globals.ts"
+import { createSession } from "../utils/server/babylon_createsession.ts";
+import { Globals } from "../utils/shared/babylon_globals.ts";
+import { AI_moves } from "../utils/server/AI_opponent.ts";
 
 interface PlayerData {
     playerId: string;
@@ -76,13 +77,15 @@ const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 
 function gameTick() {
-    const now = Date.now()
-    const delta = (now - lastTick) / 1000
-    lastTick = now
+    const now = Date.now();
+    lastTick = now;
 
 	const ballMesh = scene.getMeshByName("ball");
 	const p1Mesh = scene.getMeshByName("player1");
 	const p2Mesh = scene.getMeshByName("player2");
+
+	if (clients.size < 2)
+		AI_moves(scene);
 
 	const posSyncData = JSON.stringify({
 		type: "physics_sync",
