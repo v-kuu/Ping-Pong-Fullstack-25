@@ -2,17 +2,7 @@ import { Canvas } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
 
 // @ts-ignore
-import {
-  draw,
-  init,
-  recvJoin,
-  recvQuit,
-  recvMove,
-  recvCollect,
-  keydown,
-  keyup,
-  memory,
-} from "../web3d/web3d.wasm";
+import { draw, init, recvJoin, recvQuit, recvMove, recvCollect, keydown, keyup, memory } from "../web3d/web3d.wasm";
 
 enum MessageType {
     Join = 0,
