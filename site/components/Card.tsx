@@ -170,3 +170,22 @@ export function UserProfileCard({
     </div>
   );
 }
+
+export function VideoCard(props: { title: string; url: string; link: string }) {
+  return (
+    <div class="card text-center bg-base-200 p-4 max-w-1/3 max-h-1/3">
+      <a
+        href={props.link}
+        class="link link-primary hover:underline mb-2 inline-block"
+      >
+        <h3 class="text-xl font-bold mb-4">Play {props.title}</h3>
+      </a>
+      <div class="aspect-w-16 aspect-h-9">
+        <video muted autoplay loop class="w-full h-full object-contain rounded">
+          <source src={props.url} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  );
+}

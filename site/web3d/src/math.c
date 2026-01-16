@@ -19,19 +19,18 @@ float fract(float x)
 }
 
 // Fast approximation of the sine function.
-float sinf(float t)
+float sinf(float x)
 {
-    float x = fract(t / TAU - 0.5f);
-    float y = x + x - 1.0f;
-    return 4.0f * (y - y * abs(y));
+    return cosf(x - TAU * 0.25f);
 }
 
 // Fast approximation of the cosine function.
-float cosf(float t)
+float cosf(float x)
 {
-    float x = fract(t / TAU - 0.25f);
-    float y = x + x - 1.0f;
-    return 4.0f * (y - y * abs(y));
+    x *= 1.0f / TAU;
+    x -= 0.25f + floor(x + 0.25f);
+    x *= 16.0f * (abs(x) - 0.5f);
+    return x + (0.225f * x * (abs(x) - 1.0f));
 }
 
 // Fast approximation of the function 2^x.
