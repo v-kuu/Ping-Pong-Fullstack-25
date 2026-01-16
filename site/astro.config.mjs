@@ -23,7 +23,7 @@ export default defineConfig({
           server.watcher.add(web3dPath);
 
           server.watcher.on("change", (path) => {
-            if (path.includes("/web3d/") && path.endsWith(".c")) {
+            if (path.includes("/web3d/") && (path.endsWith(".c") || path.endsWith(".h"))) {
               console.log(`C file changed: ${path}`);
               console.log("Rebuilding WASM...");
 
