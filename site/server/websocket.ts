@@ -72,7 +72,7 @@ Bun.serve({
     },
 });
 
-const TICK_RATE = 120;
+const TICK_RATE = 60;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 

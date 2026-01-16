@@ -160,19 +160,18 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 		const p1Mesh = scene.getMeshByName("player1");
 		const p2Mesh = scene.getMeshByName("player2");
 
-		const delta = scene.getEngine().getDeltaTime() / 1e3;
 		if (ballMesh)
 		{
 			if (Globals.playing)
 			{
-				ballMesh.position.x += Globals.ballDelta.x * delta;
-				ballMesh.position.z += Globals.ballDelta.z * delta;
+				ballMesh.position.x += Globals.ballDelta.x;
+				ballMesh.position.z += Globals.ballDelta.z;
 			}
 			if (Globals.updateAvailable)
 			{
 				Globals.updateAvailable = false;
 				const error = Globals.ballVel.subtract(ballMesh.position);
-				ballMesh.position.addInPlace(error.scale(0.8));
+				ballMesh.position.addInPlace(error.scaleInPlace(0.6));
 			}
 		}
 		if (p1Mesh)
