@@ -10,7 +10,7 @@ export function Home() {
       </div>
       <div class="flex justify-center gap-4">
         <VideoCard title="Pong" url="pong.mp4" link="/pong" />
-        <VideoCard title="Web3D" url="web3d.mp4" link="/web3d" />
+        <VideoCard title="Web3D" url="web3d.mp4" link="/game" />
       </div>
     </div>
   );

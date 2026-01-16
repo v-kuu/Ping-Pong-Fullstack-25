@@ -173,7 +173,7 @@ export function UserProfileCard({
 
 export function VideoCard(props: { title: string; url: string; link: string }) {
   return (
-    <div class="card text-center bg-base-200 p-4 max-w-1/4 max-h-1/3">
+    <div class="card text-center bg-base-200 p-4 max-w-1/3 max-h-1/3">
       <a
         href={props.link}
         class="link link-primary hover:underline mb-2 inline-block"
