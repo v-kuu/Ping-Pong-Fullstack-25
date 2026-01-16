@@ -90,6 +90,7 @@ function gameTick() {
 	const posSyncData = JSON.stringify({
 		type: "physics_sync",
 		ballVel: ballMesh?.position,
+		ballDelta: Globals.ballDelta,
 		vel1: p1Mesh?.position,
 		vel2: p2Mesh?.position,
 		score1: Globals.score1,

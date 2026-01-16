@@ -1,11 +1,19 @@
-import { GameState } from "../server/babylon_serverstates.ts";
 import { Vector3, Mesh } from "@babylonjs/core";
+
+export enum GameState
+{
+	WaitingPlayers,
+	Countdown,
+	Playing,
+}
 
 export interface GlobalState
 {
 	mapWidth: number;
 	mapHeight: number;
-	playerSize: number;
+	playerWidth: number,
+	playerHeight: number,
+	playerDepth: number;
 	playing: boolean;
 	score1: number;
 	score2: number;
@@ -13,6 +21,7 @@ export interface GlobalState
 	ballSpeed: number;
 	currentState: GameState;
 	ballVel: Vector3;
+	ballDelta: Vector3;
 	vel1: Vector3;
 	vel2: Vector3;
 	player1KeyDown: boolean;
@@ -28,7 +37,9 @@ export const Globals: GlobalState =
 {
 	mapWidth: 14,
 	mapHeight: 6,
-	playerSize: 2,
+	playerWidth: 0.3,
+	playerHeight: 0.3,
+	playerDepth: 2,
 	playing: false,
 	score1: 0,
 	score2: 0,
@@ -36,6 +47,7 @@ export const Globals: GlobalState =
 	ballSpeed: 6,
 	currentState: GameState.Countdown,
 	ballVel: new Vector3(-1, 0, 0),
+	ballDelta: new Vector3(),
 	vel1: new Vector3(),
 	vel2: new Vector3(),
 	player1KeyDown: false,

@@ -29,11 +29,19 @@ function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 {
 	let playerName = leftPlayer ? "player1" : "player2";
 	let player = MeshBuilder.CreateBox(
-		playerName, { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
+		playerName,
+		{
+			width: Globals.playerWidth,
+			height: Globals.playerHeight,
+			depth: Globals.playerDepth
+		},
+		scene
+	);
 	player.position.x = leftPlayer ? -6 : 6;
 	player.position.y = 0.2;
 	player.checkCollisions = true;
-	player.ellipsoid = new Vector3(0.25, 0.15, Globals.playerSize / 2);
+	player.ellipsoid = new Vector3(
+		Globals.playerWidth / 2, Globals.playerHeight / 2, Globals.playerDepth / 2);
 	return player;
 }
 
@@ -79,6 +87,7 @@ export function setupServerEntities(scene: Scene)
 	let player1 = createPlayer(true, scene);
 	let player2 = createPlayer(false, scene);
 	let wallMeshes: Mesh[] = createWalls(scene);
+	let prevPos = new Vector3();
 
 	setupCollisions(player1, player2, wallMeshes, ball, scene);
 	scene.onBeforeRenderObservable.add(() =>
@@ -88,7 +97,9 @@ export function setupServerEntities(scene: Scene)
 		{
 			player1.moveWithCollisions(Globals.vel1);
 			player2.moveWithCollisions(Globals.vel2);
+			prevPos = ball.position.clone();
 			ball.moveWithCollisions(Globals.ballVel.scale(delta * Globals.ballSpeed));
+			Globals.ballDelta = ball.position.subtract(prevPos);
 		}
 		else
 		{

@@ -70,7 +70,14 @@ function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 {
 	let playerName = leftPlayer ? "player1" : "player2";
 	let player = MeshBuilder.CreateBox(
-		playerName, { width: 0.5, height: 0.3, depth: Globals.playerSize }, scene);
+		playerName,
+		{
+			width: Globals.playerWidth,
+			height: Globals.playerHeight,
+			depth: Globals.playerDepth
+		},
+		scene
+	);
 	player.position.x = leftPlayer ? -6 : 6;
 	player.position.y = 0.2;
 	const path = leftPlayer
@@ -80,7 +87,8 @@ function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 		player.material = pbrMat;
 	});
 	player.checkCollisions = true;
-	player.ellipsoid = new Vector3(0.25, 0.15, Globals.playerSize / 2);
+	player.ellipsoid = new Vector3(
+		Globals.playerWidth / 2, Globals.playerHeight / 2, Globals.playerDepth / 2);
 	return player;
 }
 
@@ -145,26 +153,26 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	{
 		csm.addShadowCaster(wall);
 	}
-
-	scene.onBeforeRenderObservable.add(() => {
-		// 1. Find the meshes in the scene
+	
+	scene.onBeforeRenderObservable.add(() =>
+	{
 		const ballMesh = scene.getMeshByName("ball");
 		const p1Mesh = scene.getMeshByName("player1");
 		const p2Mesh = scene.getMeshByName("player2");
 
-		// 2. Sync Ball Position
-		if (ballMesh) {
-			// Since Globals.ballVel is updated by the WebSocket onmessage:
-			ballMesh.position.copyFrom(Globals.ballVel);
+		if (ballMesh)
+		{
+			if (Globals.playing)
+			{
+				ballMesh.position.x += Globals.ballDelta.x;
+				ballMesh.position.z += Globals.ballDelta.z;
+			}
+			const error = Globals.ballVel.subtract(ballMesh.position);
+			ballMesh.position.addInPlace(error.scaleInPlace(0.6));
 		}
-		// 3. Sync Player Paddles
-		if (p1Mesh) {
-			// p1Mesh.position._z = Globals.vel1._z;
+		if (p1Mesh)
 			p1Mesh.position.copyFrom(Globals.vel1);
-		}
-		if (p2Mesh) {
-			// p2Mesh.position._z = Globals.vel2._z;
+		if (p2Mesh)
 			p2Mesh.position.copyFrom(Globals.vel2);
-		}
 	});
 }
