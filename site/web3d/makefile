@@ -1,7 +1,7 @@
 NAME := web3d.wasm
 CONTAINER := clang20
-CFLAGS := -std=c23 --target=wasm32 -nostdlib -Oz -s -Wall -Wextra -Wpedantic \
-          -mbulk-memory -Wl,--no-entry -flto
+CFLAGS := -std=c23 --target=wasm32 -nostdlib -Os -s -Wall -Wextra -Wpedantic \
+          -mbulk-memory -Wl,--no-entry -flto -ffast-math
 
 .PHONY: all
 all: src/*.c
@@ -12,7 +12,7 @@ all: src/*.c
 
 .PHONY: native
 native: src/*.c
-	clang $^ -o ../web3d/$(NAME) $(CFLAGS)
+	clang $^ -o $(NAME) $(CFLAGS)
 
 .PHONY: clean
 clean:

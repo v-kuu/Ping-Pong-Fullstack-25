@@ -2,13 +2,11 @@ import {
 	Vector3,
 	Scene,
 } from "@babylonjs/core"
-import { Sides } from "./babylon_entities.ts"
-import { Globals } from "./babylon_globals.ts"
+import { Sides } from "./babylon_serverentities.ts"
+import { GameState, Globals } from "../shared/babylon_globals.ts"
 import {
 	setState,
-	GameState,
-} from "./babylon_states.ts"
-import { updateScore } from "./babylon_ui.ts"
+} from "./babylon_serverstates.ts"
 
 function bounceOffPlayer(
 	ball: any, player: any, ballVel: Vector3)
@@ -56,14 +54,14 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 		if (wall) {
 			if (wall.type % 2 === 0) {
 				var dir = wall.type - 1;
-				Globals.ballVel = new Vector3(dir, 0, 0);
+				Globals.ballVel.set(dir, 0, 0);
 				ball.position.x = 0;
 				ball.position.y = 0.25;
 				ball.position.z = 0;
 				if (dir > 0)
-					updateScore(scene, 1);
+					Globals.score1++;
 				else
-					updateScore(scene, 2);
+					Globals.score2++;
 				setState(GameState.Countdown, scene);
 			}
 			else {
@@ -73,7 +71,6 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 		const player = players.find(p => p.mesh === collidedMesh);
 		if (player) {
 			Globals.ballVel = bounceOffPlayer(ball, player, Globals.ballVel);
-			ball.position.x += Globals.ballVel.x * 0.1;
 			ball.position.y = 0.25;
 		}
 		Globals.ballVel.y = 0;

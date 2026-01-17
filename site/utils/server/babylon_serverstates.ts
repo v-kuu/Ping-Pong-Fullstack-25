@@ -1,22 +1,19 @@
-import { Globals } from "./babylon_globals.ts"
-import { startCountdown } from "./babylon_ui.ts"
-import { Scene } from "@babylonjs/core"
-
-export enum GameState
-{
-	Countdown,
-	Playing,
-}
+import { GameState, Globals } from "../shared/babylon_globals.ts"
+import { Scene, Tools } from "@babylonjs/core"
 
 export function setState(newState: GameState, scene: Scene)
 {
 	Globals.currentState = newState;
-	
+
 	switch (newState)
 	{
+		case GameState.WaitingPlayers:
+			break;
+
 		case GameState.Countdown:
 			Globals.playing = false;
-			startCountdown(scene, Globals.mapHeight / 2 + 1, () => {
+			Tools.DelayAsync(3000).then(() =>
+			{
 				setState(GameState.Playing, scene);
 			});
 			break ;

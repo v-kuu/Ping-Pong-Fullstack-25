@@ -10,12 +10,11 @@ import {
 import { Inspector } from "@babylonjs/inspector"
 import { setupEntities } from "./babylon_entities.ts"
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
-import { Globals } from "./babylon_globals.ts"
+import { GameState, Globals } from "../shared/babylon_globals.ts"
 import {
-	GameState,
 	setState
 } from "./babylon_states.ts"
-import { initScores } from "./babylon_ui.ts"
+import { initUI } from "./babylon_ui.ts"
 import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
@@ -29,7 +28,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	});
 	if (helper && helper.ground)
 		helper.ground.dispose();
-	scene.collisionsEnabled = true;
 	scene.environmentIntensity = 3.0;
 	scene.clearColor = new Color4(0, 0, 0, 0);
 
@@ -50,7 +48,7 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	setupEntities(light, scene);
 
 	//setup UI
-	initScores(scene);
+	initUI(scene);
 
 	//input setup
 	const keys = {};
@@ -59,22 +57,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	window.addEventListener("keydown", (e) => keys[e.key] = true);
 	window.addEventListener("keyup", (e) => keys[e.key] = false);
 	scene.onBeforeRenderObservable.add(() => {
-		const delta = engine.getDeltaTime() / 1e3;
-		const distance = Globals.moveSpeed * delta;
-		Globals.vel1 = new Vector3();
-		Globals.vel2 = new Vector3();
-		if (keys["w"]) {
-			Globals.vel1.z = distance;
-		}
-		if (keys["s"]) {
-			Globals.vel1.z = -distance
-		}
-		if (keys["i"]) {
-			Globals.vel2.z = distance;
-		}
-		if (keys["k"]) {
-			Globals.vel2.z = -distance;
-		}
 		if (keys["f"]) {
 			canvas.requestFullscreen();
 		}
@@ -89,6 +71,5 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 	});
 
 	enablePostProcess(scene, envTexture);
-	setState(GameState.Countdown, scene);
 	return scene;
 };
