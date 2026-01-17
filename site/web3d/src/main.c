@@ -63,7 +63,8 @@ typedef struct {
     float dx, dy;   // Direction vector.
     bool moving;    // True if player is in motion.
     bool active;    // False if player just spawned.
-    char name[MAX_PLAYER_NAME];
+    uint64_t score; // Current score.
+    char name[MAX_PLAYER_NAME]; // Display name.
 } Player;
 static Player players[MAX_PLAYERS];
 static size_t player_count;   // Total number of players.
@@ -357,6 +358,18 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
     }
 }
 
+int font_width(Font* font, const char* string)
+{
+    int width = 0;
+    while (*string != '\0') {
+        int glyph = *string++ - FONT_GLYPH_MIN;
+        if (glyph < 0 || glyph >= FONT_GLYPH_COUNT)
+            glyph = '?' - FONT_GLYPH_MIN;
+        width += font->width[glyph] + 1;
+    }
+    return width - !width;
+}
+
 void respawn(void)
 {
     // Place the player in a random room.
@@ -399,7 +412,7 @@ static void push_message(char* text)
     message->text[length] = '\0';
 }
 
-void new_game(double timestamp)
+static void new_game(double timestamp)
 {
     // Seed the random number generator and generate a random map.
     gem_mask = next_gem_mask;
@@ -602,6 +615,7 @@ static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, 
     }
 }
 
+// Join two null-terminated strings.
 static void string_join(char* buffer, size_t buffer_size, char* string)
 {
     for (; *buffer; buffer_size--)
@@ -611,6 +625,7 @@ static void string_join(char* buffer, size_t buffer_size, char* string)
     *buffer = '\0';
 }
 
+// Convert an unsigned integer to a string.
 static char* string_from_int(char* buffer, unsigned int value)
 {
     if (value >= 10)
@@ -620,6 +635,23 @@ static char* string_from_int(char* buffer, unsigned int value)
     return buffer + 1;
 }
 
+// Convert a timestamp (in seconds) to a nine-character string (including the
+// null-terminator).
+static void string_from_timestamp(char buffer[9], double time)
+{
+    int cents = floor(time * 100.0);
+    buffer[0] = '0' + cents / 60000 % 10; // Tens of minutes.
+    buffer[1] = '0' + cents /  6000 % 10; // Minutes.
+    buffer[2] = ':';
+    buffer[3] = '0' + cents / 1000 % 6 % 10; // Tens of seconds.
+    buffer[4] = '0' + cents /  100 % 10; // Seconds.
+    buffer[5] = ':';
+    buffer[6] = '0' + cents / 10 % 10; // Tenths of a second.
+    buffer[7] = '0' + cents /  1 % 10; // Hundredths of a second.
+    buffer[8] = '\0';
+}
+
+// Get a string from the JavaScript side.
 __attribute__((import_module("islands/Web3D"), import_name("getString")))
 size_t string_from_externref(__externref_t, char* buffer, size_t buffer_size);
 
@@ -707,22 +739,6 @@ static void draw_particles(Column* col)
     }
 }
 
-// Convert a timestamp (in seconds) to a nine-character string (including the
-// null-terminator).
-static void time_to_string(char buffer[9], double time)
-{
-    int cents = floor(time * 100.0);
-    buffer[0] = '0' + cents / 60000 % 10; // Tens of minutes.
-    buffer[1] = '0' + cents /  6000 % 10; // Minutes.
-    buffer[2] = ':';
-    buffer[3] = '0' + cents / 1000 % 6 % 10; // Tens of seconds.
-    buffer[4] = '0' + cents /  100 % 10; // Seconds.
-    buffer[5] = ':';
-    buffer[6] = '0' + cents / 10 % 10; // Tenths of a second.
-    buffer[7] = '0' + cents /  1 % 10; // Hundredths of a second.
-    buffer[8] = '\0';
-}
-
 static void draw_animation(Column* col, Texture* tex, float x, float y, float w, float h, float rate)
 {
     Texture frame;
@@ -757,7 +773,7 @@ static void draw_countdown(double seconds)
 {
     // Draw a timer.
     char text[16];
-    time_to_string(text, seconds);
+    string_from_timestamp(text, seconds);
     int x = FRAME_W - 52;
     int y = FRAME_H - 16;
     int color = ((int) (seconds * 128.0f) % 128 + 127) * 0x010101 | 0xff000000;
@@ -769,6 +785,44 @@ static void draw_countdown(double seconds)
     y = FRAME_H - 26;
     font_draw(&font_tiny, x + 1, y + 1, 0xff000000, small);
     font_draw(&font_tiny, x + 0, y + 0, color, small);
+}
+
+static void draw_scores(void)
+{
+    // Sort players by score.
+    for (size_t i = 1, j; i < player_count; i++) {
+        Player temp = players[i];
+        for (j = i; j > 0 && players[j - 1].score < temp.score; j--)
+            players[j] = players[j - 1];
+        players[j] = temp;
+    }
+
+    // Draw the table heading.
+    char* text = "Scores";
+    int x = (FRAME_W - 20) / 2;
+    int y = 30;
+    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+
+    // Draw each player's name and score.
+    for (int i = 0; i < player_count; i++) {
+        Player* player = &players[i];
+
+        // Draw the player name.
+        x = (FRAME_W - 120) / 2;
+        y = 51 + i * 14;
+        font_draw(&font_tiny, x + 1, y + 1, 0xff000000, player->name);
+        font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, player->name);
+
+        // Draw the player's current score.
+        char score[16];
+        string_from_int(score, player->score);
+        int width = font_width(&font_big, score);
+        x = (FRAME_W + 120) / 2 - width;
+        y = 50 + i * 14;
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, score);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, score);
+    }
 }
 
 static void draw_user_interface(void)
@@ -793,9 +847,12 @@ static void draw_user_interface(void)
     }
 
     // Draw a countdown while waiting for the next round.
-    if (time_now < time_round)
+    if (time_now < time_round) {
         draw_countdown((time_round - time_now) / 1000.0);
+        draw_scores();
+    }
 
+    // Draw the message log.
     draw_messages();
 }
 
@@ -917,6 +974,9 @@ void recv_collect(uint32_t id, int gem_index)
         score_shake = 0.2f;
         gem_count++;
     }
+    Player* player = get_player_by_id(id);
+    if (player)
+        player->score++;
 }
 
 // Message types (these should match MessageType in server.ts).

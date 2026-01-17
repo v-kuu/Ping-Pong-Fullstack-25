@@ -1,5 +1,6 @@
 import { Canvas } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
+
 // @ts-ignore
 import * as web3d from "../web3d/web3d.wasm";
 
@@ -13,9 +14,9 @@ export function sendMessage(socket: WebSocket, ...args: number[]) {
 // memory. The string is truncated if it's too long to fit the buffer, but is
 // always null-terminated. Returns the length of the string (sans null
 // terminator).
-export function getString(str: string, bufferAddr: number, bufferSize: number) {
+export function getString(str: string, addr: number, length: number) {
     const textEncoder = new TextEncoder();
-    const source = textEncoder.encode(playerName);
+    const source = textEncoder.encode(str);
     length = Math.min(source.length, length - 1);
     const target = new Uint8Array(web3d.memory.buffer, addr, length + 1);
     target.set(source.subarray(0, length));

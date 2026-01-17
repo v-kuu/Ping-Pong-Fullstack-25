@@ -11,7 +11,7 @@ enum MessageType {
 
 // Server configuration.
 const PORT = 3002; // Port used for the server.
-const ROUND_DELAY = 5; // Delay between rounds, in seconds.
+const ROUND_DELAY = 10; // Delay between rounds, in seconds.
 const MAX_GEMS = 50n; // Gems to collect per round.
 const ALL_GEMS = (1n << MAX_GEMS) - 1n; // Bit mask for all gems.
 
