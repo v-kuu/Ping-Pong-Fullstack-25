@@ -74,6 +74,9 @@ static float score_shake;
 // Timer.
 static double time_start;   // Timestamp of the first frame.
 static double time_elapsed; // Total time since the start (in seconds).
+static double time_round;   // Timestamp for the current/next round.
+static double time_curr;
+static double time_now;     // Timestamp for the current frame.
 static float time_delta;    // Time delta since the last frame (in seconds).
 
 // Textures.
@@ -87,6 +90,7 @@ typedef struct {
 // Gems.
 #define GEM_TYPES 14
 #define MAX_GEMS 50
+#define ALL_GEMS_COLLECTED ((1ull << MAX_GEMS) - 1)
 typedef struct {
     Texture* tex;   // Texture to use for drawing.
     float x, y;     // Map position.
@@ -94,6 +98,7 @@ typedef struct {
 } Gem;
 static Gem gem_array[MAX_GEMS];
 static uint64_t gem_mask;
+static uint64_t next_gem_mask;
 static int gem_count;
 
 // Particles.
@@ -350,30 +355,28 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
     }
 }
 
-// Initialize the game.
-__attribute__((export_name("init")))
-void init(size_t rng_seed)
+void respawn(void)
 {
-    // Load assets.
-    texture_load(&texture_floor);
-    texture_load(&texture_wall);
-    texture_load(&texture_gems);
-    texture_load(&texture_barrier);
-    texture_load(&texture_ghost);
-    texture_load(&texture_guy_front);
-    texture_load(&texture_guy_left);
-    texture_load(&texture_guy_right);
-    texture_load(&texture_guy_back);
-    font_load(&font_tiny);
-    font_load(&font_big);
-    for (int i = 0; i < GEM_TYPES; i++) {
-        texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
-        texture_gem[i].color = average_color(&texture_gem[i]);
-    }
+    // Place the player in a random room.
+    int player_room = (random_int(0, MAP_ROOMS - 1) + player_self) % MAP_ROOMS;
+    player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
+    player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
+}
 
+void new_game(double timestamp)
+{
     // Seed the random number generator and generate a random map.
-    random_seed(rng_seed);
+    gem_mask = next_gem_mask;
+    time_curr = timestamp;
+    random_seed((uint64_t) timestamp);
     map_generate();
+
+    // Mark the spawn points on the map, so that no gems are placed there.
+    for (int i = 0; i < MAP_ROOMS; i++) {
+        int x = map_room_x(i);
+        int y = map_room_x(i);
+        map_set(x, y, 'g');
+    }
 
     // Place gems on unoccupied map tiles.
     for (int i = 0; i < MAX_GEMS;) {
@@ -395,10 +398,30 @@ void init(size_t rng_seed)
         if (map_get(x, y) == 'g')
             map_set(x, y, 0);
 
-    // Place the player in a random room.
-    int player_room = random_int(0, MAP_ROOMS - 1);
-    player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
-    player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
+    // Respawn in a random room.
+    respawn();
+}
+
+// Initialize the game.
+__attribute__((export_name("init")))
+void init(void)
+{
+    // Load assets.
+    texture_load(&texture_floor);
+    texture_load(&texture_wall);
+    texture_load(&texture_gems);
+    texture_load(&texture_barrier);
+    texture_load(&texture_ghost);
+    texture_load(&texture_guy_front);
+    texture_load(&texture_guy_left);
+    texture_load(&texture_guy_right);
+    texture_load(&texture_guy_back);
+    font_load(&font_tiny);
+    font_load(&font_big);
+    for (int i = 0; i < GEM_TYPES; i++) {
+        texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
+        texture_gem[i].color = average_color(&texture_gem[i]);
+    }
 }
 
 // Apply fog to a color.
@@ -593,7 +616,7 @@ static void update_particles(float dt)
 
 static void update_players(float dt)
 {
-    for (int i = 0; i < player_count; i++) {
+    for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
         player->vx = smooth(player->vx, player->x, 10.0f * dt);
         player->vy = smooth(player->vy, player->y, 10.0f * dt);
@@ -711,11 +734,24 @@ static void draw_user_interface(void)
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
     texture_draw(&texture_gem[1], 5, 180);
+
+    // Show some text while waiting for other players to join.
+    if (player_count == 1 && gem_mask == ALL_GEMS_COLLECTED) {
+        char* text = "Waiting for players";
+        int x = (FRAME_W - 80) / 2;
+        int y = (FRAME_H - 30) / 2;
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+    }
+
+    // Draw a countdown while waiting for the next round.
+    if (time_now < time_round)
+        draw_countdown((time_round - time_now) / 1000.0);
 }
 
 static void draw_players(Column* col)
 {
-    for (int i = 0; i < player_count; i++) {
+    for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
         if (player->id == player_self)
             continue;
@@ -746,17 +782,15 @@ static Player* get_player_by_id(uint32_t id)
 }
 
 __attribute__((export_name("recvJoin")))
-void recv_join(uint32_t id, double gems)
+void recv_join(uint32_t id)
 {
-    Player* player = &players[player_count++];
-    player->id = id;
-    player->x = 0.0f;
-    player->y = 0.0f;
-    player->gems = 0;
-    player->active = false;
-    if (!player_self) {
-        player_self = id;
-        gem_mask = gems;
+    if (!get_player_by_id(id)) {
+        Player* player = &players[player_count++];
+        player->id = id;
+        player->x = 0.0f;
+        player->y = 0.0f;
+        player->gems = 0;
+        player->active = false;
     }
 }
 
@@ -768,6 +802,18 @@ void recv_quit(uint32_t id)
             players[i] = players[--player_count];
             break;
         }
+    }
+}
+
+__attribute__((export_name("recvStatus")))
+void recv_status(uint32_t self, uint32_t ghost, double timestamp, double gems)
+{
+    next_gem_mask = gems;
+    player_ghost = ghost;
+    time_round = timestamp;
+    if (!player_self) {
+        player_self = self;
+        new_game(timestamp);
     }
 }
 
@@ -801,15 +847,29 @@ void recv_collect(uint32_t id, int gem_index)
     }
 }
 
-__attribute__((import_module("islands/Web3D"), import_name("sendMove")))
-void send_move(__externref_t socket, float x, float y, float dx, float dy);
+// Message types (these should match MessageType in server.ts).
+enum {
+    MESSAGE_MOVE = 3,
+    MESSAGE_COLLECT,
+};
 
-__attribute__((import_module("islands/Web3D"), import_name("sendCollect")))
-void send_collect(__externref_t socket, int gem_index);
+void send_move(__externref_t socket, float x, float y, float dx, float dy)
+{
+    __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
+    void send_move_message(__externref_t, int, int, float, float, float, float);
+    send_move_message(socket, MESSAGE_MOVE, player_self, x, y, dx, dy);
+}
+
+void send_collect(__externref_t socket, int gem_index)
+{
+    __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
+    void send_collect_message(__externref_t, int, int, int);
+    send_collect_message(socket, MESSAGE_COLLECT, player_self, gem_index);
+}
 
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
-void* draw(__externref_t socket, double timestamp)
+void* draw(__externref_t socket, double timestamp, double date_now)
 {
     // Measure time delta since the previous frame.
     static double prev_timestamp;
@@ -820,6 +880,13 @@ void* draw(__externref_t socket, double timestamp)
     if (time_start == 0.0)
         time_start = timestamp;
     time_elapsed = (timestamp - time_start) / 1000.0;
+
+    // Record the current timestamp.
+    time_now = date_now;
+
+    // Start a new game when the counter runs out.
+    if (time_now >= time_round && time_curr < time_round)
+        new_game(time_round);
 
     // Handle player movement.
     const float rotate_speed = time_delta * PLAYER_TURN_SPEED;
@@ -862,13 +929,14 @@ void* draw(__externref_t socket, double timestamp)
     send_move(socket, player_x, player_y, player_dx, player_dy);
 
     // Collect gems when touching them.
-    if (player_self != player_ghost) {
+    if (player_self != player_ghost && time_now >= time_round) {
         for (int i = 0; i < MAX_GEMS; i++) {
             if (!(gem_mask & (1ull << i))) {
                 Gem* gem = &gem_array[i];
                 float dx = player_x - gem->x;
                 float dy = player_y - gem->y;
-                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH)
+                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH
+                 && time_now >= time_round + 100.0f)
                     send_collect(socket, i);
             }
         }
@@ -923,9 +991,6 @@ void* draw(__externref_t socket, double timestamp)
     }
 
     draw_user_interface();
-
-    if (time_elapsed < 5.0f)
-        draw_countdown(5.0f - time_elapsed);
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));
