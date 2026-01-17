@@ -17,6 +17,8 @@ RUN cp /app/.astro/content.db /app/content.db.init
 RUN mkdir -p /app/.astro /app/dist/client/avatars
 
 EXPOSE 3000
+EXPOSE 3001
+EXPOSE 3002
 
 RUN ["sh", "-c", "[ -s .astro/content.db ] || cp content.db.init .astro/content.db"]
-CMD ["bun-tasks", "bun run serve ::: bun run web3d ::: bun run pong"]
+CMD ["bunx", "bun-tasks", "bun", "run", "serve", ":::", "bun", "run", "web3d", ":::", "bun", "run", "pong"]

@@ -34,7 +34,7 @@
   },
   "scripts": {
     "dev": "bun run build-wasm && bun-tasks bunx --bun astro dev ::: bun run web3d ::: bun run pong",
-    "serve": "bun run .dist/server/entry.mjs",
+    "serve": "bun run dist/server/entry.mjs",
     "web3d": "bun run --watch web3d/server.ts",
     "pong": "bun run --watch server/websocket.ts",
     "build": "bun run build-wasm && bun run check && bunx --bun astro build",
