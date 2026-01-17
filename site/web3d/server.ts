@@ -53,11 +53,12 @@ function startNewRound() {
 }
 
 // Handle a gem collect message from a client.
-function handleCollectMessage(message: Float64Array) {
+function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
     const gemIndex = message[2];
     const gemBit = 1n << BigInt(gemIndex)
     if (!(gemMask & gemBit)) { // Check that the gem hasn't been collected yet.
         gemMask |= gemBit; // Mark the gem as collected.
+        client.score++; // Credit the player with the gem.
         repeatMessage(message); // Let clients know the gem was collected.
     }
 
@@ -88,7 +89,7 @@ const server = Bun.serve({
             message[1] = client.id; // Set the playerId.
             switch (type) {
                 case MessageType.Move: return handleMoveMessage(message);
-                case MessageType.Collect: return handleCollectMessage(message);
+                case MessageType.Collect: return handleCollectMessage(client, message);
                 default: return console.log(`Unrecognized message type: ${type}`);
             }
         },
@@ -97,12 +98,13 @@ const server = Bun.serve({
         open(client: ServerWebSocket) {
             const secondPlayerJoined = clients.size === 1;
             client.id = ++clientIdCounter;
+            client.score = 0; // TODO: This should come from the DB.
             console.log("Client", client.id, "connected from", client.remoteAddress);
             clients.add(client);
             for (const other of clients)
-                sendMessage(client, MessageType.Join, other.id);
+                sendMessage(client, MessageType.Join, other.id, other.score);
             sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
-            broadcastMessage(MessageType.Join, client.id);
+            broadcastMessage(MessageType.Join, client.id, client.score);
             if (secondPlayerJoined && gemMask == ALL_GEMS)
                 startNewRound();
         },

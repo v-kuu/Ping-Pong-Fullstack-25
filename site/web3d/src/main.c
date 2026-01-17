@@ -102,7 +102,6 @@ typedef struct {
 static Gem gem_array[MAX_GEMS];
 static uint64_t gem_mask;
 static uint64_t next_gem_mask;
-static int gem_count;
 
 // Particles.
 #define MAX_PARTICLES 100
@@ -805,7 +804,7 @@ static void draw_scores(void)
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
 
     // Draw each player's name and score.
-    for (int i = 0; i < player_count; i++) {
+    for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
 
         // Draw the player name.
@@ -825,17 +824,28 @@ static void draw_scores(void)
     }
 }
 
+static Player* get_player_by_id(uint32_t id)
+{
+    for (size_t i = 0; i < player_count; i++)
+        if (players[i].id == id)
+            return &players[i];
+    return NULL;
+}
+
 static void draw_user_interface(void)
 {
-    // Draw the gem count.
-    char text[16];
-    string_from_int(text, gem_count);
-    int x = 23;
-    int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
-    score_shake = max(0.0f, score_shake - time_delta);
-    font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
-    font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
-    texture_draw(&texture_gem[1], 5, 180);
+    // Draw the gem count (if the player is connected).
+    Player* player = get_player_by_id(player_self);
+    if (player) {
+        char text[16];
+        string_from_int(text, player->score);
+        int x = 23;
+        int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
+        score_shake = max(0.0f, score_shake - time_delta);
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+        texture_draw(&texture_gem[1], 5, 180);
+    }
 
     // Show some text while waiting for other players to join.
     if (player_count == 1 && gem_mask == ALL_GEMS_COLLECTED) {
@@ -880,22 +890,15 @@ static void draw_gems(Column* col)
     }
 }
 
-static Player* get_player_by_id(uint32_t id)
-{
-    for (size_t i = 0; i < player_count; i++)
-        if (players[i].id == id)
-            return &players[i];
-    return NULL;
-}
-
 __attribute__((export_name("recvJoin")))
-void recv_join(uint32_t id)
+void recv_join(uint32_t id, int score)
 {
     // Add another player to the array.
     if (!get_player_by_id(id)) {
         Player* player = &players[player_count++];
         memset(player, 0, sizeof(Player));
         player->id = id;
+        player->score = score;
 
         // Set the player's name (TODO: Use their actual name).
         char buffer[64];
@@ -970,10 +973,8 @@ void recv_collect(uint32_t id, int gem_index)
     Gem* gem = &gem_array[gem_index];
     spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
     gem_mask |= 1ull << gem_index;
-    if (id == player_self) {
+    if (id == player_self)
         score_shake = 0.2f;
-        gem_count++;
-    }
     Player* player = get_player_by_id(id);
     if (player)
         player->score++;
