@@ -3,4 +3,3 @@ dist
 .git
 .gitignore
 .env
-.astro
