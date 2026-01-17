@@ -1,5 +1,6 @@
 import { Canvas } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
+// @ts-ignore
 import * as web3d from "../web3d/web3d.wasm";
 
 // Send a message to the server.
@@ -62,11 +63,27 @@ export function Web3D() {
     };
 
     // Set up event handlers and render the first frame
-    onkeydown = event => web3d.keydown(event.keyCode);
-    onkeyup = event => web3d.keyup(event.keyCode);
+    let ignoreInput = false;
+    const handlePause = (e: CustomEvent<boolean>) => {
+      ignoreInput = e.detail;
+    };
+    document.addEventListener('gamepause', handlePause as EventListener);
+
+    onkeydown = event => {
+      if (ignoreInput) return;
+      web3d.keydown(event.keyCode);
+    };
+    onkeyup = event => {
+      if (ignoreInput) return;
+      web3d.keyup(event.keyCode);
+    };
     canvas.oncontextmenu = (event) => event.preventDefault();
     web3d.init();
     render(performance.now());
+
+    return () => {
+      document.removeEventListener('gamepause', handlePause as EventListener);
+    };
   });
   return <Canvas />;
 }
