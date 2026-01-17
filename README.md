@@ -21,10 +21,11 @@ bun i && bun dev
 ```
 
 ## Team & roles
-👑 or product owner -> [abostrom](https://intra.42.fr/users/abostrom) </br>
-[Beastmaster](https://en.wikipedia.org/wiki/The_Beastmaster#/media/File:TheBeastmaster.jpg)/manager -> [vkuusela](https://intra.42.fr/vkuusela) </br>
-Technical architect -> [vlopatin](https://intra.42.fr/users/vlopatin) </br>
-Developers -> [jtuomi](https://intra.42.fr/users/jtuomi), [maoliiny](https://intra.42.fr/users/maoliiny)
+[abostrom](https://intra.42.fr/users/abostrom) </br>
+[vkuusela](https://intra.42.fr/vkuusela) </br>
+[vlopatin](https://intra.42.fr/users/vlopatin) </br>
+[jtuomi](https://intra.42.fr/users/jtuomi)</br>
+[maoliiny](https://intra.42.fr/users/maoliiny)
 
 ## Project Management
 
@@ -126,8 +127,8 @@ Total: 20 points
 
 ## AI Usage
 
-TODO!
+Gemini 3 Pro was used to create privacy policy & ToS.</br> Github Copilot did at least one code review.</br>ChatGPT was consulted on TypeScript usage. 
 
 ## Features List
 
-TODO!
+You can go login, play games with friends and have limited usage history.
