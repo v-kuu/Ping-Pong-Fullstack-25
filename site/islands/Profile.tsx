@@ -6,13 +6,14 @@ import { UserProfileCard } from "@/components/Card.tsx";
 import { AccountSettings } from "./Settings.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { FriendsList } from "./Friends.tsx";
+import { DeleteAccount } from "./Delete.tsx";
 
-type Tab = "info" | "account" | "avatar" | "friends";
+type Tab = "info" | "account" | "avatar" | "friends" | "delete";
 
 const getInitialTab = (): Tab => {
   if (typeof window === "undefined") return "info";
   const saved = sessionStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "account", "avatar", "friends"].includes(saved)
+  return saved && ["info", "account", "avatar", "friends", "delete"].includes(saved)
     ? saved
     : "info";
 };
@@ -23,6 +24,7 @@ const showInfo = computed(() => activeTab.value === "info");
 const showAccount = computed(() => activeTab.value === "account");
 const showAvatar = computed(() => activeTab.value === "avatar");
 const showFriends = computed(() => activeTab.value === "friends");
+const showDelete = computed(() => activeTab.value === "delete");
 
 if (typeof window !== "undefined") {
   effect(() => {
@@ -167,6 +169,12 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                     <FriendsList />
                   </div>
                 </Show>
+
+                <Show when={showDelete}>
+                  <div class={mounted ? "lg:-ml-64" : ""}>
+                    <DeleteAccount />
+                  </div>
+                </Show>
               </div>
             </div>
           </div>
@@ -213,6 +221,15 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 class={activeTab.value === "friends" ? "active" : ""}
               >
                 Friends
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => (activeTab.value = "delete")}
+                class={activeTab.value === "delete" ? "active" : ""}
+              >
+                Delete Account
               </button>
             </li>
           </ul>

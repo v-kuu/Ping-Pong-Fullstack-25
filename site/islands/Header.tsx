@@ -1,6 +1,6 @@
-import { ThemeToggle } from "./Button.tsx";
+import { ThemeToggle } from "@/components/Button.tsx";
 import { NavAvatar } from "@/islands/Avatar.tsx";
-import NavigationBar from "./NavBar.tsx";
+import NavigationBar from "@/components/NavBar.tsx";
 import { UserCircle, HomeLogo, PingLogo, WebLogo } from "./Icons.tsx";
 
 export default function Header(props: {

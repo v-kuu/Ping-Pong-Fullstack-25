@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import type { MatchData, UserProfileData } from "@/utils/types";
+import type { MatchData, UserProfileData } from "@/utils/site/types";
 import { UserProfileCard } from "@/components/Card.tsx";
 
 interface PublicUserInfoProps {

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { db, Sessions, Users, eq } from "astro:db";
-import { validateUsername } from "@/utils/validation";
-import { badRequest, unauthorized, success, internalError } from "@/utils/apiHelpers";
+import { validateUsername } from "@/utils/site/validation";
+import { badRequest, unauthorized, success, internalError } from "@/utils/site/apiHelpers";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {

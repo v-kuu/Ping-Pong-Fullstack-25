@@ -18,4 +18,5 @@ RUN mkdir -p /app/.astro /app/dist/client/avatars
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "[ -s .astro/content.db ] || cp content.db.init .astro/content.db; bun run ./dist/server/entry.mjs"]
+RUN ["sh", "-c", "[ -s .astro/content.db ] || cp content.db.init .astro/content.db"]
+CMD ["bun-tasks", "bun run serve ::: bun run web3d ::: bun run pong"]

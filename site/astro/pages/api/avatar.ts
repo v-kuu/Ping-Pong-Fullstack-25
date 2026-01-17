@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
 import { unlink } from "node:fs/promises";
-import { unauthorized, badRequest, success, internalError } from "@/utils/apiHelpers";
+import { unauthorized, badRequest, success, internalError } from "@/utils/site/apiHelpers";
 
 // In dev, write to public/avatars (served directly)
 // In prod, write to dist/client/avatars (where static files are served from)
-const AVATARS_DIR = import.meta.env.PROD 
+const AVATARS_DIR = import.meta.env.PROD
   ? `${process.cwd()}/dist/client/avatars`
   : `${process.cwd()}/public/avatars`;
 
@@ -41,7 +41,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Write file to disk using Bun (overwrites if exists)
     await Bun.write(avatarPath, file);
 
-    return success({ 
+    return success({
       message: "Avatar updated successfully",
       avatarUrl: `/api/avatars/${locals.user.username}`
     });
@@ -64,7 +64,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
       await unlink(avatarPath);
     }
 
-    return success({ 
+    return success({
       message: "Avatar removed successfully",
       avatarUrl: "/avatar.png"
     });
@@ -84,8 +84,8 @@ export const GET: APIRoute = async ({ locals }) => {
 
   return success({
     hasCustomAvatar,
-    avatarUrl: hasCustomAvatar 
-      ? `/api/avatars/${locals.user.username}` 
+    avatarUrl: hasCustomAvatar
+      ? `/api/avatars/${locals.user.username}`
       : "/avatar.png"
   });
 };

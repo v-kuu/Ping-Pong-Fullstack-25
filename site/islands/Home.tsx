@@ -1,4 +1,3 @@
-import { Button } from "@/components/Button.tsx";
 import { VideoCard } from "@/components/Card.tsx";
 
 export function Home() {

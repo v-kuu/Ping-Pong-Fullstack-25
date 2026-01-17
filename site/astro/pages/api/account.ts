@@ -1,11 +1,11 @@
 import type { APIRoute } from "astro";
 import { db, Users, eq } from "astro:db";
-import { validatePassword, validateUsername, validateEmail } from "@/utils/validation";
-import { badRequest, unauthorized, conflict, success } from "@/utils/apiHelpers";
+import { validatePassword, validateUsername, validateEmail } from "@/utils/site/validation";
+import { badRequest, unauthorized, conflict, success } from "@/utils/site/apiHelpers";
 import { join } from "path";
 import { existsSync, renameSync } from "fs";
 
-const AVATARS_DIR = import.meta.env.PROD 
+const AVATARS_DIR = import.meta.env.PROD
   ? `${process.cwd()}/dist/client/avatars`
   : `${process.cwd()}/public/avatars`;
 
