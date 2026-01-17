@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { validatePassword, validateEmail } from "../utils/validation.ts";
+import { validatePassword, validateEmail } from "../utils/site/validation.ts";
 import { SuccessCard } from "@/components/Card.tsx";
 
 export function Signup() {

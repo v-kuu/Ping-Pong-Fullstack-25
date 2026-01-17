@@ -11,7 +11,7 @@ const handleDeletion = async (username) => {
     .then((response) => {
       location.reload();
     })
-  .  catch((error) => {
+  .catch((error) => {
     console.error("Failed to delete account", error);
   });
 };
