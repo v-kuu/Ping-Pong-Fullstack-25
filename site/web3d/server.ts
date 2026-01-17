@@ -99,10 +99,10 @@ const server = Bun.serve({
             client.id = ++clientIdCounter;
             console.log("Client", client.id, "connected from", client.remoteAddress);
             clients.add(client);
-            sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
-            broadcastMessage(MessageType.Join, client.id);
             for (const other of clients)
                 sendMessage(client, MessageType.Join, other.id);
+            sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
+            broadcastMessage(MessageType.Join, client.id);
             if (secondPlayerJoined && gemMask == ALL_GEMS)
                 startNewRound();
         },

@@ -8,6 +8,20 @@ export function sendMessage(socket: WebSocket, ...args: number[]) {
     socket.send(new Float64Array([...args]));
 }
 
+// Convert a string to UTF-8 and write the bytes to a buffer in WebAssembly
+// memory. The string is truncated if it's too long to fit the buffer, but is
+// always null-terminated. Returns the length of the string (sans null
+// terminator).
+export function getString(str: string, bufferAddr: number, bufferSize: number) {
+    const textEncoder = new TextEncoder();
+    const source = textEncoder.encode(playerName);
+    length = Math.min(source.length, length - 1);
+    const target = new Uint8Array(web3d.memory.buffer, addr, length + 1);
+    target.set(source.subarray(0, length));
+    target[length] = 0;
+    return length;
+}
+
 // Handle a message from the server.
 function handleMessage(data: ArrayBuffer) {
   const handlers = [

@@ -54,6 +54,7 @@ static float player_y_smooth;
 
 // Player state.
 #define MAX_PLAYERS 64
+#define MAX_PLAYER_NAME 32
 typedef struct {
     uint64_t gems;  // Bit mask of collected gems.
     uint32_t id;    // Unique ID.
@@ -62,6 +63,7 @@ typedef struct {
     float dx, dy;   // Direction vector.
     bool moving;    // True if player is in motion.
     bool active;    // False if player just spawned.
+    char name[MAX_PLAYER_NAME];
 } Player;
 static Player players[MAX_PLAYERS];
 static size_t player_count;   // Total number of players.
@@ -363,6 +365,40 @@ void respawn(void)
     player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
 }
 
+#define MAX_MESSAGE_LENGTH 64 // How much text fits in a message.
+#define MAX_MESSAGES 22 // How many messages fit on screen.
+#define MESSAGE_DELAY 5 // How long before a message disappears.
+typedef struct {
+    double timestamp;
+    char text[MAX_MESSAGE_LENGTH];
+} Message;
+static Message messages[MAX_MESSAGES];
+static size_t message_index;
+
+static void draw_messages(void)
+{
+    for (size_t i = 0; i < MAX_MESSAGES; i++) {
+        size_t index = (message_index + MAX_MESSAGES - 1 - i) % MAX_MESSAGES;
+        Message* message = &messages[index];
+        if (time_now < message->timestamp + MESSAGE_DELAY * 1000.0) {
+            int x = 5;
+            int y = FRAME_H - 30 - 8 * i;
+            font_draw(&font_tiny, x + 1, y + 1, 0xff000000, message->text);
+            font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, message->text);
+        }
+    }
+}
+
+static void push_message(char* text)
+{
+    Message* message = &messages[message_index++ % MAX_MESSAGES];
+    message->timestamp = time_now;
+    size_t length = 0;
+    while (length < MAX_MESSAGE_LENGTH - 1 && *text)
+        message->text[length++] = *text++;
+    message->text[length] = '\0';
+}
+
 void new_game(double timestamp)
 {
     // Seed the random number generator and generate a random map.
@@ -566,14 +602,26 @@ static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, 
     }
 }
 
-static char* number_to_string(char* buffer, unsigned int value)
+static void string_join(char* buffer, size_t buffer_size, char* string)
+{
+    for (; *buffer; buffer_size--)
+        buffer++;
+    while (*string && --buffer_size)
+        *buffer++ = *string++;
+    *buffer = '\0';
+}
+
+static char* string_from_int(char* buffer, unsigned int value)
 {
     if (value >= 10)
-        buffer = number_to_string(buffer, value / 10);
+        buffer = string_from_int(buffer, value / 10);
     buffer[0] = '0' + value % 10;
     buffer[1] = '\0';
     return buffer + 1;
 }
+
+__attribute__((import_module("islands/Web3D"), import_name("getString")))
+size_t string_from_externref(__externref_t, char* buffer, size_t buffer_size);
 
 static void spawn_particles(float x, float y, float z, uint32_t color)
 {
@@ -710,15 +758,15 @@ static void draw_countdown(double seconds)
     // Draw a timer.
     char text[16];
     time_to_string(text, seconds);
-    int x = (FRAME_W - 35) / 2;
-    int y = (FRAME_H - 30) / 2;
+    int x = FRAME_W - 52;
+    int y = FRAME_H - 16;
     int color = ((int) (seconds * 128.0f) % 128 + 127) * 0x010101 | 0xff000000;
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, color, text);
 
-    char* small = "GAME STARTS IN";
-    x = (FRAME_W - 53) / 2;
-    y = (FRAME_H - 50) / 2;
+    char* small = "NEXT ROUND IN";
+    x = FRAME_W - 64;
+    y = FRAME_H - 26;
     font_draw(&font_tiny, x + 1, y + 1, 0xff000000, small);
     font_draw(&font_tiny, x + 0, y + 0, color, small);
 }
@@ -727,7 +775,7 @@ static void draw_user_interface(void)
 {
     // Draw the gem count.
     char text[16];
-    number_to_string(text, gem_count);
+    string_from_int(text, gem_count);
     int x = 23;
     int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
     score_shake = max(0.0f, score_shake - time_delta);
@@ -747,6 +795,8 @@ static void draw_user_interface(void)
     // Draw a countdown while waiting for the next round.
     if (time_now < time_round)
         draw_countdown((time_round - time_now) / 1000.0);
+
+    draw_messages();
 }
 
 static void draw_players(Column* col)
@@ -784,21 +834,43 @@ static Player* get_player_by_id(uint32_t id)
 __attribute__((export_name("recvJoin")))
 void recv_join(uint32_t id)
 {
+    // Add another player to the array.
     if (!get_player_by_id(id)) {
         Player* player = &players[player_count++];
+        memset(player, 0, sizeof(Player));
         player->id = id;
-        player->x = 0.0f;
-        player->y = 0.0f;
-        player->gems = 0;
-        player->active = false;
+
+        // Set the player's name (TODO: Use their actual name).
+        char buffer[64];
+        string_from_int(buffer, id);
+        string_join(player->name, MAX_PLAYER_NAME, "player");
+        string_join(player->name, MAX_PLAYER_NAME, buffer);
+
+        // Show a join message (unless the player is still connecting).
+        if (player_self) {
+            buffer[0] = '\0';
+            string_join(buffer, sizeof(buffer), player->name);
+            string_join(buffer, sizeof(buffer), " joined");
+            push_message(buffer);
+        }
     }
 }
 
 __attribute__((export_name("recvQuit")))
 void recv_quit(uint32_t id)
 {
+    // Find a player with a matching ID.
     for (size_t i = 0; i < player_count; i++) {
-        if (players[i].id == id) {
+        Player* player = &players[i];
+        if (player->id == id) {
+
+            // Print a quit message.
+            char buffer[64] = {0};
+            string_join(buffer, sizeof(buffer), player->name);
+            string_join(buffer, sizeof(buffer), " quit");
+            push_message(buffer);
+
+            // Remove the player from the array.
             players[i] = players[--player_count];
             break;
         }
@@ -885,8 +957,10 @@ void* draw(__externref_t socket, double timestamp, double date_now)
     time_now = date_now;
 
     // Start a new game when the counter runs out.
-    if (time_now >= time_round && time_curr < time_round)
+    if (time_now >= time_round && time_curr < time_round) {
+        push_message("A new round started");
         new_game(time_round);
+    }
 
     // Handle player movement.
     const float rotate_speed = time_delta * PLAYER_TURN_SPEED;
