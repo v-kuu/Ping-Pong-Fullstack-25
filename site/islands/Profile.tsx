@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
-import type { MatchData, UserProfileData } from "@/utils/types";
+import type { MatchData, UserProfileData } from "@/utils/site/types";
 import { UserProfileCard } from "@/components/Card.tsx";
 import { AccountSettings } from "./Settings.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
@@ -172,7 +172,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
                 <Show when={showDelete}>
                   <div class={mounted ? "lg:-ml-64" : ""}>
-                    <DeleteAccount />
+                    <DeleteAccount username={userData.username} isOwnProfile={userData.username === user?.username} isLoggedIn={!!user} />
                   </div>
                 </Show>
               </div>
@@ -186,14 +186,14 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
             aria-label="close sidebar"
             class="drawer-overlay"
           ></label>
-          <ul class="menu bg-base-200 min-h-full w-64 p-4">
+          <ul class="menu bg-base-200 min-h-full w-64 p-4 gap-5">
             <li>
               <button
                 type="button"
                 onClick={() => (activeTab.value = "info")}
                 class={activeTab.value === "info" ? "active" : ""}
               >
-                User information
+                User Information
               </button>
             </li>
             <li>
@@ -211,7 +211,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 onClick={() => (activeTab.value = "avatar")}
                 class={activeTab.value === "avatar" ? "active" : ""}
               >
-                Avatar
+                Change Avatar
               </button>
             </li>
             <li>
@@ -220,7 +220,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 onClick={() => (activeTab.value = "friends")}
                 class={activeTab.value === "friends" ? "active" : ""}
               >
-                Friends
+                Your Friends
               </button>
             </li>
             <li>

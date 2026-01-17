@@ -1,4 +1,4 @@
-import { validateUsername, validateEmail } from "../utils/validation.ts";
+import { validateUsername, validateEmail } from "../utils/site/validation.ts";
 import { useState, useEffect } from "preact/hooks";
 
 interface AccountSettingsProps {

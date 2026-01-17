@@ -1,3 +1,5 @@
 export function Canvas() {
-  return <canvas id="renderCanvas" class="w-full h-full" />;
-}
+  return (
+    <canvas id="renderCanvas" class="aspect-auto w-full h-full" />
+  );
+};

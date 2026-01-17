@@ -8,9 +8,10 @@ interface Props {
   active: string;
   favicon: string;
   class?: string;
+  redirect?: boolean;
 }
 
-const { title, active, favicon, class: className } = Astro.props;
+const { title, active, favicon, class: className, redirect } = Astro.props;
 const user = Astro.locals.user ?? null;
 ---
 
@@ -20,6 +21,12 @@ const user = Astro.locals.user ?? null;
       const savedTheme = localStorage.getItem("theme");
       const theme = savedTheme === "dracula" ? "dracula" : "synthwave";
       document.documentElement.setAttribute("data-theme", theme);
+      if ({redirect}) {
+        const meta = document.createElement("meta");
+        meta.httpEquiv = "refresh";
+        meta.content = "5;url=/";
+        document.head.appendChild(meta);
+      }
     </script>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
@@ -32,7 +39,7 @@ const user = Astro.locals.user ?? null;
     <link rel="icon" href={favicon} />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="h-full">
     <Header active={active} user={user} client:load />
     <main class={className}>
       <slot />

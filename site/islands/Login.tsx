@@ -25,7 +25,7 @@ export function Login() {
         throw new Error(data.error || "Invalid username or password");
       }
 
-      window.location.href = "/game";
+      window.location.href = "/profile";
     } catch (err: any) {
       setServerError(err.message);
     }
