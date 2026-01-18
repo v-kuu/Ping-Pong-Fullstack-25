@@ -128,7 +128,7 @@ const server = Bun.serve({
             sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
             for (const other of clients)
                 sendJoinMessage(other, client);
-            if (secondPlayerJoined && gemMask == 0n)
+            if (secondPlayerJoined && gemMask === 0n)
                 startNewMatch();
         },
 
@@ -137,7 +137,8 @@ const server = Bun.serve({
             console.log("Client", client.id, "disconnected");
             clients.delete(client);
             broadcastMessage(MessageType.Quit, client.id);
-            // TODO: Update stats if all players left.
+            if (clients.size === 0)
+                gemMask = 0n;
         },
     },
 });

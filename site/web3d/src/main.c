@@ -846,10 +846,9 @@ static void draw_user_interface(void)
         int y = (FRAME_H - 30) / 2;
         font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
         font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
-    }
 
     // Draw a countdown while waiting for the next match.
-    if (time_now < time_match) {
+    } else if (time_now < time_match) {
         draw_countdown((time_match - time_now) / 1000.0);
         draw_scores();
     }
@@ -922,6 +921,11 @@ void recv_quit(uint32_t id)
             break;
         }
     }
+
+    // If the only other player left while a match was about to start, cancel
+    // the match.
+    if (player_count == 1 && time_curr < time_match)
+        time_curr = time_match;
 }
 
 __attribute__((export_name("recvStatus")))
@@ -1026,7 +1030,7 @@ void* draw(__externref_t socket, double timestamp, double date_now)
     time_now = date_now;
 
     // Start a new game when the counter runs out.
-    if (time_now >= time_match && time_curr < time_match) {
+    if (time_now >= time_match && time_curr < time_match && player_count > 1) {
         push_message("A new match started");
         new_game(time_match);
 
