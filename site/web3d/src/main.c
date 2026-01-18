@@ -447,6 +447,10 @@ static void new_game(double timestamp, uint64_t gems)
         if (map_get(x, y) == 'g')
             map_set(x, y, 0);
 
+    // Mark other players' positions as stale.
+    for (size_t i = 0; i < player_count; i++)
+        players[i].moved = false;
+
     // Respawn in a random room.
     respawn();
 }
