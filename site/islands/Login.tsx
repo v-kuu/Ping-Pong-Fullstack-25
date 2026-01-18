@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 
 export function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -11,7 +11,7 @@ export function Login() {
 
     try {
       const formData = new FormData();
-      formData.append("username", username);
+      formData.append("email", email);
       formData.append("password", password);
 
       const res = await fetch("/api/login", {
@@ -22,7 +22,7 @@ export function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Invalid username or password");
+        throw new Error(data.error || "Invalid email or password");
       }
 
       window.location.href = "/profile";
@@ -50,14 +50,14 @@ export function Login() {
       {serverError && <div class="alert alert-error">{serverError}</div>}
 
       <div class="space-y-1">
-        <label class="label-text">Username</label>
+        <label class="label-text">Email</label>
         <input
-          type="text"
+          type="email"
           class="input input-bordered w-full"
-          value={username}
-          onInput={(e: any) => setUsername(e.target.value)}
-          placeholder="AwesomeUser"
-          autoComplete="username"
+          value={email}
+          onInput={(e: any) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          autoComplete="email"
           required
         />
       </div>
