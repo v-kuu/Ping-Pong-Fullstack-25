@@ -41,11 +41,13 @@ function countBitsSet(value: BigInt): number {
 
 // Send a join message.
 function sendJoinMessage(recipient: ServerWebSocket, joined: ServerWebSocket) {
+    const name = joined.name.slice(0, MAX_PLAYER_NAME - 1);
     const data = Buffer.allocUnsafe(56);
     data.writeDoubleLE(MessageType.Join, 0);
     data.writeDoubleLE(joined.id, 8);
     data.writeDoubleLE(joined.score, 16);
-    data.write(joined.name.slice(0, MAX_PLAYER_NAME), 24);
+    data.write(name, 24);
+    data.writeUInt8(0, 24 + name.length);
     recipient.sendBinary(data);
 }
 
