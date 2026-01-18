@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-export function Canvas() {
-  return (
-    <canvas id="renderCanvas" class="aspect-auto w-full h-full" />
-  );
-};
-=======
 // Pong canvas - stretches to fill container
 export function CanvasPong() {
   return <canvas id="renderCanvas" class="w-full h-full" />;
@@ -21,4 +14,3 @@ export function CanvasWeb3D() {
     </div>
   );
 }
->>>>>>> origin/aspect_ratio_fix
