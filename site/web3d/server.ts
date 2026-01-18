@@ -11,16 +11,27 @@ enum MessageType {
 
 // Server configuration.
 const PORT = 3002; // Port used for the server.
-const ROUND_DELAY = 10; // Delay between rounds, in seconds.
-const MAX_GEMS = 50n; // Gems to collect per round.
+const MATCH_DELAY = 10; // Delay between matches, in seconds.
+const MAX_GEMS = 50n; // Gems to collect per match.
 const ALL_GEMS = (1n << MAX_GEMS) - 1n; // Bit mask for all gems.
+const MAX_PLAYER_NAME = 32; // Maximum player name length.
 
 // server state.
 const clients = new Set<ServerWebSocket>;
 let clientIdCounter = 0; // Counter used for assigning client IDs.
 let startTime = Date.now(); // Time of the start of the game (and also the RNG seed).
-let gemMask = ALL_GEMS; // Bit mask of gems that have been collected.
+let gemMask = 0n; // Bit mask of gems that have not been collected.
 let ghostId = 0; // Client ID of the current ghost.
+
+// Send a join message.
+function sendJoinMessage(recipient: ServerWebSocket, joined: ServerWebSocket) {
+    const data = Buffer.allocUnsafe(56);
+    data.writeDoubleLE(MessageType.Join, 0);
+    data.writeDoubleLE(joined.id, 8);
+    data.writeDoubleLE(joined.score, 16);
+    data.write(joined.name.slice(0, MAX_PLAYER_NAME), 24);
+    recipient.sendBinary(data);
+}
 
 // Send a message to a client.
 function sendMessage(client: ServerWebSocket, ...args: number[]) {
@@ -43,28 +54,38 @@ function handleMoveMessage(message: Float64Array) {
     repeatMessage(message);
 }
 
-// Notify all connected clients that a new round is starting.
-function startNewRound() {
-    startTime = Date.now() + ROUND_DELAY * 1000;
-    gemMask = 0n;
-    console.log("Starting a new round");
-    for (const client of clients)
-        sendMessage(client, MessageType.Status, client.id, ghostId, startTime, 0);
+// Notify all connected clients that a new match is starting.
+function startNewMatch() {
+    startTime = Date.now() + MATCH_DELAY * 1000;
+    gemMask = ALL_GEMS;
+    console.log("Starting a new match");
+    for (const client of clients) {
+        client.score = 0;
+        sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
+    }
+    // TODO: Update player stats here.
 }
 
 // Handle a gem collect message from a client.
 function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
     const gemIndex = message[2];
-    const gemBit = 1n << BigInt(gemIndex)
-    if (!(gemMask & gemBit)) { // Check that the gem hasn't been collected yet.
-        gemMask |= gemBit; // Mark the gem as collected.
-        client.score++; // Credit the player with the gem.
-        repeatMessage(message); // Let clients know the gem was collected.
+    const gemBit = 1n << BigInt(gemIndex);
+    if ((gemMask & gemBit) && Date.now() >= startTime + 1000) {
+
+        // Give the player a point, and grant them an extra point if there's a
+        // tie when the last gem is collected.
+        client.score++;
+        if ((gemMask & (gemMask - 1n)) === 0n) { // Check if it's the last gem.
+            const top = Array.from(clients).sort((a, b) => b.score - a.score);
+            client.score += top.length > 1 && top[0].score === top[1].score;
+        }
+        gemMask &= ~gemBit; // Mark the gem as collected.
+        broadcastMessage(MessageType.Collect, client.id, gemIndex, client.score);
     }
 
-    // Start a new round when all gems have been collected.
-    if (gemMask === ALL_GEMS && clients.size > 1)
-        startNewRound();
+    // Start a new match when all gems have been collected.
+    if (gemMask === 0n && clients.size > 1)
+        startNewMatch();
 }
 
 // Start the WebSocket server.
@@ -98,15 +119,17 @@ const server = Bun.serve({
         open(client: ServerWebSocket) {
             const secondPlayerJoined = clients.size === 1;
             client.id = ++clientIdCounter;
-            client.score = 0; // TODO: This should come from the DB.
-            console.log("Client", client.id, "connected from", client.remoteAddress);
+            client.score = 0;
+            client.name = "player" + client.id; // TODO: Query from DB.
+            console.log(client.name, "connected from", client.remoteAddress);
             clients.add(client);
             for (const other of clients)
-                sendMessage(client, MessageType.Join, other.id, other.score);
+                sendJoinMessage(client, other);
             sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
-            broadcastMessage(MessageType.Join, client.id, client.score);
-            if (secondPlayerJoined && gemMask == ALL_GEMS)
-                startNewRound();
+            for (const other of clients)
+                sendJoinMessage(other, client);
+            if (secondPlayerJoined && gemMask == 0n)
+                startNewMatch();
         },
 
         // Handle client disconnection.
@@ -114,6 +137,7 @@ const server = Bun.serve({
             console.log("Client", client.id, "disconnected");
             clients.delete(client);
             broadcastMessage(MessageType.Quit, client.id);
+            // TODO: Update stats if all players left.
         },
     },
 });

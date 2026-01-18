@@ -63,7 +63,7 @@ typedef struct {
     float dx, dy;   // Direction vector.
     bool moving;    // True if player is in motion.
     bool active;    // False if player just spawned.
-    uint64_t score; // Current score.
+    int score;      // Current score.
     char name[MAX_PLAYER_NAME]; // Display name.
 } Player;
 static Player players[MAX_PLAYERS];
@@ -77,7 +77,7 @@ static float score_shake;
 // Timer.
 static double time_start;   // Timestamp of the first frame.
 static double time_elapsed; // Total time since the start (in seconds).
-static double time_round;   // Timestamp for the current/next round.
+static double time_match;   // Timestamp for the current/next match.
 static double time_curr;
 static double time_now;     // Timestamp for the current frame.
 static float time_delta;    // Time delta since the last frame (in seconds).
@@ -93,7 +93,7 @@ typedef struct {
 // Gems.
 #define GEM_TYPES 14
 #define MAX_GEMS 50
-#define ALL_GEMS_COLLECTED ((1ull << MAX_GEMS) - 1)
+#define ALL_GEMS ((1ull << MAX_GEMS) - 1)
 typedef struct {
     Texture* tex;   // Texture to use for drawing.
     float x, y;     // Map position.
@@ -652,7 +652,7 @@ static void string_from_timestamp(char buffer[9], double time)
 
 // Get a string from the JavaScript side.
 __attribute__((import_module("islands/Web3D"), import_name("getString")))
-size_t string_from_externref(__externref_t, char* buffer, size_t buffer_size);
+size_t string_from_extern(__externref_t, char* buffer, size_t buffer_size);
 
 static void spawn_particles(float x, float y, float z, uint32_t color)
 {
@@ -779,7 +779,7 @@ static void draw_countdown(double seconds)
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, color, text);
 
-    char* small = "NEXT ROUND IN";
+    char* small = "NEXT MATCH IN";
     x = FRAME_W - 64;
     y = FRAME_H - 26;
     font_draw(&font_tiny, x + 1, y + 1, 0xff000000, small);
@@ -848,7 +848,7 @@ static void draw_user_interface(void)
     }
 
     // Show some text while waiting for other players to join.
-    if (player_count == 1 && gem_mask == ALL_GEMS_COLLECTED) {
+    if (player_count == 1 && gem_mask == 0) {
         char* text = "Waiting for players";
         int x = (FRAME_W - 80) / 2;
         int y = (FRAME_H - 30) / 2;
@@ -856,9 +856,9 @@ static void draw_user_interface(void)
         font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
     }
 
-    // Draw a countdown while waiting for the next round.
-    if (time_now < time_round) {
-        draw_countdown((time_round - time_now) / 1000.0);
+    // Draw a countdown while waiting for the next match.
+    if (time_now < time_match) {
+        draw_countdown((time_match - time_now) / 1000.0);
         draw_scores();
     }
 
@@ -882,7 +882,7 @@ static void draw_players(Column* col)
 static void draw_gems(Column* col)
 {
     for (int i = 0; i < MAX_GEMS; i++) {
-        if (!(gem_mask & (1ull << i))) {
+        if ((gem_mask & (1ull << i))) {
             Gem* gem = &gem_array[i];
             float height = 0.3f + 0.05f * sinf(time_elapsed * 2.0f + gem->phase);
             draw_sprite(col, gem->tex, gem->x, gem->y, 0.4f, height);
@@ -891,7 +891,7 @@ static void draw_gems(Column* col)
 }
 
 __attribute__((export_name("recvJoin")))
-void recv_join(uint32_t id, int score)
+void recv_join(uint32_t id, int score, __externref_t name)
 {
     // Add another player to the array.
     if (!get_player_by_id(id)) {
@@ -899,16 +899,11 @@ void recv_join(uint32_t id, int score)
         memset(player, 0, sizeof(Player));
         player->id = id;
         player->score = score;
-
-        // Set the player's name (TODO: Use their actual name).
-        char buffer[64];
-        string_from_int(buffer, id);
-        string_join(player->name, MAX_PLAYER_NAME, "player");
-        string_join(player->name, MAX_PLAYER_NAME, buffer);
+        string_from_extern(name, player->name, MAX_PLAYER_NAME);
 
         // Show a join message (unless the player is still connecting).
         if (player_self) {
-            buffer[0] = '\0';
+            char buffer[64] = {0};
             string_join(buffer, sizeof(buffer), player->name);
             string_join(buffer, sizeof(buffer), " joined");
             push_message(buffer);
@@ -942,7 +937,7 @@ void recv_status(uint32_t self, uint32_t ghost, double timestamp, double gems)
 {
     next_gem_mask = gems;
     player_ghost = ghost;
-    time_round = timestamp;
+    time_match = timestamp;
     if (!player_self) {
         player_self = self;
         new_game(timestamp);
@@ -968,16 +963,16 @@ void recv_move(uint32_t id, float x, float y, float dx, float dy)
 }
 
 __attribute__((export_name("recvCollect")))
-void recv_collect(uint32_t id, int gem_index)
+void recv_collect(uint32_t id, int gem_index, int updated_score)
 {
     Gem* gem = &gem_array[gem_index];
     spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
-    gem_mask |= 1ull << gem_index;
+    gem_mask &= ~(1ull << gem_index);
     if (id == player_self)
         score_shake = 0.2f;
     Player* player = get_player_by_id(id);
     if (player)
-        player->score++;
+        player->score = updated_score;
 }
 
 // Message types (these should match MessageType in server.ts).
@@ -1018,9 +1013,13 @@ void* draw(__externref_t socket, double timestamp, double date_now)
     time_now = date_now;
 
     // Start a new game when the counter runs out.
-    if (time_now >= time_round && time_curr < time_round) {
-        push_message("A new round started");
-        new_game(time_round);
+    if (time_now >= time_match && time_curr < time_match) {
+        push_message("A new match started");
+        new_game(time_match);
+
+        // Reset all players' scores.
+        for (size_t i = 0; i < player_count; i++)
+            players[i].score = 0;
     }
 
     // Handle player movement.
@@ -1064,14 +1063,13 @@ void* draw(__externref_t socket, double timestamp, double date_now)
     send_move(socket, player_x, player_y, player_dx, player_dy);
 
     // Collect gems when touching them.
-    if (player_self != player_ghost && time_now >= time_round) {
+    if (player_self != player_ghost && time_now >= time_match) {
         for (int i = 0; i < MAX_GEMS; i++) {
-            if (!(gem_mask & (1ull << i))) {
+            if (gem_mask & (1ull << i)) {
                 Gem* gem = &gem_array[i];
                 float dx = player_x - gem->x;
                 float dy = player_y - gem->y;
-                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH
-                 && time_now >= time_round + 100.0f)
+                if (dx * dx + dy * dy < PLAYER_REACH * PLAYER_REACH)
                     send_collect(socket, i);
             }
         }

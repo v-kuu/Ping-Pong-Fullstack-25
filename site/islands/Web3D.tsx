@@ -4,6 +4,15 @@ import { useEffect } from "preact/hooks";
 // @ts-ignore
 import * as web3d from "../web3d/web3d.wasm";
 
+enum MessageType {
+    Join = 0,
+    Quit,
+    Status,
+    Move,
+    Collect,
+    Catch,
+}
+
 // Send a message to the server.
 export function sendMessage(socket: WebSocket, ...args: number[]) {
   if (socket.readyState === WebSocket.OPEN)
@@ -26,15 +35,19 @@ export function getString(str: string, addr: number, length: number) {
 
 // Handle a message from the server.
 function handleMessage(data: ArrayBuffer) {
-  const handlers = [
-    web3d.recvJoin,
-    web3d.recvQuit,
-    web3d.recvStatus,
-    web3d.recvMove,
-    web3d.recvCollect,
-  ];
   const [type, ...args] = new Float64Array(data);
-  handlers[type](...args);
+  switch (type) {
+    case MessageType.Join: {
+      const [playerId, score] = args;
+      const name = new TextDecoder().decode(new DataView(data, 24));
+      web3d.recvJoin(playerId, score, name);
+    } break;
+    case MessageType.Quit: return web3d.recvQuit(...args);
+    case MessageType.Status: return web3d.recvStatus(...args);
+    case MessageType.Move: return web3d.recvMove(...args);
+    case MessageType.Collect: return web3d.recvCollect(...args);
+    default: return console.log("Invalid message type", type);
+  }
 }
 
 export function Web3D() {
