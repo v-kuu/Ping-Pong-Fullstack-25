@@ -64,6 +64,7 @@ typedef struct {
     bool moving;    // True if player is in motion.
     bool moved;     // False until the player moves for the first time.
     bool active;    // False if the player disconnected.
+    bool played;    // True if the player participated in the last match.
     int score;      // Current score.
     char name[MAX_PLAYER_NAME]; // Display name.
 } Player;
@@ -798,6 +799,8 @@ static void draw_scores(void)
     // Draw each player's name and score.
     for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
+        if (!player->played)
+            continue;
 
         // Draw the player name.
         x = (FRAME_W - 120) / 2;
@@ -853,7 +856,7 @@ static void draw_user_interface(void)
     }
 
     // Draw the scores if there's no active match.
-    if (gem_mask == 0)
+    if (gem_mask == 0 && player && player->played)
         draw_scores();
 
     // Draw the message log.
@@ -968,6 +971,10 @@ void recv_count(double timestamp)
 __attribute__((export_name("recvEnd")))
 void recv_end(void)
 {
+    // Mark all players who participated in the game.
+    for (size_t i = 0; i < player_count; i++)
+        players[i].played = true;
+
     // Sort players by score.
     for (size_t i = 1, j; i < player_count; i++) {
         Player temp = players[i];
