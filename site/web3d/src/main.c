@@ -78,6 +78,7 @@ static float score_shake;
 static double time_start;   // Timestamp of the first frame.
 static double time_elapsed; // Total time since the start (in seconds).
 static double time_match;   // Timestamp for the current/next match.
+static double time_next_match;  // Timestamp for the next match.
 static double time_curr;
 static double time_now;     // Timestamp for the current frame.
 static float time_delta;    // Time delta since the last frame (in seconds).
@@ -101,7 +102,6 @@ typedef struct {
 } Gem;
 static Gem gem_array[MAX_GEMS];
 static uint64_t gem_mask;
-static uint64_t next_gem_mask;
 
 // Particles.
 #define MAX_PARTICLES 100
@@ -411,10 +411,10 @@ static void push_message(char* text)
     message->text[length] = '\0';
 }
 
-static void new_game(double timestamp)
+static void new_game(double timestamp, uint64_t gems)
 {
     // Seed the random number generator and generate a random map.
-    gem_mask = next_gem_mask;
+    gem_mask = gems;
     time_curr = timestamp;
     random_seed((uint64_t) timestamp);
     map_generate();
@@ -840,18 +840,21 @@ static void draw_user_interface(void)
     }
 
     // Show some text while waiting for other players to join.
-    if (player_count == 1 && gem_mask == 0) {
+    if (player_count == 1) {
         char* text = "Waiting for players";
-        int x = (FRAME_W - 80) / 2;
-        int y = (FRAME_H - 30) / 2;
-        font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
-        font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+        int x = FRAME_W - 90;
+        int y = FRAME_H - 17;
+        font_draw(&font_tiny, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, text);
 
     // Draw a countdown while waiting for the next match.
-    } else if (time_now < time_match) {
-        draw_countdown((time_match - time_now) / 1000.0);
-        draw_scores();
+    } else if (time_now < time_next_match) {
+        draw_countdown((time_next_match - time_now) / 1000.0);
     }
+
+    // Draw the scores if there's no active match.
+    if (gem_mask == 0)
+        draw_scores();
 
     // Draw the message log.
     draw_messages();
@@ -928,18 +931,33 @@ void recv_quit(uint32_t id)
         time_curr = time_match;
 }
 
-__attribute__((export_name("recvStatus")))
-void recv_status(uint32_t self, uint32_t ghost, double timestamp, double gems)
+__attribute__((export_name("recvBegin")))
+void recv_begin(uint32_t self, uint32_t ghost, double timestamp, double gems)
 {
     // Update the game state.
-    next_gem_mask = gems;
     player_ghost = ghost;
     time_match = timestamp;
-    if (!player_self) {
+    if (player_self) {
+        push_message("A new match started!");
+    } else {
         player_self = self;
-        new_game(timestamp);
     }
+    new_game(timestamp, gems);
 
+    // Reset all players' scores.
+    for (size_t i = 0; i < player_count; i++)
+        players[i].score = 0;
+}
+
+__attribute__((export_name("recvCount")))
+void recv_count(double timestamp)
+{
+    time_next_match = timestamp;
+}
+
+__attribute__((export_name("recvEnd")))
+void recv_end(void)
+{
     // Sort players by score.
     for (size_t i = 1, j; i < player_count; i++) {
         Player temp = players[i];
@@ -949,16 +967,13 @@ void recv_status(uint32_t self, uint32_t ghost, double timestamp, double gems)
     }
 
     // Announce a winner, if there is one.
-    for (size_t i = 0; i < player_count; i++) {
-        Player* player = &players[i];
-        if (player->score > 0) {
-            char message[64] = {0};
-            string_join(message, sizeof(message), player->name);
-            string_join(message, sizeof(message), " wins the match!");
-            push_message(message);
-            break;
-        }
-    }
+    char message[64] = {0};
+    string_join(message, sizeof(message), players[0].name);
+    string_join(message, sizeof(message), " wins the match!");
+    push_message(message);
+
+    // Clear all gems.
+    gem_mask = 0;
 }
 
 __attribute__((export_name("recvMove")))
@@ -994,7 +1009,7 @@ void recv_collect(uint32_t id, int gem_index, int updated_score)
 
 // Message types (these should match MessageType in server.ts).
 enum {
-    MESSAGE_MOVE = 3,
+    MESSAGE_MOVE = 5,
     MESSAGE_COLLECT,
 };
 
@@ -1028,16 +1043,6 @@ void* draw(__externref_t socket, double timestamp, double date_now)
 
     // Record the current timestamp.
     time_now = date_now;
-
-    // Start a new game when the counter runs out.
-    if (time_now >= time_match && time_curr < time_match && player_count > 1) {
-        push_message("A new match started");
-        new_game(time_match);
-
-        // Reset all players' scores.
-        for (size_t i = 0; i < player_count; i++)
-            players[i].score = 0;
-    }
 
     // Handle player movement.
     const float rotate_speed = time_delta * PLAYER_TURN_SPEED;

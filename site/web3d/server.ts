@@ -3,7 +3,9 @@ import type { ServerWebSocket } from "bun";
 enum MessageType {
     Join = 0,
     Quit,
-    Status,
+    Begin,
+    Count,
+    End,
     Move,
     Collect,
     Catch,
@@ -20,6 +22,8 @@ const MAX_PLAYER_NAME = 32; // Maximum player name length.
 const clients = new Set<ServerWebSocket>;
 let clientIdCounter = 0; // Counter used for assigning client IDs.
 let startTime = Date.now(); // Time of the start of the game (and also the RNG seed).
+let nextMatchTimer = 0; // Timer ID for the start of the next match.
+let nextMatch = startTime; // Timestamp for the start of the next match.
 let gemMask = 0n; // Bit mask of gems that have not been collected.
 let ghostId = 0; // Client ID of the current ghost.
 
@@ -56,13 +60,23 @@ function handleMoveMessage(message: Float64Array) {
 
 // Notify all connected clients that a new match is starting.
 function startNewMatch() {
-    startTime = Date.now() + MATCH_DELAY * 1000;
-    gemMask = ALL_GEMS;
-    console.log("Starting a new match");
-    for (const client of clients) {
-        client.score = 0;
-        sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
-    }
+    if (nextMatchTimer !== 0)
+        return;
+    nextMatch = Date.now() + MATCH_DELAY * 1000;
+    console.log("Starting a new match in", MATCH_DELAY, "seconds");
+    broadcastMessage(MessageType.Count, nextMatch);
+
+    // Schedule the start of the next match.
+    nextMatchTimer = setTimeout(() => {
+        nextMatchTimer = 0;
+        startTime = Date.now();
+        gemMask = ALL_GEMS;
+        console.log("A new match started!");
+        for (const client of clients) {
+            client.score = 0;
+            sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
+        }
+    }, MATCH_DELAY * 1000);
     // TODO: Update player stats here.
 }
 
@@ -84,8 +98,11 @@ function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
     }
 
     // Start a new match when all gems have been collected.
-    if (gemMask === 0n && clients.size > 1)
+    if (gemMask === 0n && clients.size > 1) {
+        console.log("All gems were collected!");
+        broadcastMessage(MessageType.End);
         startNewMatch();
+    }
 }
 
 // Start the WebSocket server.
@@ -125,7 +142,7 @@ const server = Bun.serve({
             clients.add(client);
             for (const other of clients)
                 sendJoinMessage(client, other);
-            sendMessage(client, MessageType.Status, client.id, ghostId, startTime, Number(gemMask));
+            sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
             for (const other of clients)
                 sendJoinMessage(other, client);
             if (secondPlayerJoined && gemMask === 0n)
@@ -137,8 +154,33 @@ const server = Bun.serve({
             console.log("Client", client.id, "disconnected");
             clients.delete(client);
             broadcastMessage(MessageType.Quit, client.id);
-            if (clients.size === 0)
+
+            // When there's only one player left...
+            if (clients.size === 1) {
+
+                // If a game was about to start, cancel it.
+                if (nextMatchTimer !== 0) {
+                    console.log("Only one player left, match cancelled!");
+                    clearTimeout(nextMatchTimer);
+                    nextMatchTimer = 0;
+
+                // Otherwise, the remaining player wins the match.
+                } else {
+                    console.log("All opponents left,", client.name, "wins!");
+                    broadcastMessage(MessageType.End);
+                    gemMask = 0n;
+                }
+            }
+
+            // When all players leave, reset the game completely.
+            if (clients.size === 0) {
+                if (nextMatchTimer !== 0) {
+                    console.log("All players disconnected!");
+                    clearTimeout(nextMatchTimer);
+                    nextMatchTimer = 0;
+                }
                 gemMask = 0n;
+            }
         },
     },
 });

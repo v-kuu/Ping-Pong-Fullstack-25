@@ -7,7 +7,9 @@ import * as web3d from "../web3d/web3d.wasm";
 enum MessageType {
     Join = 0,
     Quit,
-    Status,
+    Begin,
+    Count,
+    End,
     Move,
     Collect,
     Catch,
@@ -43,7 +45,9 @@ function handleMessage(data: ArrayBuffer) {
       web3d.recvJoin(playerId, score, name);
     } break;
     case MessageType.Quit: return web3d.recvQuit(...args);
-    case MessageType.Status: return web3d.recvStatus(...args);
+    case MessageType.Begin: return web3d.recvBegin(...args);
+    case MessageType.Count: return web3d.recvCount(...args);
+    case MessageType.End: return web3d.recvEnd(...args);
     case MessageType.Move: return web3d.recvMove(...args);
     case MessageType.Collect: return web3d.recvCollect(...args);
     default: return console.log("Invalid message type", type);
