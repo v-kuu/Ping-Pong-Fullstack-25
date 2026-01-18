@@ -987,11 +987,17 @@ void recv_end(void)
         players[j] = temp;
     }
 
-    // Announce a winner, if there is one.
-    char message[64] = {0};
-    string_join(message, sizeof(message), players[0].name);
-    string_join(message, sizeof(message), " wins the match!");
-    push_message(message);
+    // If there's a tie, don't announce a winner.
+    if (player_count > 1 && players[0].score == players[1].score) {
+        push_message("It's a tie!");
+
+    // Otherwise, mention the player's name.
+    } else {
+        char message[64] = {0};
+        string_join(message, sizeof(message), players[0].name);
+        string_join(message, sizeof(message), " wins the match!");
+        push_message(message);
+    }
 
     // Clear all gems.
     gem_mask = 0;
