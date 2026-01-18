@@ -4,14 +4,16 @@ interface DeleteAccountProps {
   isLoggedIn?: boolean;
 }
 
-const handleDeletion = async (username) => {
+async function handleDeletion(username) {
   const conf = window.confirm("Sure about this?")
-  if (!conf) return;
-  const res = await fetch(`/api/delete/${username}`)
-    .then((response) => {
+  if (!conf || !username) return;
+  console.log(username);
+  await fetch(`/api/delete`, {
+    method: 'DELETE'
+  }).then((response) => {
+      console.log(response);
       location.reload();
-    })
-  .catch((error) => {
+  }).catch((error) => {
     console.error("Failed to delete account", error);
   });
 };
@@ -22,17 +24,12 @@ export function DeleteAccount({
   isLoggedIn = false,
 }: DeleteAccountProps) {
   return (
-  <form type= "submit" class="card rounded-2xl backdrop-blur-xl gap-5">
-  <h1 class="font-bold text-xl">
-    Think twice
-  </h1>
     <label>
       <button
         class="btn btn-warning btn-xl"
-        onClick={handleDeletion}
+        onClick={() => { handleDeletion(username) }}
       >
         Delete Account
       </button>
     </label>
-  </form>
-    )}
+);};

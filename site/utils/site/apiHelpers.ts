@@ -33,3 +33,12 @@ export function created<T>(data: T): Response {
 export function noContent(): Response {
   return new Response(null, { status: 204 });
 }
+
+export function redirect(location: string): Response {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: location,
+    },
+  });
+}
