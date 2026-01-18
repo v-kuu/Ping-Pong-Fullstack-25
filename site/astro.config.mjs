@@ -47,9 +47,6 @@ export default defineConfig({
   srcDir: "astro",
   pages: "astro/pages",
   output: "server",
-  security: {
-    checkOrigin: false
-  },
   adapter: bun(),
   server: {
     port: 3000,

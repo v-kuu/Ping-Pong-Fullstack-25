@@ -1,35 +1,49 @@
 interface DeleteAccountProps {
-  username: string;
-  isOwnProfile?: boolean;
-  isLoggedIn?: boolean;
+  id: number;
 }
 
-async function handleDeletion(username) {
-  const conf = window.confirm("Sure about this?")
-  if (!conf || !username) return;
-  console.log(username);
-  await fetch(`/api/delete`, {
-    method: 'DELETE'
-  }).then((response) => {
-      console.log(response);
-      location.reload();
-  }).catch((error) => {
+async function handleDeletion(id) {
+  const conf = window.confirm("Sure about this?");
+  if (!conf || !id) return;
+
+  try {
+    const response = await fetch(`/api/delete/${id}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      window.location.href = "/login";
+    } else {
+      console.error("Failed to delete account");
+      alert("Failed to delete account. Please try again.");
+    }
+  } catch (error) {
     console.error("Failed to delete account", error);
-  });
-};
+    alert("An error occurred while deleting account.");
+  }
+}
 
 export function DeleteAccount({
-  username,
-  isOwnProfile = false,
-  isLoggedIn = false,
+  id,
 }: DeleteAccountProps) {
   return (
-    <label>
+    <div class="alert alert-warning items-center-safe">
+      <p>Warning:<br/>You'll lose all data</p>
+      <form
+        method="DELETE"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleDeletion(id);
+        }}
+        action={`/api/delete/${id}`}
+      >
       <button
         class="btn btn-warning btn-xl"
-        onClick={() => { handleDeletion(username) }}
+        type="submit"
       >
         Delete Account
       </button>
-    </label>
-);};
+      </form>
+    </div>
+  );
+};

@@ -10,27 +10,13 @@ import { DeleteAccount } from "./Delete.tsx";
 
 type Tab = "info" | "account" | "avatar" | "friends" | "delete";
 
-const getInitialTab = (): Tab => {
-  if (typeof window === "undefined") return "info";
-  const saved = sessionStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "account", "avatar", "friends", "delete"].includes(saved)
-    ? saved
-    : "info";
-};
-
-const activeTab = signal<Tab>(getInitialTab());
+const activeTab = signal<Tab>("info");
 
 const showInfo = computed(() => activeTab.value === "info");
 const showAccount = computed(() => activeTab.value === "account");
 const showAvatar = computed(() => activeTab.value === "avatar");
 const showFriends = computed(() => activeTab.value === "friends");
 const showDelete = computed(() => activeTab.value === "delete");
-
-if (typeof window !== "undefined") {
-  effect(() => {
-    sessionStorage.setItem("profileTab", activeTab.value);
-  });
-}
 
 interface ProfileMenuProps {
   user: UserProfileData | null;
@@ -46,6 +32,18 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
   useEffect(() => {
     setMounted(true);
+    const saved = sessionStorage.getItem("profileTab") as Tab | null;
+    if (
+      saved &&
+      ["info", "account", "avatar", "friends", "delete"].includes(saved)
+    ) {
+      activeTab.value = saved;
+    }
+
+    const dispose = effect(() => {
+      sessionStorage.setItem("profileTab", activeTab.value);
+    });
+    return dispose;
   }, []);
 
   useEffect(() => {
@@ -163,16 +161,14 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                     </div>
                   )}
                 </Show>
-
                 <Show when={showFriends}>
                   <div class={mounted ? "lg:-ml-64" : ""}>
                     <FriendsList />
                   </div>
                 </Show>
-
                 <Show when={showDelete}>
                   <div class={mounted ? "lg:-ml-64" : ""}>
-                    <DeleteAccount username={userData.username} isOwnProfile={userData.username === user?.username} isLoggedIn={!!user} />
+                    <DeleteAccount id={userData.id} />
                   </div>
                 </Show>
               </div>

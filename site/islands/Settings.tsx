@@ -167,7 +167,7 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
         )}
 
         <div class="space-y-1">
-          <label class="label-text">Username</label>
+          <label class="label-text">Username
           <input
             type="text"
             class={`input input-bordered w-full ${usernameError ? "input-error" : ""}`}
@@ -176,32 +176,38 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
             pattern="[A-Za-z][A-Za-z0-9\-]*"
             minLength={3}
             maxLength={30}
+            name="nick"
           />
+          </label>
           {usernameError && <p class="text-xs text-error">{usernameError}</p>}
         </div>
 
         <div class="space-y-1">
-          <label class="label-text">Email</label>
+          <label class="label-text">Email
           <input
             type="email"
             class={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
             value={emailValue}
             onInput={(e: any) => setEmailValue(e.target.value)}
+            name="mail"
           />
+          </label>
           {emailError && <p class="text-xs text-error">{emailError}</p>}
         </div>
 
         <div class="divider my-1">Change Password</div>
 
         <div class="space-y-1">
-          <label class="label-text">New Password</label>
+          <label class="label-text">New Password
           <input
             type="password"
             class={`input input-bordered w-full ${passwordError ? "input-error" : ""}`}
             value={newPassword}
             onInput={(e: any) => setNewPassword(e.target.value)}
             placeholder="Leave blank to keep current"
+            name="newPassword"
           />
+          </label>
           {showPasswordRequirements && (
             <p class="text-xs text-error">12+ chars and strong enough</p>
           )}
@@ -209,13 +215,15 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
 
         {newPassword.length > 0 && (
           <div class="space-y-1">
-            <label class="label-text">Confirm New Password</label>
+            <label class="label-text">Confirm New Password
             <input
               type="password"
               class={`input input-bordered w-full ${passwordMismatch ? "input-error" : ""}`}
               value={confirmPassword}
               onInput={(e: any) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
             />
+            </label>
             {passwordMismatch && <p class="text-xs text-error">Passwords do not match</p>}
           </div>
         )}
@@ -223,7 +231,7 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
         <div class="divider my-1">Verify Identity</div>
 
         <div class="space-y-1">
-          <label class="label-text">Current Password</label>
+          <label class="label-text">Current Password
           <input
             type="password"
             class={`input input-bordered w-full ${currentPasswordError ? "input-error" : ""}`}
@@ -232,7 +240,9 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
               setCurrentPassword(e.target.value);
               setCurrentPasswordError(null);
             }}
+            name="currentPassword"
           />
+          </label>
           {currentPasswordError && <p class="text-xs text-error">{currentPasswordError}</p>}
         </div>
 

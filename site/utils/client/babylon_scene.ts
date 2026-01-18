@@ -19,7 +19,7 @@ import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
-	registerBuiltInLoaders();
+	//registerBuiltInLoaders();
 	let scene = new Scene(engine);
 	const envTexture = new CubeTexture("/clouds.env", scene);
 	let helper = scene.createDefaultEnvironment({
