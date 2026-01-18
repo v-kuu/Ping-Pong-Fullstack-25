@@ -788,14 +788,6 @@ static void draw_countdown(double seconds)
 
 static void draw_scores(void)
 {
-    // Sort players by score.
-    for (size_t i = 1, j; i < player_count; i++) {
-        Player temp = players[i];
-        for (j = i; j > 0 && players[j - 1].score < temp.score; j--)
-            players[j] = players[j - 1];
-        players[j] = temp;
-    }
-
     // Draw the table heading.
     char* text = "Scores";
     int x = (FRAME_W - 20) / 2;
@@ -935,12 +927,33 @@ void recv_quit(uint32_t id)
 __attribute__((export_name("recvStatus")))
 void recv_status(uint32_t self, uint32_t ghost, double timestamp, double gems)
 {
+    // Update the game state.
     next_gem_mask = gems;
     player_ghost = ghost;
     time_match = timestamp;
     if (!player_self) {
         player_self = self;
         new_game(timestamp);
+    }
+
+    // Sort players by score.
+    for (size_t i = 1, j; i < player_count; i++) {
+        Player temp = players[i];
+        for (j = i; j > 0 && players[j - 1].score < temp.score; j--)
+            players[j] = players[j - 1];
+        players[j] = temp;
+    }
+
+    // Announce a winner, if there is one.
+    for (size_t i = 0; i < player_count; i++) {
+        Player* player = &players[i];
+        if (player->score > 0) {
+            char message[64] = {0};
+            string_join(message, sizeof(message), player->name);
+            string_join(message, sizeof(message), " wins the match!");
+            push_message(message);
+            break;
+        }
     }
 }
 
