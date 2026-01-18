@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
+import { db, Matches, Users, inArray } from "astro:db";
 import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
 import { unauthorized, success } from "@/utils/apiHelpers";
 
@@ -12,20 +12,15 @@ export const GET: APIRoute = async ({ locals }) => {
   
   const userId = user.id;
   
-  const userMatches = await db
-    .select({
-      id: Matches.id,
-      game: Matches.game,
-      player1Id: Matches.player1Id,
-      player2Id: Matches.player2Id,
-      winnerId: Matches.winnerId,
-      startedAt: Matches.startedAt,
-      score: Matches.score,
-    })
+  const allMatches = await db
+    .select()
     .from(Matches)
-    .where(or(eq(Matches.player1Id, userId), eq(Matches.player2Id, userId)))
-    .orderBy(sql`${Matches.startedAt} DESC`)
-    .limit(10);
+    .limit(100);
+  
+  const userMatches = allMatches.filter((match) => {
+    const playerIds = Array.isArray(match.playerIds) ? match.playerIds : [];
+    return playerIds.includes(userId);
+  });
   
   const playerIds = getPlayerIdsFromMatches(userMatches);
   

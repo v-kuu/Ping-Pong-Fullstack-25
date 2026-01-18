@@ -1,4 +1,5 @@
 import type { ServerWebSocket } from "bun";
+// import { recordMatch } from "../utils/recordMatch.ts";
 
 enum MessageType {
     Join = 0,
@@ -103,8 +104,26 @@ function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
         broadcastMessage(MessageType.End);
         startNewMatch();
     }
-}
 
+    /*
+    // Start a new round when all gems have been collected.
+    if (gemMask === ALL_GEMS && clients.size > 1) {
+        const playerIds = Array.from(clients).map(c => c.id); // Assuming c.id maps to User ID
+        const scores = Array.from(clients).map(c => c.score);
+        // Find winner (highest score)
+        const winnerId = Array.from(clients).sort((a, b) => b.score - a.score)[0].id;
+
+        await recordMatch({
+            game: "web3d",
+            playerIds,
+            scores,
+            winnerId
+        });
+
+        startNewRound();
+    }
+    */
+}
 // Start the WebSocket server.
 const server = Bun.serve({
     port: PORT,

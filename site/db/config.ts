@@ -17,12 +17,11 @@ const Matches = defineTable({
     columns: {
         id: column.number({ primaryKey: true, autoIncrement: true }),
         game: column.text(),
-        player1Id: column.number({ references: () => Users.columns.id }),
-        player2Id: column.number({ references: () => Users.columns.id }),
+        playerIds: column.json(),
+        scores: column.json(),
         winnerId: column.number({ references: () => Users.columns.id, optional: true }),
         startedAt: column.date({ default: NOW }),
         completedAt: column.date({ optional: true }),
-        score: column.text({ optional: true }),
     }
 });
 
