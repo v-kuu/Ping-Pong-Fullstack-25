@@ -14,19 +14,30 @@ enum MessageType {
 
 // Server configuration.
 const PORT = 3002; // Port used for the server.
-const MATCH_DELAY = 10; // Delay between matches, in seconds.
+const MATCH_COUNTDOWN = 5; // Length of countdown for a match, in seconds.
 const MAX_GEMS = 50n; // Gems to collect per match.
 const ALL_GEMS = (1n << MAX_GEMS) - 1n; // Bit mask for all gems.
 const MAX_PLAYER_NAME = 32; // Maximum player name length.
 
 // server state.
-const clients = new Set<ServerWebSocket>;
+const clients = new Set<ServerWebSocket>; // Currently connected clients.
+let players = new Set<ServerWebSocket>; // Players in the current match.
 let clientIdCounter = 0; // Counter used for assigning client IDs.
 let startTime = Date.now(); // Time of the start of the game (and also the RNG seed).
 let nextMatchTimer = 0; // Timer ID for the start of the next match.
 let nextMatch = startTime; // Timestamp for the start of the next match.
 let gemMask = 0n; // Bit mask of gems that have not been collected.
 let ghostId = 0; // Client ID of the current ghost.
+
+// Count the number of ones in the binary representation of a BigInt.
+function countBitsSet(value: BigInt): number {
+    let count = 0;
+    while (value !== 0n) {
+        count += Number(value & 1n);
+        value >>= 1n;
+    }
+    return count;
+}
 
 // Send a join message.
 function sendJoinMessage(recipient: ServerWebSocket, joined: ServerWebSocket) {
@@ -59,26 +70,35 @@ function handleMoveMessage(message: Float64Array) {
     repeatMessage(message);
 }
 
-// Notify all connected clients that a new match is starting.
-function startNewMatch() {
-    if (nextMatchTimer !== 0)
-        return;
-    nextMatch = Date.now() + MATCH_DELAY * 1000;
-    console.log("Starting a new match in", MATCH_DELAY, "seconds");
-    broadcastMessage(MessageType.Count, nextMatch);
+// Start a new match.
+function startMatch() {
+    nextMatchTimer = 0;
+    startTime = Date.now();
+    gemMask = ALL_GEMS;
+    for (const client of clients) {
+        client.score = 0;
+        sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
+    }
+    console.log("A new match started!");
+}
 
-    // Schedule the start of the next match.
-    nextMatchTimer = setTimeout(() => {
-        nextMatchTimer = 0;
-        startTime = Date.now();
-        gemMask = ALL_GEMS;
-        console.log("A new match started!");
-        for (const client of clients) {
-            client.score = 0;
-            sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
-        }
-    }, MATCH_DELAY * 1000);
-    // TODO: Update player stats here.
+// End a match.
+function endMatch() {
+    // TODO: Update scores using the `players` set here.
+    players = new Set(clients);
+    broadcastMessage(MessageType.End);
+    gemMask = 0n;
+    console.log("The match ended!");
+}
+
+// Begin the countdown for the next match.
+function beginCountdown() {
+    if (nextMatchTimer === 0) {
+        nextMatch = Date.now() + MATCH_COUNTDOWN * 1000;
+        broadcastMessage(MessageType.Count, nextMatch);
+        nextMatchTimer = setTimeout(startMatch, MATCH_COUNTDOWN * 1000);
+        console.log("Starting a new match in", MATCH_COUNTDOWN, "seconds");
+    }
 }
 
 // Handle a gem collect message from a client.
@@ -86,14 +106,7 @@ function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
     const gemIndex = message[2];
     const gemBit = 1n << BigInt(gemIndex);
     if ((gemMask & gemBit) && Date.now() >= startTime + 1000) {
-
-        // Give the player a point, and grant them an extra point if there's a
-        // tie when the last gem is collected.
         client.score++;
-        if ((gemMask & (gemMask - 1n)) === 0n) { // Check if it's the last gem.
-            const top = Array.from(clients).sort((a, b) => b.score - a.score);
-            client.score += top.length > 1 && top[0].score === top[1].score;
-        }
         gemMask &= ~gemBit; // Mark the gem as collected.
         broadcastMessage(MessageType.Collect, client.id, gemIndex, client.score);
     }
@@ -101,8 +114,8 @@ function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
     // Start a new match when all gems have been collected.
     if (gemMask === 0n && clients.size > 1) {
         console.log("All gems were collected!");
-        broadcastMessage(MessageType.End);
-        startNewMatch();
+        endMatch();
+        beginCountdown();
     }
 
     /*
@@ -159,19 +172,23 @@ const server = Bun.serve({
             client.name = "player" + client.id; // TODO: Query from DB.
             console.log(client.name, "connected from", client.remoteAddress);
             clients.add(client);
-            for (const other of clients)
+            players.add(client);
+            for (const other of players)
                 sendJoinMessage(client, other);
             sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
             for (const other of clients)
-                sendJoinMessage(other, client);
+                if (other !== client)
+                    sendJoinMessage(other, client);
             if (secondPlayerJoined && gemMask === 0n)
-                startNewMatch();
+                beginCountdown();
         },
 
         // Handle client disconnection.
         close(client: ServerWebSocket) {
-            console.log("Client", client.id, "disconnected");
+            console.log(client.name, "disconnected");
             clients.delete(client);
+            if (nextMatchTimer !== 0)
+                players.delete(client);
             broadcastMessage(MessageType.Quit, client.id);
 
             // When there's only one player left...
@@ -183,11 +200,13 @@ const server = Bun.serve({
                     clearTimeout(nextMatchTimer);
                     nextMatchTimer = 0;
 
-                // Otherwise, the remaining player wins the match.
+                // Otherwise, the remaining player receives all remaining gems.
                 } else {
-                    console.log("All opponents left,", client.name, "wins!");
-                    broadcastMessage(MessageType.End);
-                    gemMask = 0n;
+                    console.log("All but one player left, match ends!");
+                    const lastPlayer = clients.values().next().value;
+                    lastPlayer.score += countBitsSet(gemMask);
+                    broadcastMessage(MessageType.Collect, lastPlayer.id, -1, lastPlayer.score);
+                    endMatch();
                 }
             }
 
@@ -198,6 +217,7 @@ const server = Bun.serve({
                     clearTimeout(nextMatchTimer);
                     nextMatchTimer = 0;
                 }
+                players.clear();
                 gemMask = 0n;
             }
         },

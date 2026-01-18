@@ -62,12 +62,14 @@ typedef struct {
     float vx, vy;   // Visual position.
     float dx, dy;   // Direction vector.
     bool moving;    // True if player is in motion.
-    bool active;    // False if player just spawned.
+    bool moved;     // False until the player moves for the first time.
+    bool active;    // False if the player disconnected.
     int score;      // Current score.
     char name[MAX_PLAYER_NAME]; // Display name.
 } Player;
 static Player players[MAX_PLAYERS];
 static size_t player_count;   // Total number of players.
+static size_t player_active;  // Number of active players.
 static uint32_t player_self;  // Player ID of the local player.
 static uint32_t player_ghost; // Player ID of the current ghost.
 
@@ -79,7 +81,6 @@ static double time_start;   // Timestamp of the first frame.
 static double time_elapsed; // Total time since the start (in seconds).
 static double time_match;   // Timestamp for the current/next match.
 static double time_next_match;  // Timestamp for the next match.
-static double time_curr;
 static double time_now;     // Timestamp for the current frame.
 static float time_delta;    // Time delta since the last frame (in seconds).
 
@@ -415,7 +416,6 @@ static void new_game(double timestamp, uint64_t gems)
 {
     // Seed the random number generator and generate a random map.
     gem_mask = gems;
-    time_curr = timestamp;
     random_seed((uint64_t) timestamp);
     map_generate();
 
@@ -840,7 +840,7 @@ static void draw_user_interface(void)
     }
 
     // Show some text while waiting for other players to join.
-    if (player_count == 1) {
+    if (player_active == 1) {
         char* text = "Waiting for players";
         int x = FRAME_W - 90;
         int y = FRAME_H - 17;
@@ -864,7 +864,7 @@ static void draw_players(Column* col)
 {
     for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
-        if (player->id == player_self)
+        if (player->id == player_self || !player->active)
             continue;
         if (player->id == player_ghost)
             draw_ghost(col, player->vx, player->vy);
@@ -887,21 +887,26 @@ static void draw_gems(Column* col)
 __attribute__((export_name("recvJoin")))
 void recv_join(uint32_t id, int score, __externref_t name)
 {
-    // Add another player to the array.
-    if (!get_player_by_id(id)) {
-        Player* player = &players[player_count++];
-        memset(player, 0, sizeof(Player));
-        player->id = id;
-        player->score = score;
-        string_from_extern(name, player->name, MAX_PLAYER_NAME);
+    // If it's not a returning player, add another player to the array.
+    Player* player = get_player_by_id(id);
+    if (!player) {
+        player = &players[player_count++];
+    }
 
-        // Show a join message (unless the player is still connecting).
-        if (player_self) {
-            char buffer[64] = {0};
-            string_join(buffer, sizeof(buffer), player->name);
-            string_join(buffer, sizeof(buffer), " joined");
-            push_message(buffer);
-        }
+    // Initialize the player.
+    memset(player, 0, sizeof(Player));
+    player->id = id;
+    player->score = score;
+    player->active = true;
+    string_from_extern(name, player->name, MAX_PLAYER_NAME);
+    player_active++;
+
+    // Show a join message.
+    if (player_self) {
+        char buffer[64] = {0};
+        string_join(buffer, sizeof(buffer), player->name);
+        string_join(buffer, sizeof(buffer), " joined");
+        push_message(buffer);
     }
 }
 
@@ -909,26 +914,28 @@ __attribute__((export_name("recvQuit")))
 void recv_quit(uint32_t id)
 {
     // Find a player with a matching ID.
-    for (size_t i = 0; i < player_count; i++) {
-        Player* player = &players[i];
-        if (player->id == id) {
+    Player* player = get_player_by_id(id);
+    if (!player)
+        return;
 
-            // Print a quit message.
-            char buffer[64] = {0};
-            string_join(buffer, sizeof(buffer), player->name);
-            string_join(buffer, sizeof(buffer), " quit");
-            push_message(buffer);
+    // Mark the player as inactive.
+    player->active = false;
+    player_active--;
 
-            // Remove the player from the array.
-            players[i] = players[--player_count];
-            break;
-        }
+    // Print a quit message.
+    char buffer[64] = {0};
+    string_join(buffer, sizeof(buffer), player->name);
+    string_join(buffer, sizeof(buffer), " quit");
+    push_message(buffer);
+
+    // If the match hadn't started yet, remove the player completely.
+    if (time_match < time_next_match) {
+        *player = players[--player_count];
+
+        // If there's only one player left, cancel the match.
+        if (player_active == 1)
+            time_match = time_next_match;
     }
-
-    // If the only other player left while a match was about to start, cancel
-    // the match.
-    if (player_count == 1 && time_curr < time_match)
-        time_curr = time_match;
 }
 
 __attribute__((export_name("recvBegin")))
@@ -944,9 +951,12 @@ void recv_begin(uint32_t self, uint32_t ghost, double timestamp, double gems)
     }
     new_game(timestamp, gems);
 
-    // Reset all players' scores.
-    for (size_t i = 0; i < player_count; i++)
+    // Sweep inactive players, and reset all players' scores to zero.
+    for (size_t i = 0; i < player_count; i++) {
         players[i].score = 0;
+        if (!players[i].active)
+            players[i--] = players[--player_count];
+    }
 }
 
 __attribute__((export_name("recvCount")))
@@ -986,25 +996,34 @@ void recv_move(uint32_t id, float x, float y, float dx, float dy)
         player->y = y;
         player->dx = dx;
         player->dy = dy;
-        if (!player->active) {
+        if (!player->moved) {
             player->vx = player->x;
             player->vy = player->y;
         }
-        player->active = true;
+        player->moved = true;
     }
 }
 
 __attribute__((export_name("recvCollect")))
 void recv_collect(uint32_t id, int gem_index, int updated_score)
 {
-    Gem* gem = &gem_array[gem_index];
-    spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
-    gem_mask &= ~(1ull << gem_index);
-    if (id == player_self)
-        score_shake = 0.2f;
+    // Update the player's score.
     Player* player = get_player_by_id(id);
     if (player)
         player->score = updated_score;
+
+    // If the index is negative, it's just a score update.
+    if (gem_index < 0)
+        return;
+
+    // Destroy the collected gem.
+    Gem* gem = &gem_array[gem_index];
+    spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
+    gem_mask &= ~(1ull << gem_index);
+
+    // Trigger the score counter shake effect.
+    if (id == player_self)
+        score_shake = 0.2f;
 }
 
 // Message types (these should match MessageType in server.ts).
