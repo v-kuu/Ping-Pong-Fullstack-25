@@ -64,6 +64,7 @@ Clean()
     docker builder prune -af
     docker image prune -af
     docker volume prune -af
+    rm -rf data certs
 }
 
 while getopts ":h :b :u :c :d :s" option; do
