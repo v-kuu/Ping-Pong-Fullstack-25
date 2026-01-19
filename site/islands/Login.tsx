@@ -50,7 +50,7 @@ export function Login() {
       {serverError && <div class="alert alert-error">{serverError}</div>}
 
       <div class="space-y-1">
-        <label class="label-text">Email</label>
+        <label class="label-text">Email
         <input
           type="email"
           class="input input-bordered w-full"
@@ -58,12 +58,14 @@ export function Login() {
           onInput={(e: any) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          name="mail"
           required
         />
+        </label>
       </div>
 
       <div class="space-y-1">
-        <label class="label-text">Password</label>
+        <label class="label-text">Password
         <input
           type="password"
           class="input input-bordered w-full"
@@ -72,7 +74,9 @@ export function Login() {
           placeholder="•••••••••"
           autoComplete="current-password"
           required
+          name="password"
         />
+        </label>
       </div>
 
       <button class="btn btn-primary" type="submit">
