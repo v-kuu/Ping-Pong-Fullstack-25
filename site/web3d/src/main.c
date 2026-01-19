@@ -801,6 +801,7 @@ static void draw_scores(void)
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
 
     // Draw each player's name and score.
+    size_t count = 0;
     for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
         if (!player->played)
@@ -808,7 +809,7 @@ static void draw_scores(void)
 
         // Draw the player name.
         x = (FRAME_W - 120) / 2;
-        y = 51 + i * 14;
+        y = 51 + count * 14;
         font_draw(&font_tiny, x + 1, y + 1, 0xff000000, player->name);
         font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, player->name);
 
@@ -817,9 +818,10 @@ static void draw_scores(void)
         string_from_int(score, player->score);
         int width = font_width(&font_big, score);
         x = (FRAME_W + 120) / 2 - width;
-        y = 50 + i * 14;
+        y = 50 + count * 14;
         font_draw(&font_big, x + 1, y + 1, 0xff000000, score);
         font_draw(&font_big, x + 0, y + 0, 0xffffffff, score);
+        count++;
     }
 }
 
