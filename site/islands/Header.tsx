@@ -14,8 +14,12 @@ export default function Header(props: {
       <div class="navbar bg-base-100 shadow-sm">
         <div class="flex-1 menu menu-horizontal">
           <HomeLogo />
-          <PingLogo />
-          <WebLogo />
+          {user && (
+            <>
+              <PingLogo />
+              <WebLogo />
+            </>
+          )}
         </div>
         <nav class="flex items-center gap-2 flex-none">
           <ThemeToggle />

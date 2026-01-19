@@ -11,23 +11,30 @@ if (!user) {
 
 const userId = user.id;
 
-const allMatches = await db
-  .select()
-  .from(Matches)
-  .limit(100);
+let matches = [];
 
-const userMatches = allMatches.filter((match) => {
-  const playerIds = Array.isArray(match.playerIds) ? match.playerIds : [];
-  return playerIds.includes(userId);
-});
+try {
+  const allMatches = await db
+    .select()
+    .from(Matches)
+    .limit(100);
 
-const playerIds = getPlayerIdsFromMatches(userMatches);
+  const userMatches = allMatches.filter((match) => {
+    const playerIds = Array.isArray(match.playerIds) ? match.playerIds : [];
+    return playerIds.includes(userId);
+  });
 
-const allPlayers = playerIds.length > 0
-  ? await db.select().from(Users).where(inArray(Users.id, playerIds))
-  : [];
+  const playerIds = getPlayerIdsFromMatches(userMatches);
 
-const matches = processMatchData(userMatches, userId, allPlayers);
+  const allPlayers = playerIds.length > 0
+    ? await db.select().from(Users).where(inArray(Users.id, playerIds))
+    : [];
+
+  matches = processMatchData(userMatches, userId, allPlayers);
+} catch (error) {
+  console.error("Failed to load profile data:", error);
+  return Astro.redirect("/500");
+}
 ---
 
 <Base title="Profile" active="/profile" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
