@@ -19,9 +19,12 @@ if (user) {
   <div class="w-full max-w-md">
     <SuccessCard
       title="Logged Out!"
-      message="You have been successfully logged out."
-      buttonText="Redirected automatically in 5 seconds"
+      message="You have been successfully logged out. Redirecting in 3 seconds..."
+      buttonText="Go to Home"
       buttonHref="/"
     />
   </div>
+  <script is:inline>
+    setTimeout(() => { window.location.href = "/"; }, 3000);
+  </script>
 </Base>

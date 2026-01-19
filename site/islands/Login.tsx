@@ -25,7 +25,7 @@ export function Login() {
         throw new Error(data.error || "Invalid email or password");
       }
 
-      window.location.href = "/profile";
+      window.location.href = "/";
     } catch (err: any) {
       setServerError(err.message);
     }
@@ -51,31 +51,31 @@ export function Login() {
 
       <div class="space-y-1">
         <label class="label-text">Email
-        <input
-          type="email"
-          class="input input-bordered w-full"
-          value={email}
-          onInput={(e: any) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          name="mail"
-          required
-        />
+          <input
+            type="email"
+            class="input input-bordered w-full"
+            value={email}
+            onInput={(e: any) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            name="mail"
+            required
+          />
         </label>
       </div>
 
       <div class="space-y-1">
         <label class="label-text">Password
-        <input
-          type="password"
-          class="input input-bordered w-full"
-          value={password}
-          onInput={(e: any) => setPassword(e.target.value)}
-          placeholder="•••••••••"
-          autoComplete="current-password"
-          required
-          name="password"
-        />
+          <input
+            type="password"
+            class="input input-bordered w-full"
+            value={password}
+            onInput={(e: any) => setPassword(e.target.value)}
+            placeholder="•••••••••"
+            autoComplete="current-password"
+            required
+            name="password"
+          />
         </label>
       </div>
 

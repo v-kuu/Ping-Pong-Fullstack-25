@@ -1,8 +1,11 @@
 ---
 import Base from "@/astro/layouts/Base.astro";
 import { Home } from "@/islands/Home.tsx";
+
+const localUser = Astro.locals.user;
+const user = localUser ? { username: localUser.username } : null;
 ---
 
-<Base title="P O N G" active="" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" class="h-dvh animate-background">
-  <Home client:load />
+<Base title="Pong x Web3D" active="" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏓</text></svg>" class="animate-background">
+  <Home user={user} client:load />
 </Base>
