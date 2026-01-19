@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
       scores: body.scores,
     });
 
-    return created({ matchId: result.lastInsertRowid });
+    return created({ matchId: Number(result.lastInsertRowid) });
   } catch (error) {
     console.error("Failed to record match:", error);
     return internalError("Failed to record match");
