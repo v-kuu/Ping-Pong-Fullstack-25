@@ -91,7 +91,7 @@ function LeaderboardModal({
           })}
         </div>
         <p className="text-xs opacity-50 mt-4 text-center">
-          {new Date(match.completedAt).toLocaleDateString()}
+          {new Date(match.createdAt).toLocaleDateString()}
         </p>
       </div>
       <form method="dialog" className="modal-backdrop">
@@ -128,7 +128,7 @@ function MatchRow({ match }: { match: MatchData }) {
           </span>
         </td>
         <td className="text-right">
-          {new Date(match.completedAt).toLocaleDateString()}
+          {new Date(match.createdAt).toLocaleDateString()}
         </td>
       </tr>
     );
@@ -157,7 +157,7 @@ function MatchRow({ match }: { match: MatchData }) {
         </div>
       </td>
       <td className="text-right">
-        {new Date(match.completedAt).toLocaleDateString()}
+        {new Date(match.createdAt).toLocaleDateString()}
         {/* Modal inside td to keep HTML valid */}
         <div onClick={(e) => e.stopPropagation()}>
           <LeaderboardModal match={match} modalId={modalId} />

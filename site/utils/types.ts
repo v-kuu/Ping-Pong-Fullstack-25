@@ -3,7 +3,7 @@ export interface MatchData {
   game: "pong" | "web3d";
   playerIds: number[];
   scores: number[] | null;
-  completedAt: string;
+  createdAt: string;
   opponentName: string;
   playerNames: string[];
   playerScores: { name: string; score: number; isCurrentUser: boolean }[];

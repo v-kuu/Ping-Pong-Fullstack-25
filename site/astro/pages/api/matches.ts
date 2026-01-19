@@ -9,7 +9,6 @@ interface CreateMatchRequest {
   game: GameType;
   playerIds: number[];
   scores: number[];
-  startedAt?: string;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -53,8 +52,6 @@ export const POST: APIRoute = async ({ request }) => {
       game: body.game,
       playerIds: body.playerIds,
       scores: body.scores,
-      startedAt: body.startedAt ? new Date(body.startedAt) : undefined,
-      completedAt: new Date(),
     });
 
     return created({ matchId: result.lastInsertRowid });

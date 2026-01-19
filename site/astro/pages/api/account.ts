@@ -33,9 +33,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return unauthorized("Invalid current password");
     }
 
-    const updates: { username?: string; email?: string; password?: string; updatedAt: Date } = {
-      updatedAt: new Date(),
-    };
+    const updates: { username?: string; email?: string; password?: string } = {};
 
     let avatarRenamed = false;
     let finalUsername = user.username;

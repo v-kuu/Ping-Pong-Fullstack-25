@@ -4,7 +4,7 @@ interface MatchRecord {
   id: number;
   game: string;
   playerIds: number[] | unknown;
-  completedAt: Date | string | null | undefined;
+  createdAt: Date | string | null | undefined;
   scores: number[] | unknown;
 }
 
@@ -86,9 +86,9 @@ export function processMatchData(
       game: match.game as "pong" | "web3d",
       playerIds,
       scores,
-      completedAt: match.completedAt instanceof Date
-        ? match.completedAt.toISOString()
-        : (match.completedAt || ""),
+      createdAt: match.createdAt instanceof Date
+        ? match.createdAt.toISOString()
+        : (match.createdAt || ""),
       opponentName,
       playerNames: playerIds.map(id => playerMap.get(id)?.username || "Unknown"),
       playerScores,

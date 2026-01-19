@@ -6,8 +6,6 @@ const Users = defineTable({
         username: column.text({ unique: true }),
         password: column.text(),
         email: column.text({ unique: true }),
-        createdAt: column.date({ default: NOW }),
-        updatedAt: column.date({ default: NOW }),
         elo: column.number({ default: 1000 }),
         lastSeen: column.date({ optional: true }),
     }
@@ -19,8 +17,7 @@ const Matches = defineTable({
         game: column.text(),
         playerIds: column.json(),
         scores: column.json(),
-        startedAt: column.date({ default: NOW }),
-        completedAt: column.date({ optional: true }),
+        createdAt: column.date({ default: NOW }),
     }
 });
 
