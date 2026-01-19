@@ -1,35 +1,35 @@
 import type { APIRoute } from "astro";
 import { db, Sessions, Users, eq } from "astro:db";
-import { validateUsername } from "@/utils/validation";
-import { badRequest, unauthorized, success, internalError } from "@/utils/apiHelpers";
+import { validateEmail } from "@/utils/site/validation";
+import { badRequest, unauthorized, success, internalError } from "@/utils/site/apiHelpers";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const formData = await request.formData();
 
-    const username = formData.get("username")?.toString().trim();
+    const email = formData.get("email")?.toString().trim();
     const password = formData.get("password")?.toString();
 
-    if (!username || !password) {
-      return badRequest("Username and password are required");
+    if (!email || !password) {
+      return badRequest("Email and password are required");
     }
 
-    if (!validateUsername(username)) {
-      return badRequest("Invalid username format");
+    if (!validateEmail(email)) {
+      return badRequest("Invalid email format");
     }
 
     const user = await db
       .select({
         id: Users.id,
-        username: Users.username,
+        email: Users.email,
         password: Users.password,
       })
       .from(Users)
-      .where(eq(Users.username, username))
+      .where(eq(Users.email, email))
       .limit(1);
 
     if (user.length === 0) {
-      return unauthorized("Invalid username or password");
+      return unauthorized("Invalid email or password");
     }
 
     const foundUser = user[0];
@@ -40,7 +40,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     );
 
     if (!isValidPassword) {
-      return unauthorized("Invalid username or password");
+      return unauthorized("Invalid email or password");
     }
 
     const sessionId = crypto.randomUUID();

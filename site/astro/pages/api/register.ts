@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { db, Users, eq, or } from "astro:db";
-import { validatePassword, validateUsername } from "@/utils/validation";
-import { badRequest, conflict, created, internalError } from "@/utils/apiHelpers";
+import { validatePassword, validateUsername } from "@/utils/site/validation";
+import { badRequest, conflict, created, internalError } from "@/utils/site/apiHelpers";
 
 export const POST: APIRoute = async ({ request }) => {
   try {

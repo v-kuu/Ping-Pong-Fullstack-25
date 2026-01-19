@@ -1,34 +1,22 @@
 import { useEffect, useState } from "preact/hooks";
 import { signal, computed, effect } from "@preact/signals";
 import { Show } from "@preact-signals/utils/components";
-import type { MatchData, UserProfileData } from "@/utils/types";
+import type { MatchData, UserProfileData } from "@/utils/site/types";
 import { UserProfileCard } from "@/components/Card.tsx";
 import { AccountSettings } from "./Settings.tsx";
 import { ChangeAvatar } from "./Avatar.tsx";
 import { FriendsList } from "./Friends.tsx";
+import { DeleteAccount } from "./Delete.tsx";
 
-type Tab = "info" | "account" | "avatar" | "friends";
+type Tab = "info" | "account" | "avatar" | "friends" | "delete";
 
-const getInitialTab = (): Tab => {
-  if (typeof window === "undefined") return "info";
-  const saved = sessionStorage.getItem("profileTab") as Tab | null;
-  return saved && ["info", "account", "avatar", "friends"].includes(saved)
-    ? saved
-    : "info";
-};
-
-const activeTab = signal<Tab>(getInitialTab());
+const activeTab = signal<Tab>("info");
 
 const showInfo = computed(() => activeTab.value === "info");
 const showAccount = computed(() => activeTab.value === "account");
 const showAvatar = computed(() => activeTab.value === "avatar");
 const showFriends = computed(() => activeTab.value === "friends");
-
-if (typeof window !== "undefined") {
-  effect(() => {
-    sessionStorage.setItem("profileTab", activeTab.value);
-  });
-}
+const showDelete = computed(() => activeTab.value === "delete");
 
 interface ProfileMenuProps {
   user: UserProfileData | null;
@@ -44,6 +32,18 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
 
   useEffect(() => {
     setMounted(true);
+    const saved = sessionStorage.getItem("profileTab") as Tab | null;
+    if (
+      saved &&
+      ["info", "account", "avatar", "friends", "delete"].includes(saved)
+    ) {
+      activeTab.value = saved;
+    }
+
+    const dispose = effect(() => {
+      sessionStorage.setItem("profileTab", activeTab.value);
+    });
+    return dispose;
   }, []);
 
   useEffect(() => {
@@ -161,10 +161,14 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                     </div>
                   )}
                 </Show>
-
                 <Show when={showFriends}>
                   <div class={mounted ? "lg:-ml-64" : ""}>
                     <FriendsList />
+                  </div>
+                </Show>
+                <Show when={showDelete}>
+                  <div class={mounted ? "lg:-ml-64" : ""}>
+                    <DeleteAccount id={userData ? userData.id : 0} />
                   </div>
                 </Show>
               </div>
@@ -178,14 +182,14 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
             aria-label="close sidebar"
             class="drawer-overlay"
           ></label>
-          <ul class="menu bg-base-200 min-h-full w-64 p-4">
+          <ul class="menu bg-base-200 min-h-full w-64 p-4 gap-5">
             <li>
               <button
                 type="button"
                 onClick={() => (activeTab.value = "info")}
                 class={activeTab.value === "info" ? "active" : ""}
               >
-                User information
+                User Information
               </button>
             </li>
             <li>
@@ -203,7 +207,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 onClick={() => (activeTab.value = "avatar")}
                 class={activeTab.value === "avatar" ? "active" : ""}
               >
-                Avatar
+                Change Avatar
               </button>
             </li>
             <li>
@@ -212,7 +216,16 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 onClick={() => (activeTab.value = "friends")}
                 class={activeTab.value === "friends" ? "active" : ""}
               >
-                Friends
+                Your Friends
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => (activeTab.value = "delete")}
+                class={activeTab.value === "delete" ? "active" : ""}
+              >
+                Delete Account
               </button>
             </li>
           </ul>

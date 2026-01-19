@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Friendships, Users, eq, or, and, inArray } from "astro:db";
-import { unauthorized, success, notFound, badRequest, internalError } from "@/utils/apiHelpers";
+import { unauthorized, success, notFound, badRequest, internalError } from "@/utils/site/apiHelpers";
 
 function getOnlineStatus(lastSeen: Date | null | undefined): "online" | "offline" {
     if (!lastSeen) return "offline";

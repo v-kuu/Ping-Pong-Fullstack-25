@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Friendships, eq, and } from "astro:db";
-import { unauthorized, notFound, badRequest, success, internalError } from "@/utils/apiHelpers";
+import { unauthorized, notFound, badRequest, success, internalError } from "@/utils/site/apiHelpers";
 
 export const PATCH: APIRoute = async ({ params, request, locals }) => {
   const user = locals.user;

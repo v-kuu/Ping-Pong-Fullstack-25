@@ -1,15 +1,15 @@
-import { Canvas } from "../components/Canvas.tsx";
+import { CanvasWeb3D } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
 
 // @ts-ignore
 import { draw, init, recvJoin, recvQuit, recvMove, recvCollect, keydown, keyup, memory } from "../web3d/web3d.wasm";
 
 enum MessageType {
-    Join = 0,
-    Quit,
-    Move,
-    Collect,
-    Catch,
+  Join = 0,
+  Quit,
+  Move,
+  Collect,
+  Catch,
 }
 
 // Send a message to the server.
@@ -100,5 +100,5 @@ export function Web3D() {
 
     render(performance.now());
   });
-  return <Canvas />;
+  return <CanvasWeb3D />;
 }

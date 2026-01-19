@@ -1,5 +1,5 @@
 ---
-import Header from "@/components/Header.tsx";
+import Header from "@/islands/Header.tsx";
 import "@/astro/styles.css";
 
 interface Props {
@@ -27,9 +27,9 @@ const user = Astro.locals.user ?? null;
     <link rel="icon" href={favicon} />
     <title>{title}</title>
   </head>
-  <body class="h-full m-0">
+  <body class="h-full m-0 flex flex-col">
     <Header active={active} user={user} client:load />
-    <main class={className}>
+    <main class={"flex-1 min-h-0 overflow-hidden " + className}>
       <slot />
     </main>
   </body>

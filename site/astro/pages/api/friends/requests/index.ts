@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Users, Friendships, eq, or, and, inArray } from "astro:db";
-import { unauthorized, success, notFound, badRequest, internalError } from "@/utils/apiHelpers";
+import { unauthorized, success, notFound, badRequest, internalError } from "@/utils/site/apiHelpers";
 
 export const GET: APIRoute = async ({ locals }) => {
     const user = locals.user;

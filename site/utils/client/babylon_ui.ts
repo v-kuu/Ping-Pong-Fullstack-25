@@ -146,20 +146,20 @@ function initAvatars(scene: Scene)
 
 async function createAvatar(scene: Scene, id: number)
 {
-	let url: string;
-	try
-	{
-		let res = await fetch("/api/avatars/" + Globals.userName.username.username);
-		if (!res.ok)
-			throw new Error("Failed to fetch avatar");
-		url = res.url;
+	let url = "/avatar.png";
+	if (Globals.userName.username) {
+  	try
+  	{
+  		let res = await fetch("/api/avatars/" + Globals.userName.username.username);
+  		if (!res.ok)
+  			throw new Error("Failed to fetch avatar");
+  		url = res.url;
+  	}
+  	catch (error)
+  	{
+  		console.error(error);
+  	}
 	}
-	catch (error)
-	{
-		console.error(error);
-		url = "/avatar.png";
-	}
-
 	let avatar = MeshBuilder.CreatePlane("avatar", { size: 2 }, scene);
 	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
