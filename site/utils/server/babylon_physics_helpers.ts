@@ -62,7 +62,10 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 					Globals.score1++;
 				else
 					Globals.score2++;
-				setState(GameState.Countdown, scene);
+				if (Globals.score1 >= Globals.maxScore || Globals.score2 >= Globals.maxScore)
+					setState(GameState.GameOver, scene);
+				else
+					setState(GameState.Countdown, scene);
 			}
 			else {
 				Globals.ballVel.z *= -1;
