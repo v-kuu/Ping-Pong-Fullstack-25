@@ -168,7 +168,7 @@ export function ProfileMenu({ user, matches }: ProfileMenuProps) {
                 </Show>
                 <Show when={showDelete}>
                   <div class={mounted ? "lg:-ml-64" : ""}>
-                    <DeleteAccount id={userData.id} />
+                    <DeleteAccount id={userData ? userData.id : 0} />
                   </div>
                 </Show>
               </div>

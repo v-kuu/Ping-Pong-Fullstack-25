@@ -2,7 +2,7 @@ interface DeleteAccountProps {
   id: number;
 }
 
-async function handleDeletion(id) {
+async function handleDeletion(id: number) {
   const conf = window.confirm("Sure about this?");
   if (!conf || !id) return;
 
