@@ -18,6 +18,7 @@ export interface GlobalState
 	playing: boolean;
 	score1: number;
 	score2: number;
+	maxScore: number;
 	moveSpeed: number;
 	ballSpeed: number;
 	currentState: GameState;
@@ -44,6 +45,7 @@ export const Globals: GlobalState =
 	playing: false,
 	score1: 0,
 	score2: 0,
+	maxScore: 5,
 	moveSpeed: 6,
 	ballSpeed: 6,
 	currentState: GameState.WaitingPlayers,
