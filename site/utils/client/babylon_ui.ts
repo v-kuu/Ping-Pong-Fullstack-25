@@ -86,8 +86,8 @@ function createScoreMesh(
 	color: Color3[],
 ): Mesh | null
 {
-	let mat = new StandardMaterial("name", scene);
-	let tex = new FireProceduralTexture("name", 1024, scene);
+	let mat = new StandardMaterial(name, scene);
+	let tex = new FireProceduralTexture(name, 1024, scene);
 	tex.fireColors = color;
 	mat.diffuseTexture = tex;
 	mat.emissiveTexture = tex;
@@ -190,4 +190,28 @@ export function updateScore(scene: Scene, id: number)
 	if (mesh)
 		mesh.position.x = id === 1 ? Globals.mapWidth / -2 + 0.5 : Globals.mapWidth / 2 - 0.5;
 	id === 1 ? (Globals.score1Mesh = mesh) : (Globals.score2Mesh = mesh);
+}
+
+export function messageGameOver(scene: Scene)
+{
+	let mat = new StandardMaterial("GameOver", scene);
+	mat.diffuseColor = Color3.Red();
+	mat.emissiveColor = Color3.Red();
+
+	let scoreMesh = MeshBuilder.CreateText(
+		"GameOver",
+		"KO",
+		fontData,
+		{
+			size: 2.5,
+			depth: 0.5,
+		},
+		scene,
+	);
+	if (scoreMesh)
+	{
+		scoreMesh.material = mat;
+		scoreMesh.position.z = Globals.mapHeight / 2 + 1;
+		scoreMesh.rotation.x = Tools.ToRadians(45);
+	}
 }
