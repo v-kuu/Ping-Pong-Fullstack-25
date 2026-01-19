@@ -1,8 +1,8 @@
 import type { APIRoute } from "astro";
-import { db, Users, Matches, eq, inArray } from "astro:db";
-import type { MatchData } from "@/utils/types";
-import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
-import { badRequest, notFound, success } from "@/utils/apiHelpers";
+import { db, Users, Matches, eq, or, sql, inArray } from "astro:db";
+import type { MatchData } from "@/utils/site/types";
+import { processMatchData, getPlayerIdsFromMatches } from "@/utils/site/matchHelpers";
+import { badRequest, notFound, success } from "@/utils/site/apiHelpers";
 
 export const GET: APIRoute = async ({ params }) => {
   const username = params.username;

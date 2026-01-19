@@ -1,8 +1,8 @@
 ---
 import Base from "@/astro/layouts/Base.astro";
 import { ProfileMenu } from "@/islands/Profile.tsx";
-import { db, Matches, Users, inArray } from "astro:db";
-import { processMatchData, getPlayerIdsFromMatches } from "@/utils/matchHelpers";
+import { db, Matches, Users, eq, or, sql, inArray } from "astro:db";
+import { processMatchData, getPlayerIdsFromMatches } from "@/utils/site/matchHelpers";
 
 const user = Astro.locals.user;
 if (!user) {

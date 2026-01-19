@@ -1,4 +1,4 @@
-import type { MatchData, UserProfileData } from "@/utils/types";
+import type { MatchData, UserProfileData } from "@/utils/site/types";
 import { IconPlus, Check, Clock } from "../components/Icons";
 import { UserAvatar } from "./Avatar.tsx";
 

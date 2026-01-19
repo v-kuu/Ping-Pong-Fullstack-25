@@ -1,80 +1,10 @@
 ---
 import Base from "@/astro/layouts/Base.astro";
-
-import { marked } from "marked";
-
-const content = `# Terms of Service
-
-**Last Updated:** 11.12.2025
-
-Welcome to Pongsite (later referred to as ("we", "us" or "our").</br>
-By accessing or using our website, creating an account, or uploading content, you agree to be bound by these Terms of Service ("Terms").</br>
-If you do not agree to these Terms, please do not use our services.
-
-## 1. Description of Service
-
-Pongsite provides a simple gaming platform that allows users to create a personal user account and upload a profile picture.</br>
-Our service is designed to be minimal and privacy-focused.
-
-## 2. User Accounts
-
-To access certain features of the website, you must register for an account. By creating an account, you agree to:
-
-* Provide accurate and current information.
-* Maintain the security of your password and accept all risks of unauthorized access to your account.
-* Notify us immediately if you discover or suspect any security breaches related to the service.
-
-We reserve the right to suspend or terminate your account if any information provided proves to be inaccurate, false, or violates these Terms.
-
-## 3. User Content and Conduct
-
-### 3.1 Your Content
-You retain full ownership of the profile picture you upload ("User Content").</br>
-By uploading a profile picture, you grant us a non-exclusive, royalty-free license to display, store, and</br>
-reproduce the content solely for the purpose of operating your account and displaying your profile on the service.
-
-### 3.2 Prohibited Content
-You agree not to upload any content that:
-* Infringes on any third-party copyright, trademark, or other intellectual property rights.
-* Is unlawful, threatening, abusive, harassing, defamatory, or hateful.
-* Contains malware, viruses, or any other malicious code.
-* Contains sexually explicit material or depicts violence.
-
-### 3.3 Data Usage
-We are committed to data minimization. We do not sell, trade, or otherwise transfer your personal information to outside parties.</br>
-We only store the data necessary to maintain your account (e.g., your login credentials and your uploaded profile picture).
-
-## 4. Account Termination
-
-You may delete your account at any time. Upon deletion, your profile picture and account information will be permanently removed from our active databases.</br>
-
-We reserve the right to terminate or suspend your access to the service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
-
-## 5. Disclaimers
-
-The service is provided on an "AS IS" and "AS AVAILABLE" basis. We make no warranties, expressed or implied, regarding the operation of the service or the information, content, or materials included therein. We do not warrant that the service will be uninterrupted or error-free.
-
-## 6. Limitation of Liability
-
-To the fullest extent permitted by applicable law, Pongsite shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses, resulting from:
-* Your use or inability to use the service.
-* Any unauthorized access to or use of our servers and/or any personal information stored therein.
-
-## 7. Changes to Terms
-
-We reserve the right to modify these Terms at any time. If we make changes, we will notify you by revising the date at the top of the policy. Your continued use of the service after any such change constitutes your acceptance of the new Terms.
-
-## 8. Governing Law
-
-These Terms shall be governed and construed in accordance with the laws of Finland/EU, without regard to its conflict of law provisions.
-
-## 9. Contact Us
-
-If you have any questions about these Terms, please contact us at:
-
-**tos@joonastuomi.fi**`;
+import { Content as ToS } from "@/components/tos.md";
 ---
 
 <Base title="Terms of Service" active="/terms-of-service" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
-    <article class="prose max-w-none prose-slate text-center" set:html={marked.parse(content)} />
+    <article class="prose max-w-none prose-slate text-center">
+        <ToS />
+    </article>
 </Base>

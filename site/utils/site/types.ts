@@ -13,6 +13,7 @@ export interface MatchData {
 }
 
 export interface UserProfileData {
+  id: number;
   username: string;
   email: string;
   elo: number;

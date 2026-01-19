@@ -1,5 +1,5 @@
 ---
-import Header from "@/components/Header.tsx";
+import Header from "@/islands/Header.tsx";
 import Footer from "@/islands/Footer.tsx";
 import "@/astro/styles.css";
 
@@ -10,7 +10,7 @@ interface Props {
   class?: string;
 }
 
-const { title, active, favicon, class: className } = Astro.props;
+const { title, active, favicon, class: className, redirect } = Astro.props;
 const user = Astro.locals.user ?? null;
 ---
 
@@ -32,7 +32,7 @@ const user = Astro.locals.user ?? null;
     <link rel="icon" href={favicon} />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="h-full">
     <Header active={active} user={user} client:load />
     <main class={className}>
       <slot />

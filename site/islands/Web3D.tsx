@@ -1,4 +1,4 @@
-import { Canvas } from "../components/Canvas.tsx";
+import { CanvasWeb3D } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
 
 // @ts-ignore
@@ -117,5 +117,5 @@ export function Web3D({user}) {
       document.removeEventListener('gamepause', handlePause as EventListener);
     };
   });
-  return <Canvas />;
+  return <CanvasWeb3D />;
 }

@@ -3,7 +3,7 @@ import earcut from "earcut";
 (globalThis as any).earcut = earcut;
 import { Engine } from "@babylonjs/core";
 import { useEffect } from "preact/hooks";
-import { Canvas } from "../components/Canvas.tsx";
+import { CanvasPong } from "../components/Canvas.tsx";
 import { createScene } from "../utils/client/babylon_scene.ts";
 import { Globals } from "../utils/shared/babylon_globals.ts";
 import { updateScore } from "@/utils/client/babylon_ui.ts";
@@ -65,20 +65,12 @@ export function Game(username: string) {
 		}
 
 		// Input handling
-		let ignoreInput = false;
-		const handlePause = (e: CustomEvent<boolean>) => {
-			ignoreInput = e.detail;
-		};
-		document.addEventListener('gamepause', handlePause as EventListener);
-
 		const keys = new Set<string>();
 		const onKeyDown = (e: KeyboardEvent) => {
-			if (ignoreInput) return;
 			if (e.key === "w" || e.key === "s")
 				keys.add(e.key)
 		}
 		const onKeyUp = (e: KeyboardEvent) => {
-			if (ignoreInput) return;
 			keys.delete(e.key)
 		}
 		const sendInput = () => {
@@ -95,7 +87,6 @@ export function Game(username: string) {
 		const inputInterval = setInterval(sendInput, 16);
 
 		return () => {
-			document.removeEventListener('gamepause', handlePause as EventListener);
 			removeEventListener("resize", () => engine.resize());
 			window.removeEventListener("keydown", onKeyDown);
 			window.removeEventListener("keyup", onKeyUp);
@@ -104,5 +95,5 @@ export function Game(username: string) {
 			ws.close()
 		};
 	}, []);
-	return <Canvas />;
+	return <CanvasPong />;
 }

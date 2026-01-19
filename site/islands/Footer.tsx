@@ -1,6 +1,10 @@
 export default function Footer(props: { active: string }) {
   const items = [
     {
+      name: "About",
+      href: "/about",
+    },
+    {
       name: "Terms of Service",
       href: "/terms-of-service",
     },

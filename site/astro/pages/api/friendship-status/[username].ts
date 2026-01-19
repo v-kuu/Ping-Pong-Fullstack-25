@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Users, Friendships, eq, or, and } from "astro:db";
-import { success } from "@/utils/apiHelpers";
+import { success } from "@/utils/site/apiHelpers";
 
 const NONE_RESPONSE = { status: "none", requestId: null };
 

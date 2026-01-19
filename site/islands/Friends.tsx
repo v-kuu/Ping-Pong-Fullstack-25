@@ -149,6 +149,7 @@ export function FriendsList() {
             onInput={(e) => setAddUsername(e.currentTarget.value)}
             placeholder="Enter username"
             class="input input-bordered flex-1"
+            name="friend"
           />
           <button type="submit" class="btn btn-primary">
             Add

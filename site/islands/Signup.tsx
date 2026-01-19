@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { validatePassword, validateEmail } from "../utils/validation.ts";
+import { validatePassword, validateEmail } from "../utils/site/validation.ts";
 import { SuccessCard } from "@/components/Card.tsx";
 
 export function Signup() {
@@ -87,7 +87,7 @@ export function Signup() {
       {serverError && <div class="alert alert-error">{serverError}</div>}
 
       <div class="space-y-1">
-        <label class="label-text">Username</label>
+        <label class="label-text">Username
         <input
           type="text"
           class="input input-bordered w-full"
@@ -98,12 +98,14 @@ export function Signup() {
           pattern="[A-Za-z][A-Za-z0-9\-]*"
           minLength={3}
           maxLength={30}
+          name="username"
           required
         />
+        </label>
       </div>
 
       <div class="space-y-1">
-        <label class="label-text">Email</label>
+        <label class="label-text">Email
         <input
           type="email"
           class="input input-bordered w-full"
@@ -111,12 +113,14 @@ export function Signup() {
           onInput={(e: any) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          name="mail"
           required
         />
+        </label>
       </div>
 
       <div class="space-y-1">
-        <label class="label-text">Password</label>
+        <label class="label-text">Password
         <input
           type="password"
           class="input input-bordered w-full"
@@ -124,12 +128,14 @@ export function Signup() {
           onInput={(e: any) => setPassword(e.target.value)}
           placeholder="•••••••••"
           autoComplete="new-password"
+          name="newPassword"
           required
         />
+        </label>
       </div>
 
       <div class="space-y-1">
-        <label class="label-text">Confirm password</label>
+        <label class="label-text">Confirm password
         <input
           type="password"
           class="input input-bordered w-full"
@@ -137,12 +143,15 @@ export function Signup() {
           onInput={(e: any) => setConfirm(e.target.value)}
           placeholder="•••••••••"
           autoComplete="new-password"
+          name="confirmPassword"
           required
         />
+        </label>
       </div>
 
       <label class="label cursor-pointer justify-start gap-2">
         <input
+          name="terms-checkbox"
           type="checkbox"
           class="checkbox checkbox-sm"
           checked={acceptedTerms}
@@ -161,6 +170,7 @@ export function Signup() {
       </label>
       <label class="label cursor-pointer justify-start gap-2">
         <input
+          name="privacy-checkbox"
           type="checkbox"
           class="checkbox checkbox-sm"
           checked={acceptedPrivacy}
