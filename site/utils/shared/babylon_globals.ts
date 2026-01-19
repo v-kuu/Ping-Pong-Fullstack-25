@@ -5,6 +5,7 @@ export enum GameState
 	WaitingPlayers,
 	Countdown,
 	Playing,
+	GameOver,
 }
 
 export interface GlobalState
@@ -45,7 +46,7 @@ export const Globals: GlobalState =
 	score2: 0,
 	moveSpeed: 6,
 	ballSpeed: 6,
-	currentState: GameState.Countdown,
+	currentState: GameState.WaitingPlayers,
 	ballVel: new Vector3(-1, 0, 0),
 	ballDelta: new Vector3(),
 	vel1: new Vector3(),
