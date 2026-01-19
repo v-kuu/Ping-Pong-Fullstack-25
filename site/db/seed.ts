@@ -22,20 +22,20 @@ export default async function seed() {
   const userIds = dbUsers.map(u => u.id);
 
   const matches = [
-    { game: "pong", playerIds: [userIds[0], userIds[1]], winnerId: userIds[0], scores: [3, 1], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[0], userIds[2]], winnerId: userIds[2], scores: [2, 3], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[1], userIds[3]], winnerId: userIds[3], scores: [1, 3], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[2], userIds[4]], winnerId: userIds[4], scores: [0, 3], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[0], userIds[4]], winnerId: userIds[0], scores: [3, 2], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[1], userIds[2]], winnerId: userIds[1], scores: [3, 0], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[3], userIds[0]], winnerId: userIds[3], scores: [4, 2], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[4], userIds[1]], winnerId: userIds[4], scores: [3, 1], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[5], userIds[6]], winnerId: userIds[5], scores: [2, 1], completedAt: new Date() },
-    { game: "pong", playerIds: [userIds[6], userIds[7]], winnerId: userIds[7], scores: [1, 3], completedAt: new Date() },
-    { game: "web3d", playerIds: [userIds[0], userIds[1], userIds[2], userIds[3]], winnerId: userIds[0], scores: [15, 12, 8, 5], completedAt: new Date() },
-    { game: "web3d", playerIds: [userIds[4], userIds[5], userIds[6]], winnerId: userIds[4], scores: [20, 14, 10], completedAt: new Date() },
-    { game: "web3d", playerIds: [userIds[0], userIds[4], userIds[5], userIds[6], userIds[7]], winnerId: userIds[4], scores: [12, 18, 9, 7, 11], completedAt: new Date() },
-    { game: "web3d", playerIds: [userIds[1], userIds[2]], winnerId: userIds[2], scores: [8, 13], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[0], userIds[1]], scores: [3, 1], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[0], userIds[2]], scores: [2, 3], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[1], userIds[3]], scores: [1, 3], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[2], userIds[4]], scores: [0, 3], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[0], userIds[4]], scores: [3, 2], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[1], userIds[2]], scores: [3, 0], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[3], userIds[0]], scores: [4, 2], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[4], userIds[1]], scores: [3, 1], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[5], userIds[6]], scores: [2, 1], completedAt: new Date() },
+    { game: "pong", playerIds: [userIds[6], userIds[7]], scores: [1, 3], completedAt: new Date() },
+    { game: "web3d", playerIds: [userIds[0], userIds[1], userIds[2], userIds[3]], scores: [15, 12, 8, 5], completedAt: new Date() },
+    { game: "web3d", playerIds: [userIds[4], userIds[5], userIds[6]], scores: [20, 14, 10], completedAt: new Date() },
+    { game: "web3d", playerIds: [userIds[0], userIds[4], userIds[5], userIds[6], userIds[7]], scores: [12, 18, 9, 7, 11], completedAt: new Date() },
+    { game: "web3d", playerIds: [userIds[1], userIds[2]], scores: [8, 13], completedAt: new Date() },
   ];
 
   for (const match of matches) {

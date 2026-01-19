@@ -10,7 +10,6 @@
  *   game: "pong",
  *   playerIds: [10, 20],
  *   scores: [5, 3],
- *   winnerId: 10,
  * });
  * 
  * // Web3D (4 players)
@@ -18,7 +17,6 @@
  *   game: "web3d",
  *   playerIds: [10, 20, 30, 40],
  *   scores: [15, 12, 8, 5],
- *   winnerId: 10,
  * });
  */
 
@@ -26,7 +24,6 @@ interface RecordMatchParams {
   game: "pong" | "web3d";
   playerIds: number[];
   scores: number[];
-  winnerId?: number;
 }
 
 interface RecordMatchResult {

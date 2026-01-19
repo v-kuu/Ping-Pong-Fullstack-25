@@ -4,7 +4,6 @@ interface MatchRecord {
   id: number;
   game: string;
   playerIds: number[] | unknown;
-  winnerId: number | null;
   completedAt: Date | string | null | undefined;
   scores: number[] | unknown;
 }
@@ -87,7 +86,6 @@ export function processMatchData(
       game: match.game as "pong" | "web3d",
       playerIds,
       scores,
-      winnerId: match.winnerId,
       completedAt: match.completedAt instanceof Date
         ? match.completedAt.toISOString()
         : (match.completedAt || ""),
@@ -96,7 +94,7 @@ export function processMatchData(
       playerScores,
       placement,
       totalPlayers,
-      won: match.winnerId === currentUserId,
+      won: playerScores[0]?.isCurrentUser ?? false,
     };
   });
 }

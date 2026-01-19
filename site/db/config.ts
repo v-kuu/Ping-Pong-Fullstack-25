@@ -19,7 +19,6 @@ const Matches = defineTable({
         game: column.text(),
         playerIds: column.json(),
         scores: column.json(),
-        winnerId: column.number({ references: () => Users.columns.id, optional: true }),
         startedAt: column.date({ default: NOW }),
         completedAt: column.date({ optional: true }),
     }

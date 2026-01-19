@@ -9,7 +9,6 @@ interface CreateMatchRequest {
   game: GameType;
   playerIds: number[];
   scores: number[];
-  winnerId?: number;
   startedAt?: string;
 }
 
@@ -50,15 +49,10 @@ export const POST: APIRoute = async ({ request }) => {
       return badRequest("All scores must be numbers");
     }
 
-    if (body.winnerId !== undefined && !body.playerIds.includes(body.winnerId)) {
-      return badRequest("winnerId must be one of the player IDs");
-    }
-
     const result = await db.insert(Matches).values({
       game: body.game,
       playerIds: body.playerIds,
       scores: body.scores,
-      winnerId: body.winnerId ?? null,
       startedAt: body.startedAt ? new Date(body.startedAt) : undefined,
       completedAt: new Date(),
     });
