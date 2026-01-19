@@ -833,8 +833,18 @@ static Player* get_player_by_id(uint32_t id)
     return NULL;
 }
 
-static void draw_user_interface(void)
+static void draw_user_interface(bool logged_in)
 {
+    // Tell the user to log in if we're not connected.
+    if (!logged_in) {
+        char* text = "Log in to play";
+        int x = (FRAME_W - 90) / 2;
+        int y = (FRAME_H - 17) / 2;
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+        return;
+    }
+
     // Draw the gem count (if the player is connected).
     Player* player = get_player_by_id(player_self);
     if (player) {
@@ -1067,7 +1077,7 @@ void send_collect(__externref_t socket, int gem_index)
 
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
-void* draw(__externref_t socket, double timestamp, double date_now)
+void* draw(__externref_t socket, double timestamp, double date_now, bool logged_in)
 {
     // Measure time delta since the previous frame.
     static double prev_timestamp;
@@ -1083,8 +1093,8 @@ void* draw(__externref_t socket, double timestamp, double date_now)
     time_now = date_now;
 
     // Handle player movement.
-    const float rotate_speed = time_delta * PLAYER_TURN_SPEED;
-    const float run_speed = time_delta * PLAYER_RUN_SPEED;
+    const float rotate_speed = logged_in * time_delta * PLAYER_TURN_SPEED;
+    const float run_speed = logged_in * time_delta * PLAYER_RUN_SPEED;
     float run_f = key_held[KEY_FORWARD] - key_held[KEY_BACK];
     float run_s = key_held[KEY_RSTRAFE] - key_held[KEY_LSTRAFE];
     if (run_f != 0.0f && run_s != 0.0f) {
@@ -1183,7 +1193,7 @@ void* draw(__externref_t socket, double timestamp, double date_now)
             frame[x + y * FRAME_W] = apply_fog(col.color[y], col.light[y], x, y);
     }
 
-    draw_user_interface();
+    draw_user_interface(logged_in);
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));

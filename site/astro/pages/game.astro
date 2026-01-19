@@ -4,5 +4,5 @@ import { Web3D } from "@/islands/Web3D";
 ---
 
 <GameLayout title="W E B 3 D" active="/game" favicon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
-	<Web3D client:load />
+	<Web3D user={Astro.locals.user} client:load />
 </GameLayout>

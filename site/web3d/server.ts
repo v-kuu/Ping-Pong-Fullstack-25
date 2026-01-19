@@ -156,6 +156,46 @@ const server = Bun.serve({
 
         // Handle client → server messages.
         message(client: ServerWebSocket, data: Buffer) {
+
+            // If no ID is set, expect a messages with the ID and name.
+            if (client.id === undefined) {
+
+                // Check that the user is not already connected.
+                const userName = new TextDecoder().decode(data.subarray(8));
+                const userId = data.readDoubleLE(0);
+                const secondPlayerJoined = clients.size === 1;
+                for (const other of clients) {
+                    if (other.id === userId) {
+                        console.log(`Duplicate login for ${userName}`);
+                        return client.close();
+                    }
+                }
+
+                // Add a new client.
+                clients.add(client);
+                players.add(client);
+                client.name = userName;
+                client.id = userId;
+                client.score = 0;
+                console.log(`New login ${client.name} (UID ${client.id})`);
+
+                // Send join and begin messages to the new client.
+                for (const other of players)
+                    sendJoinMessage(client, other);
+                sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
+
+                // Send join messages to all other clients.
+                for (const other of clients)
+                    if (other !== client)
+                        sendJoinMessage(other, client);
+
+                // If a second player joined, start a new game.
+                if (secondPlayerJoined)
+                    beginCountdown();
+                return;
+            }
+
+            // Otherwise, parse other types of messages.
             const message = new Float64Array(data.buffer);
             const type = message[0];
             message[1] = client.id; // Set the playerId.
@@ -168,25 +208,13 @@ const server = Bun.serve({
 
         // Handle client connection.
         open(client: ServerWebSocket) {
-            const secondPlayerJoined = clients.size === 1;
-            client.id = ++clientIdCounter;
-            client.score = 0;
-            client.name = "player" + client.id; // TODO: Query from DB.
-            console.log(client.name, "connected from", client.remoteAddress);
-            clients.add(client);
-            players.add(client);
-            for (const other of players)
-                sendJoinMessage(client, other);
-            sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
-            for (const other of clients)
-                if (other !== client)
-                    sendJoinMessage(other, client);
-            if (secondPlayerJoined && gemMask === 0n)
-                beginCountdown();
+            console.log("New connection from", client.remoteAddress);
         },
 
         // Handle client disconnection.
         close(client: ServerWebSocket) {
+            if (!clients.has(client))
+                return;
             console.log(client.name, "disconnected");
             clients.delete(client);
             if (nextMatchTimer !== 0)

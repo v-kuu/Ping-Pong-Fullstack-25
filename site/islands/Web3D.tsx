@@ -17,7 +17,7 @@ enum MessageType {
 
 // Send a message to the server.
 export function sendMessage(socket: WebSocket, ...args: number[]) {
-  if (socket.readyState === WebSocket.OPEN)
+  if (socket && socket.readyState === WebSocket.OPEN)
     socket.send(new Float64Array([...args]));
 }
 
@@ -54,7 +54,9 @@ function handleMessage(data: ArrayBuffer) {
   }
 }
 
-export function Web3D() {
+export function Web3D({user}) {
+  const username = user && user.username;
+  const playerId = user && user.id;
   useEffect(() => {
 
     // Set up the canvas for low-resolution rendering.
@@ -68,13 +70,25 @@ export function Web3D() {
     const frameSize = canvas.width * canvas.height * 4;
 
     // Connect to the game server.
-    const socket = new WebSocket("ws://" + location.hostname + ":3002/web3d");
-    socket.binaryType = "arraybuffer";
-    socket.onmessage = event => handleMessage(event.data);
+    let socket = null;
+    if (username && playerId) {
+      socket = new WebSocket("ws://" + location.hostname + ":3002/web3d");
+      socket.binaryType = "arraybuffer";
+      socket.onmessage = event => handleMessage(event.data);
+      socket.onopen = event => {
+        if (username && playerId) {
+          const encodedName = new TextEncoder().encode(username);
+          const data = new ArrayBuffer(8 + encodedName.length);
+          new Uint8Array(data, 8).set(encodedName);
+          new DataView(data).setFloat64(0, playerId, true);
+          socket.send(data);
+        }
+      };
+    }
 
     // Make a callback function for updating the frame
     const render = (timestamp: DOMHighResTimeStamp) => {
-      const frameAddr = web3d.draw(socket, timestamp, Date.now());
+      const frameAddr = web3d.draw(socket, timestamp, Date.now(), username != null);
       imageData.data.set(bytes.subarray(frameAddr, frameAddr + frameSize));
       context.putImageData(imageData, 0, 0);
       requestAnimationFrame(render);
