@@ -54,6 +54,7 @@ static float player_y_smooth;
 
 // Player state.
 #define MAX_PLAYERS 64
+#define MAX_PLAYER_NAME 32
 typedef struct {
     uint64_t gems;  // Bit mask of collected gems.
     uint32_t id;    // Unique ID.
@@ -61,10 +62,15 @@ typedef struct {
     float vx, vy;   // Visual position.
     float dx, dy;   // Direction vector.
     bool moving;    // True if player is in motion.
-    bool active;    // False if player just spawned.
+    bool moved;     // False until the player moves for the first time.
+    bool active;    // False if the player disconnected.
+    bool played;    // True if the player participated in the last match.
+    int score;      // Current score.
+    char name[MAX_PLAYER_NAME]; // Display name.
 } Player;
 static Player players[MAX_PLAYERS];
 static size_t player_count;   // Total number of players.
+static size_t player_active;  // Number of active players.
 static uint32_t player_self;  // Player ID of the local player.
 static uint32_t player_ghost; // Player ID of the current ghost.
 
@@ -74,6 +80,9 @@ static float score_shake;
 // Timer.
 static double time_start;   // Timestamp of the first frame.
 static double time_elapsed; // Total time since the start (in seconds).
+static double time_match;   // Timestamp for the current/next match.
+static double time_next_match;  // Timestamp for the next match.
+static double time_now;     // Timestamp for the current frame.
 static float time_delta;    // Time delta since the last frame (in seconds).
 
 // Textures.
@@ -87,6 +96,7 @@ typedef struct {
 // Gems.
 #define GEM_TYPES 14
 #define MAX_GEMS 50
+#define ALL_GEMS ((1ull << MAX_GEMS) - 1)
 typedef struct {
     Texture* tex;   // Texture to use for drawing.
     float x, y;     // Map position.
@@ -94,7 +104,6 @@ typedef struct {
 } Gem;
 static Gem gem_array[MAX_GEMS];
 static uint64_t gem_mask;
-static int gem_count;
 
 // Particles.
 #define MAX_PARTICLES 100
@@ -350,30 +359,73 @@ void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
     }
 }
 
-// Initialize the game.
-__attribute__((export_name("init")))
-void init(size_t rng_seed)
+int font_width(Font* font, const char* string)
 {
-    // Load assets.
-    texture_load(&texture_floor);
-    texture_load(&texture_wall);
-    texture_load(&texture_gems);
-    texture_load(&texture_barrier);
-    texture_load(&texture_ghost);
-    texture_load(&texture_guy_front);
-    texture_load(&texture_guy_left);
-    texture_load(&texture_guy_right);
-    texture_load(&texture_guy_back);
-    font_load(&font_tiny);
-    font_load(&font_big);
-    for (int i = 0; i < GEM_TYPES; i++) {
-        texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
-        texture_gem[i].color = average_color(&texture_gem[i]);
+    int width = 0;
+    while (*string != '\0') {
+        int glyph = *string++ - FONT_GLYPH_MIN;
+        if (glyph < 0 || glyph >= FONT_GLYPH_COUNT)
+            glyph = '?' - FONT_GLYPH_MIN;
+        width += font->width[glyph] + 1;
     }
+    return width - !width;
+}
 
+void respawn(void)
+{
+    // Place the player in a random room.
+    int player_room = (random_int(0, MAP_ROOMS - 1) + player_self) % MAP_ROOMS;
+    player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
+    player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
+}
+
+#define MAX_MESSAGE_LENGTH 64 // How much text fits in a message.
+#define MAX_MESSAGES 22 // How many messages fit on screen.
+#define MESSAGE_DELAY 5 // How long before a message disappears.
+typedef struct {
+    double timestamp;
+    char text[MAX_MESSAGE_LENGTH];
+} Message;
+static Message messages[MAX_MESSAGES];
+static size_t message_index;
+
+static void draw_messages(void)
+{
+    for (size_t i = 0; i < MAX_MESSAGES; i++) {
+        size_t index = (message_index + MAX_MESSAGES - 1 - i) % MAX_MESSAGES;
+        Message* message = &messages[index];
+        if (time_now < message->timestamp + MESSAGE_DELAY * 1000.0) {
+            int x = 5;
+            int y = FRAME_H - 30 - 8 * i;
+            font_draw(&font_tiny, x + 1, y + 1, 0xff000000, message->text);
+            font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, message->text);
+        }
+    }
+}
+
+static void push_message(char* text)
+{
+    Message* message = &messages[message_index++ % MAX_MESSAGES];
+    message->timestamp = time_now;
+    size_t length = 0;
+    while (length < MAX_MESSAGE_LENGTH - 1 && *text)
+        message->text[length++] = *text++;
+    message->text[length] = '\0';
+}
+
+static void new_game(double timestamp, uint64_t gems)
+{
     // Seed the random number generator and generate a random map.
-    random_seed(rng_seed);
+    gem_mask = gems;
+    random_seed((uint64_t) timestamp);
     map_generate();
+
+    // Mark the spawn points on the map, so that no gems are placed there.
+    for (int i = 0; i < MAP_ROOMS; i++) {
+        int x = map_room_x(i);
+        int y = map_room_x(i);
+        map_set(x, y, 'g');
+    }
 
     // Place gems on unoccupied map tiles.
     for (int i = 0; i < MAX_GEMS;) {
@@ -395,10 +447,34 @@ void init(size_t rng_seed)
         if (map_get(x, y) == 'g')
             map_set(x, y, 0);
 
-    // Place the player in a random room.
-    int player_room = random_int(0, MAP_ROOMS - 1);
-    player_x = player_x_smooth = map_room_x(player_room) + 0.5f;
-    player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
+    // Mark other players' positions as stale.
+    for (size_t i = 0; i < player_count; i++)
+        players[i].moved = false;
+
+    // Respawn in a random room.
+    respawn();
+}
+
+// Initialize the game.
+__attribute__((export_name("init")))
+void init(void)
+{
+    // Load assets.
+    texture_load(&texture_floor);
+    texture_load(&texture_wall);
+    texture_load(&texture_gems);
+    texture_load(&texture_barrier);
+    texture_load(&texture_ghost);
+    texture_load(&texture_guy_front);
+    texture_load(&texture_guy_left);
+    texture_load(&texture_guy_right);
+    texture_load(&texture_guy_back);
+    font_load(&font_tiny);
+    font_load(&font_big);
+    for (int i = 0; i < GEM_TYPES; i++) {
+        texture_sub(&texture_gem[i], &texture_gems, i * 16, 0, 16, 16);
+        texture_gem[i].color = average_color(&texture_gem[i]);
+    }
 }
 
 // Apply fog to a color.
@@ -543,14 +619,45 @@ static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, 
     }
 }
 
-static char* number_to_string(char* buffer, unsigned int value)
+// Join two null-terminated strings.
+static void string_join(char* buffer, size_t buffer_size, char* string)
+{
+    for (; *buffer; buffer_size--)
+        buffer++;
+    while (*string && --buffer_size)
+        *buffer++ = *string++;
+    *buffer = '\0';
+}
+
+// Convert an unsigned integer to a string.
+static char* string_from_int(char* buffer, unsigned int value)
 {
     if (value >= 10)
-        buffer = number_to_string(buffer, value / 10);
+        buffer = string_from_int(buffer, value / 10);
     buffer[0] = '0' + value % 10;
     buffer[1] = '\0';
     return buffer + 1;
 }
+
+// Convert a timestamp (in seconds) to a nine-character string (including the
+// null-terminator).
+static void string_from_timestamp(char buffer[9], double time)
+{
+    int cents = floor(time * 100.0);
+    buffer[0] = '0' + cents / 60000 % 10; // Tens of minutes.
+    buffer[1] = '0' + cents /  6000 % 10; // Minutes.
+    buffer[2] = ':';
+    buffer[3] = '0' + cents / 1000 % 6 % 10; // Tens of seconds.
+    buffer[4] = '0' + cents /  100 % 10; // Seconds.
+    buffer[5] = ':';
+    buffer[6] = '0' + cents / 10 % 10; // Tenths of a second.
+    buffer[7] = '0' + cents /  1 % 10; // Hundredths of a second.
+    buffer[8] = '\0';
+}
+
+// Get a string from the JavaScript side.
+__attribute__((import_module("islands/Web3D"), import_name("getString")))
+size_t string_from_extern(__externref_t, char* buffer, size_t buffer_size);
 
 static void spawn_particles(float x, float y, float z, uint32_t color)
 {
@@ -593,7 +700,7 @@ static void update_particles(float dt)
 
 static void update_players(float dt)
 {
-    for (int i = 0; i < player_count; i++) {
+    for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
         player->vx = smooth(player->vx, player->x, 10.0f * dt);
         player->vy = smooth(player->vy, player->y, 10.0f * dt);
@@ -636,22 +743,6 @@ static void draw_particles(Column* col)
     }
 }
 
-// Convert a timestamp (in seconds) to a nine-character string (including the
-// null-terminator).
-static void time_to_string(char buffer[9], double time)
-{
-    int cents = floor(time * 100.0);
-    buffer[0] = '0' + cents / 60000 % 10; // Tens of minutes.
-    buffer[1] = '0' + cents /  6000 % 10; // Minutes.
-    buffer[2] = ':';
-    buffer[3] = '0' + cents / 1000 % 6 % 10; // Tens of seconds.
-    buffer[4] = '0' + cents /  100 % 10; // Seconds.
-    buffer[5] = ':';
-    buffer[6] = '0' + cents / 10 % 10; // Tenths of a second.
-    buffer[7] = '0' + cents /  1 % 10; // Hundredths of a second.
-    buffer[8] = '\0';
-}
-
 static void draw_animation(Column* col, Texture* tex, float x, float y, float w, float h, float rate)
 {
     Texture frame;
@@ -686,54 +777,51 @@ static void draw_countdown(double seconds)
 {
     // Draw a timer.
     char text[16];
-    time_to_string(text, seconds);
-    int x = (FRAME_W - 35) / 2;
-    int y = (FRAME_H - 30) / 2;
+    string_from_timestamp(text, seconds);
+    int x = FRAME_W - 52;
+    int y = FRAME_H - 16;
     int color = ((int) (seconds * 128.0f) % 128 + 127) * 0x010101 | 0xff000000;
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, color, text);
 
-    char* small = "GAME STARTS IN";
-    x = (FRAME_W - 53) / 2;
-    y = (FRAME_H - 50) / 2;
+    char* small = "NEXT MATCH IN";
+    x = FRAME_W - 64;
+    y = FRAME_H - 26;
     font_draw(&font_tiny, x + 1, y + 1, 0xff000000, small);
     font_draw(&font_tiny, x + 0, y + 0, color, small);
 }
 
-static void draw_user_interface(void)
+static void draw_scores(void)
 {
-    // Draw the gem count.
-    char text[16];
-    number_to_string(text, gem_count);
-    int x = 23;
-    int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
-    score_shake = max(0.0f, score_shake - time_delta);
+    // Draw the table heading.
+    char* text = "Scores";
+    int x = (FRAME_W - 20) / 2;
+    int y = 30;
     font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
     font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
-    texture_draw(&texture_gem[1], 5, 180);
-}
 
-static void draw_players(Column* col)
-{
-    for (int i = 0; i < player_count; i++) {
+    // Draw each player's name and score.
+    size_t count = 0;
+    for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
-        if (player->id == player_self)
+        if (!player->played)
             continue;
-        if (player->id == player_ghost)
-            draw_ghost(col, player->vx, player->vy);
-        else
-            draw_guy(col, player->vx, player->vy, player->dx, player->dy, player->moving);
-    }
-}
 
-static void draw_gems(Column* col)
-{
-    for (int i = 0; i < MAX_GEMS; i++) {
-        if (!(gem_mask & (1ull << i))) {
-            Gem* gem = &gem_array[i];
-            float height = 0.3f + 0.05f * sinf(time_elapsed * 2.0f + gem->phase);
-            draw_sprite(col, gem->tex, gem->x, gem->y, 0.4f, height);
-        }
+        // Draw the player name.
+        x = (FRAME_W - 120) / 2;
+        y = 51 + count * 14;
+        font_draw(&font_tiny, x + 1, y + 1, 0xff000000, player->name);
+        font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, player->name);
+
+        // Draw the player's current score.
+        char score[16];
+        string_from_int(score, player->score);
+        int width = font_width(&font_big, score);
+        x = (FRAME_W + 120) / 2 - width;
+        y = 50 + count * 14;
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, score);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, score);
+        count++;
     }
 }
 
@@ -745,30 +833,186 @@ static Player* get_player_by_id(uint32_t id)
     return NULL;
 }
 
-__attribute__((export_name("recvJoin")))
-void recv_join(uint32_t id, double gems)
+static void draw_user_interface(bool logged_in)
 {
-    Player* player = &players[player_count++];
+    // Tell the user to log in if we're not connected.
+    if (!logged_in) {
+        char* text = "Log in to play";
+        int x = (FRAME_W - 90) / 2;
+        int y = (FRAME_H - 17) / 2;
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+        return;
+    }
+
+    // Draw the gem count (if the player is connected).
+    Player* player = get_player_by_id(player_self);
+    if (player) {
+        char text[16];
+        string_from_int(text, player->score);
+        int x = 23;
+        int y = 182 + 10.0f * score_shake * sinf(time_elapsed * 80.0f);
+        score_shake = max(0.0f, score_shake - time_delta);
+        font_draw(&font_big, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_big, x + 0, y + 0, 0xffffffff, text);
+        texture_draw(&texture_gem[1], 5, 180);
+    }
+
+    // Show some text while waiting for other players to join.
+    if (player_active == 1) {
+        char* text = "Waiting for players";
+        int x = FRAME_W - 90;
+        int y = FRAME_H - 17;
+        font_draw(&font_tiny, x + 1, y + 1, 0xff000000, text);
+        font_draw(&font_tiny, x + 0, y + 0, 0xffffffff, text);
+
+    // Draw a countdown while waiting for the next match.
+    } else if (time_now < time_next_match) {
+        draw_countdown((time_next_match - time_now) / 1000.0);
+    }
+
+    // Draw the scores if there's no active match.
+    if (gem_mask == 0 && player && player->played)
+        draw_scores();
+
+    // Draw the message log.
+    draw_messages();
+}
+
+static void draw_players(Column* col)
+{
+    for (size_t i = 0; i < player_count; i++) {
+        Player* player = &players[i];
+        if (player->id == player_self || !player->active)
+            continue;
+        if (player->id == player_ghost)
+            draw_ghost(col, player->vx, player->vy);
+        else
+            draw_guy(col, player->vx, player->vy, player->dx, player->dy, player->moving);
+    }
+}
+
+static void draw_gems(Column* col)
+{
+    for (int i = 0; i < MAX_GEMS; i++) {
+        if ((gem_mask & (1ull << i))) {
+            Gem* gem = &gem_array[i];
+            float height = 0.3f + 0.05f * sinf(time_elapsed * 2.0f + gem->phase);
+            draw_sprite(col, gem->tex, gem->x, gem->y, 0.4f, height);
+        }
+    }
+}
+
+__attribute__((export_name("recvJoin")))
+void recv_join(uint32_t id, int score, __externref_t name)
+{
+    // If it's not a returning player, add another player to the array.
+    Player* player = get_player_by_id(id);
+    if (!player) {
+        player = &players[player_count++];
+    }
+
+    // Initialize the player.
+    memset(player, 0, sizeof(Player));
     player->id = id;
-    player->x = 0.0f;
-    player->y = 0.0f;
-    player->gems = 0;
-    player->active = false;
-    if (!player_self) {
-        player_self = id;
-        gem_mask = gems;
+    player->score = score;
+    player->active = true;
+    string_from_extern(name, player->name, MAX_PLAYER_NAME);
+    player_active++;
+
+    // Show a join message.
+    if (player_self) {
+        char buffer[64] = {0};
+        string_join(buffer, sizeof(buffer), player->name);
+        string_join(buffer, sizeof(buffer), " joined");
+        push_message(buffer);
     }
 }
 
 __attribute__((export_name("recvQuit")))
 void recv_quit(uint32_t id)
 {
-    for (size_t i = 0; i < player_count; i++) {
-        if (players[i].id == id) {
-            players[i] = players[--player_count];
-            break;
-        }
+    // Find a player with a matching ID.
+    Player* player = get_player_by_id(id);
+    if (!player)
+        return;
+
+    // Mark the player as inactive.
+    player->active = false;
+    player_active--;
+
+    // Print a quit message.
+    char buffer[64] = {0};
+    string_join(buffer, sizeof(buffer), player->name);
+    string_join(buffer, sizeof(buffer), " quit");
+    push_message(buffer);
+
+    // If the match hadn't started yet, remove the player completely.
+    if (time_match < time_next_match) {
+        *player = players[--player_count];
+
+        // If there's only one player left, cancel the match.
+        if (player_active == 1)
+            time_match = time_next_match;
     }
+}
+
+__attribute__((export_name("recvBegin")))
+void recv_begin(uint32_t self, uint32_t ghost, double timestamp, double gems)
+{
+    // Update the game state.
+    player_ghost = ghost;
+    time_match = timestamp;
+    if (player_self) {
+        push_message("A new match started!");
+    } else {
+        player_self = self;
+    }
+    new_game(timestamp, gems);
+
+    // Sweep inactive players, and reset all players' scores to zero.
+    for (size_t i = 0; i < player_count; i++) {
+        players[i].score = 0;
+        if (!players[i].active)
+            players[i--] = players[--player_count];
+    }
+}
+
+__attribute__((export_name("recvCount")))
+void recv_count(double timestamp)
+{
+    time_next_match = timestamp;
+}
+
+__attribute__((export_name("recvEnd")))
+void recv_end(void)
+{
+    // Mark all players who participated in the game.
+    for (size_t i = 0; i < player_count; i++)
+        players[i].played = true;
+
+    // Sort players by score.
+    for (size_t i = 1, j; i < player_count; i++) {
+        Player temp = players[i];
+        for (j = i; j > 0 && players[j - 1].score < temp.score; j--)
+            players[j] = players[j - 1];
+        players[j] = temp;
+    }
+
+    // If there's a tie, don't announce a winner.
+    if (player_count > 1 && players[0].score == players[1].score) {
+        push_message("It's a tie!");
+
+    // Otherwise, mention the player's name.
+    } else {
+        char message[64] = {0};
+        string_join(message, sizeof(message), players[0].name);
+        string_join(message, sizeof(message), " wins the match!");
+        push_message(message);
+    }
+
+    // Clear all gems.
+    gem_mask = 0;
 }
 
 __attribute__((export_name("recvMove")))
@@ -781,35 +1025,59 @@ void recv_move(uint32_t id, float x, float y, float dx, float dy)
         player->y = y;
         player->dx = dx;
         player->dy = dy;
-        if (!player->active) {
+        if (!player->moved) {
             player->vx = player->x;
             player->vy = player->y;
         }
-        player->active = true;
+        player->moved = true;
     }
 }
 
 __attribute__((export_name("recvCollect")))
-void recv_collect(uint32_t id, int gem_index)
+void recv_collect(uint32_t id, int gem_index, int updated_score)
 {
+    // Update the player's score.
+    Player* player = get_player_by_id(id);
+    if (player)
+        player->score = updated_score;
+
+    // If the index is negative, it's just a score update.
+    if (gem_index < 0)
+        return;
+
+    // Destroy the collected gem.
     Gem* gem = &gem_array[gem_index];
     spawn_particles(gem->x, gem->y, 0.3f, gem->tex->color);
-    gem_mask |= 1ull << gem_index;
-    if (id == player_self) {
+    gem_mask &= ~(1ull << gem_index);
+
+    // Trigger the score counter shake effect.
+    if (id == player_self)
         score_shake = 0.2f;
-        gem_count++;
-    }
 }
 
-__attribute__((import_module("islands/Web3D"), import_name("sendMove")))
-void send_move(__externref_t socket, float x, float y, float dx, float dy);
+// Message types (these should match MessageType in server.ts).
+enum {
+    MESSAGE_MOVE = 5,
+    MESSAGE_COLLECT,
+};
 
-__attribute__((import_module("islands/Web3D"), import_name("sendCollect")))
-void send_collect(__externref_t socket, int gem_index);
+void send_move(__externref_t socket, float x, float y, float dx, float dy)
+{
+    __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
+    void send_move_message(__externref_t, int, int, float, float, float, float);
+    send_move_message(socket, MESSAGE_MOVE, player_self, x, y, dx, dy);
+}
+
+void send_collect(__externref_t socket, int gem_index)
+{
+    __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
+    void send_collect_message(__externref_t, int, int, int);
+    send_collect_message(socket, MESSAGE_COLLECT, player_self, gem_index);
+}
 
 // Render the next frame of the game.
 __attribute__((export_name("draw")))
-void* draw(__externref_t socket, double timestamp)
+void* draw(__externref_t socket, double timestamp, double date_now, bool logged_in)
 {
     // Measure time delta since the previous frame.
     static double prev_timestamp;
@@ -821,9 +1089,12 @@ void* draw(__externref_t socket, double timestamp)
         time_start = timestamp;
     time_elapsed = (timestamp - time_start) / 1000.0;
 
+    // Record the current timestamp.
+    time_now = date_now;
+
     // Handle player movement.
-    const float rotate_speed = time_delta * PLAYER_TURN_SPEED;
-    const float run_speed = time_delta * PLAYER_RUN_SPEED;
+    const float rotate_speed = logged_in * time_delta * PLAYER_TURN_SPEED;
+    const float run_speed = logged_in * time_delta * PLAYER_RUN_SPEED;
     float run_f = key_held[KEY_FORWARD] - key_held[KEY_BACK];
     float run_s = key_held[KEY_RSTRAFE] - key_held[KEY_LSTRAFE];
     if (run_f != 0.0f && run_s != 0.0f) {
@@ -862,9 +1133,9 @@ void* draw(__externref_t socket, double timestamp)
     send_move(socket, player_x, player_y, player_dx, player_dy);
 
     // Collect gems when touching them.
-    if (player_self != player_ghost) {
+    if (player_self != player_ghost && time_now >= time_match) {
         for (int i = 0; i < MAX_GEMS; i++) {
-            if (!(gem_mask & (1ull << i))) {
+            if (gem_mask & (1ull << i)) {
                 Gem* gem = &gem_array[i];
                 float dx = player_x - gem->x;
                 float dy = player_y - gem->y;
@@ -922,10 +1193,7 @@ void* draw(__externref_t socket, double timestamp)
             frame[x + y * FRAME_W] = apply_fog(col.color[y], col.light[y], x, y);
     }
 
-    draw_user_interface();
-
-    if (time_elapsed < 5.0f)
-        draw_countdown(5.0f - time_elapsed);
+    draw_user_interface(logged_in);
 
     // Reset keyboard state.
     memset(key_down, 0, sizeof(key_down));
