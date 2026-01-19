@@ -8,6 +8,7 @@ export function setState(newState: GameState, scene: Scene)
 	switch (newState)
 	{
 		case GameState.WaitingPlayers:
+			Globals.playing = false;
 			break;
 
 		case GameState.Countdown:
@@ -20,6 +21,10 @@ export function setState(newState: GameState, scene: Scene)
 
 		case GameState.Playing:
 			Globals.playing = true;
+			break ;
+
+		case GameState.GameOver:
+			Globals.playing = false;
 			break ;
 	}
 }
