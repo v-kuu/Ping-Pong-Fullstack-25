@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { db, Matches } from "astro:db";
-import { badRequest, created, internalError, unauthorized } from "@/utils/apiHelpers";
+import { badRequest, created, internalError, unauthorized } from "@/utils/site/apiHelpers";
 
 const VALID_GAMES = ["pong", "web3d"] as const;
 type GameType = (typeof VALID_GAMES)[number];
