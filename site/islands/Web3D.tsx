@@ -18,7 +18,7 @@ enum MessageType {
 // Send a message to the server.
 export function sendMessage(socket: WebSocket, ...args: number[]) {
   if (socket && socket.readyState === WebSocket.OPEN)
-    socket.send(new Float64Array([...args]));
+    socket.send(new Float64Array(args));
 }
 
 // Convert a string to UTF-8 and write the bytes to a buffer in WebAssembly
@@ -54,7 +54,7 @@ function handleMessage(data: ArrayBuffer) {
   }
 }
 
-export function Web3D({user}) {
+export function Web3D({user}: {user: { id: number; username: string } | null}) {
   const username = user && user.username;
   const playerId = user && user.id;
   useEffect(() => {
@@ -70,13 +70,13 @@ export function Web3D({user}) {
     const frameSize = canvas.width * canvas.height * 4;
 
     // Connect to the game server.
-    let socket = null;
+    let socket: WebSocket | null = null;
     if (username && playerId) {
       socket = new WebSocket("ws://" + location.hostname + ":3002/web3d");
       socket.binaryType = "arraybuffer";
       socket.onmessage = event => handleMessage(event.data);
-      socket.onopen = event => {
-        if (username && playerId) {
+      socket.onopen = _event => {
+        if (username && playerId && socket) {
           const encodedName = new TextEncoder().encode(username);
           const data = new ArrayBuffer(8 + encodedName.length);
           new Uint8Array(data, 8).set(encodedName);
