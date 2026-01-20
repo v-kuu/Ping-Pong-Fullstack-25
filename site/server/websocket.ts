@@ -6,7 +6,7 @@ import type { ServerWebSocket } from "bun";
 // import { recordMatch } from "../utils/recordMatch.ts";
 import { NullEngine, Scene } from "@babylonjs/core";
 import { createSession } from "../utils/server/babylon_createsession.ts";
-import { Globals } from "../utils/shared/babylon_globals.ts";
+import { Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
 import { AI_moves } from "../utils/server/AI_opponent.ts";
 
 interface PlayerData {
@@ -89,24 +89,19 @@ function gameTick() {
     const now = Date.now();
     lastTick = now;
 
-    const ballMesh = scene.getMeshByName("ball");
+    if (clients.size % 2)
+        AI_moves(scene);
+	const ballMesh = scene.getMeshByName("ball");
     const p1Mesh = scene.getMeshByName("player1");
     const p2Mesh = scene.getMeshByName("player2");
 
-    if (clients.size % 2)
-        AI_moves(scene);
-
+	ServerVars.ballPos.copyFrom(ballMesh.position);
+	ServerVars.p1Pos.copyFrom(p1Mesh.position);
+	ServerVars.p2Pos.copyFrom(p2Mesh.position);
     const posSyncData = JSON.stringify({
         type: "physics_sync",
-        ballVel: ballMesh?.position,
-        ballDelta: Globals.ballDelta,
-        vel1: p1Mesh?.position,
-        vel2: p2Mesh?.position,
-        score1: Globals.score1,
-        score2: Globals.score2,
-        currentState: Globals.currentState,
+		ServerState: ServerVars,
     });
-
     for (const ws of clients) {
         try {
             ws.send(posSyncData);

@@ -10,7 +10,7 @@ interface Props {
   class?: string;
 }
 
-const { title, active, favicon, class: className, redirect } = Astro.props;
+const { title, active, favicon, class: className } = Astro.props;
 const user = Astro.locals.user ?? null;
 ---
 

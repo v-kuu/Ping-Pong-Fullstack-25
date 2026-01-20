@@ -7,8 +7,9 @@ import {
 	Vector3,
 	DirectionalLight,
 	CascadedShadowGenerator,
+	Space,
 } from "@babylonjs/core"
-import { Globals } from "../shared/babylon_globals.ts"
+import { Globals, ServerVars } from "../shared/babylon_globals.ts"
 
 export enum Sides
 {
@@ -61,8 +62,6 @@ function createBall(scene: Scene): Mesh
 	{
 		ball.material = pbrMat;
 	});
-	ball.checkCollisions = true;
-	ball.ellipsoid = new Vector3(0.25, 0.25, 0.25);
 	return ball;
 }
 
@@ -86,9 +85,6 @@ function createPlayer(leftPlayer: boolean, scene: Scene): Mesh
 	{
 		player.material = pbrMat;
 	});
-	player.checkCollisions = true;
-	player.ellipsoid = new Vector3(
-		Globals.playerWidth / 2, Globals.playerHeight / 2, Globals.playerDepth / 2);
 	return player;
 }
 
@@ -156,23 +152,29 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 	
 	scene.onBeforeRenderObservable.add(() =>
 	{
+		const delta = scene.getEngine().getDeltaTime() / 1e3;
 		const ballMesh = scene.getMeshByName("ball");
 		const p1Mesh = scene.getMeshByName("player1");
 		const p2Mesh = scene.getMeshByName("player2");
 
 		if (ballMesh)
 		{
-			if (Globals.playing)
+			const velocity = ServerVars.ballPos.subtract(ballMesh.position).scale(delta);
+			if (velocity.lengthSquared() > 0.001)
 			{
-				ballMesh.position.x += Globals.ballDelta.x;
-				ballMesh.position.z += Globals.ballDelta.z;
+				const dir = velocity.normalize();
+				const rotAxis = Vector3.Cross(dir, Vector3.Up()).normalize();
+
+				const angularSpeed = velocity.length() / 0.25;
+				const angle = angularSpeed * delta;
+
+				ballMesh.rotate(rotAxis, angle, Space.LOCAL);
 			}
-			const error = Globals.ballVel.subtract(ballMesh.position);
-			ballMesh.position.addInPlace(error.scaleInPlace(0.6));
+			ballMesh.position.copyFrom(ServerVars.ballPos);
 		}
 		if (p1Mesh)
-			p1Mesh.position.copyFrom(Globals.vel1);
+			p1Mesh.position.copyFrom(ServerVars.p1Pos);
 		if (p2Mesh)
-			p2Mesh.position.copyFrom(Globals.vel2);
+			p2Mesh.position.copyFrom(ServerVars.p2Pos);
 	});
 }

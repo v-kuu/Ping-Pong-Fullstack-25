@@ -25,8 +25,8 @@ export function createSession(engine: NullEngine): Scene
 	scene.onBeforeRenderObservable.add(() => {
 		const delta = engine.getDeltaTime() / 1e3;
 		const distance = Globals.moveSpeed * delta;
-		Globals.vel1 = new Vector3();
-		Globals.vel2 = new Vector3();
+		Globals.vel1.set(0, 0, 0);
+		Globals.vel2.set(0, 0, 0);
 		if (Globals.player1KeyUp) {
 			Globals.vel1.z = distance;
 		}
@@ -41,6 +41,6 @@ export function createSession(engine: NullEngine): Scene
 		}
 	});
 
-	setState(GameState.Countdown, scene);
+	setState(GameState.WaitingPlayers, scene);
 	return scene;
 };

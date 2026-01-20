@@ -10,7 +10,7 @@ import {
 	Texture,
 } from "@babylonjs/core";
 import { FireProceduralTexture } from "@babylonjs/procedural-textures";
-import { Globals } from "../shared/babylon_globals.ts";
+import { Globals, ServerVars } from "../shared/babylon_globals.ts";
 
 async function get3dFont(): Promise<any>
 {
@@ -181,7 +181,7 @@ export function updateScore(scene: Scene, id: number)
 	else if (Globals.score2Mesh)
 		Globals.score2Mesh.dispose();
 	let name = id === 1 ? "score1" : "score2";
-	let value = id === 1 ? `${Globals.score1}` : `${Globals.score2}`;
+	let value = id === 1 ? `${ServerVars.score1}` : `${ServerVars.score2}`;
 	let color =
 		id === 1
 			? FireProceduralTexture.BlueFireColors
