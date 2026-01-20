@@ -10,6 +10,10 @@ export function setState(newState: GameState, scene: Scene)
 		case GameState.WaitingPlayers:
 			resetGame();
 			Globals.playing = false;
+			Tools.DelayAsync(5000).then(() =>
+			{
+				setState(GameState.Countdown, scene);
+			});
 			break;
 
 		case GameState.Countdown:
