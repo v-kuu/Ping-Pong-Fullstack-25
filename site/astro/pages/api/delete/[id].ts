@@ -29,7 +29,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     await db.delete(Matches)
       .where(
-        sql`${Matches.playerIds} LIKE ${userId}`
+        sql`exists (select 1 from json_each(${Matches.playerIds}) where value = ${userId})`
       );
 
     await db.delete(Users)
