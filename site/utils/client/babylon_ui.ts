@@ -147,10 +147,10 @@ function initAvatars(scene: Scene)
 async function createAvatar(scene: Scene, id: number)
 {
 	let url = "/avatar.png";
-	if (Globals.userName.username) {
+	if (Globals.userName != "Guest") {
   	try
   	{
-  		let res = await fetch("/api/avatars/" + Globals.userName.username.username);
+  		let res = await fetch("/api/avatars/" + Globals.userName);
   		if (!res.ok)
   			throw new Error("Failed to fetch avatar");
   		url = res.url;

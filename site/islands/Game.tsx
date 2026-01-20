@@ -9,7 +9,9 @@ import { Globals } from "../utils/shared/babylon_globals.ts";
 import { updateScore } from "@/utils/client/babylon_ui.ts";
 import { setState } from "../utils/client/babylon_states.ts"
 
-export function Game(username: string) {
+export function Game({user}: {user: { id: number; username: string } | null}) {
+  const username = user ? user.username : "Guest";
+  const playerId = user ? user.id : 0;
 	Globals.userName = username;
 	useEffect(() => {
 		const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
@@ -36,7 +38,7 @@ export function Game(username: string) {
 		addEventListener("resize", () => engine.resize());
 
 		// Open WebSocket
-		const ws = new WebSocket("ws://" + location.hostname + ":3001/ws");
+		const ws = new WebSocket("ws://" + location.hostname + ":3001/ws" + "?id=" + encodeURIComponent(playerId));
 
 		ws.onopen = () => {
 			console.log("Connected to server");

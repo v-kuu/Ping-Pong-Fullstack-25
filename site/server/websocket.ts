@@ -26,11 +26,18 @@ engine.runRenderLoop(function () {
 
 Bun.serve({
     port: 3001,
+    // process.env.PRODUCTION === "true" ?
+    //   tls: {
+    //     key: Bun.file(process.env.PONG_KEY_PATH),
+    //     cert: Bun.file(process.env.PONG_CERT_PATH),
+    //   },
+    // :
     fetch(req, server) {
         const url = new URL(req.url)
-
+        let playerId = +url.searchParams.get("id");
         if (url.pathname === "/ws") {
-            const playerId = crypto.randomUUID();
+            //const playerId = req.id;
+            console.log(playerId);
             server.upgrade(req, {
                 data: {
                     playerId,
@@ -65,7 +72,7 @@ Bun.serve({
             else
                 ws.data.index = 99;
 
-            console.log("Client connected. Total:", clients.size);
+            console.log("Client connected. Total:", clients.size, ws.data.playerId);
         },
         close(ws) {
             clients.delete(ws)
