@@ -37,6 +37,17 @@ const Friendships = defineTable({
     }
 });
 
+const Messages = defineTable({
+    columns: {
+        id: column.number({ primaryKey: true, autoIncrement: true }),
+        fromId: column.number({ references: () => Users.columns.id }),
+        toId: column.number({ references: () => Users.columns.id }),
+        content: column.text(),
+        createdAt: column.date({ default: NOW }),
+        read: column.boolean({ default: false }),
+    }
+});
+
 export default defineDb({
-    tables: { Users, Matches, Sessions, Friendships }
+    tables: { Users, Matches, Sessions, Friendships, Messages }
 });
