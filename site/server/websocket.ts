@@ -3,11 +3,13 @@
 // Open websocket with "bun run server/websocket.ts"
 
 import type { ServerWebSocket } from "bun";
-// import { recordMatch } from "../utils/recordMatch.ts";
+import { recordMatch } from "../utils/recordMatch.ts";
 import { NullEngine, Scene } from "@babylonjs/core";
 import { createSession } from "../utils/server/babylon_createsession.ts";
-import { Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
+import { setState } from "@/utils/server/babylon_serverstates.ts"
+import { GameState, Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
 import { AI_moves } from "../utils/server/AI_opponent.ts";
+import { unauthorized } from "@/utils/site/apiHelpers.ts";
 
 interface PlayerData {
     playerId: string;
@@ -16,9 +18,10 @@ interface PlayerData {
 }
 
 const clients = new Set<ServerWebSocket<unknown>>();
-
+let playerQueue = [];
 var engine = new NullEngine();
 var scene = createSession(engine);
+let playerOne, playerTwo = 0;
 engine.runRenderLoop(function () {
       scene.render();
 });
@@ -34,10 +37,8 @@ Bun.serve({
     // :
     fetch(req, server) {
         const url = new URL(req.url)
-        let playerId = +url.searchParams.get("id");
-        if (url.pathname === "/ws") {
-            //const playerId = req.id;
-            console.log(playerId);
+        const playerId = +url.searchParams.get("id");
+        if (url.pathname === "/ws" && playerId) {
             server.upgrade(req, {
                 data: {
                     playerId,
@@ -45,36 +46,32 @@ Bun.serve({
             })
             return;
         }
-        return new Response("WebSocket server");
+        return unauthorized();
     },
     websocket: {
         message(ws, msg) {
             const data = JSON.parse(msg);
-            const playerIdx = ws.data.index;
+            const playerIdx = ws.data.playerId;
 
             if (data.type === "move") {
-                if (playerIdx === 0) {
+                if (playerIdx === playerOne) {
                     Globals.player1KeyUp = data.keys.includes("w");
                     Globals.player1KeyDown = data.keys.includes("s");
                 }
-                else if (playerIdx === 1) {
+                else if (playerIdx === playerTwo) {
                     Globals.player2KeyUp = data.keys.includes("w");
                     Globals.player2KeyDown = data.keys.includes("s");
                 }
             }
         },
         open(ws) {
+            ws.data.index = clients.size;
             clients.add(ws)
-            if (clients.size === 1)
-                ws.data.index = 0;
-            else if (clients.size === 2)
-                ws.data.index = 1;
-            else
-                ws.data.index = 99;
-
+            playerQueue.push(ws.data.playerId);
             console.log("Client connected. Total:", clients.size, ws.data.playerId);
         },
         close(ws) {
+            playerQueue = playerQueue.filter(id => id !== ws.data.playerId);
             clients.delete(ws)
             console.log("Client disconnected. Total:", clients.size);
         },
@@ -84,51 +81,72 @@ Bun.serve({
 const TICK_RATE = 60;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
+let newMatch = true;
+async function gameTick() {
+  const now = Date.now();
+  lastTick = now;
 
-function gameTick() {
-    const now = Date.now();
-    lastTick = now;
+  if (ServerVars.currentState === GameState.GameOver && newMatch) {
+    await recordMatch({
+        game: "pong",
+        playerIds: [playerOne, playerTwo],
+        scores: [ServerVars.score1, ServerVars.score2],
+    });
+    winnerTakesItAll();
+  } else if (clients.size === 0) {
+   	ServerVars.GameState = GameState.WaitingPlayers;
+    return;
+  } else if (clients.size === 1) {
+    AI_moves(scene);
+    if (newMatch) playerOne = playerQueue.shift();
+    newMatch = false;
+  } else if (clients.size === 2 && !newMatch) {
+    if (!newMatch) playerTwo = playerQueue.shift();
+    newMatch = true;
+    freshMatch();
+    ServerVars.GameState = GameState.WaitingPlayers;
+  }
 
-    if (clients.size % 2)
-        AI_moves(scene);
-	const ballMesh = scene.getMeshByName("ball");
-    const p1Mesh = scene.getMeshByName("player1");
-    const p2Mesh = scene.getMeshByName("player2");
+  const ballMesh = scene.getMeshByName("ball");
+  const p1Mesh = scene.getMeshByName("player1");
+  const p2Mesh = scene.getMeshByName("player2");
 
 	ServerVars.ballPos.copyFrom(ballMesh.position);
 	ServerVars.p1Pos.copyFrom(p1Mesh.position);
 	ServerVars.p2Pos.copyFrom(p2Mesh.position);
-    const posSyncData = JSON.stringify({
-        type: "physics_sync",
-		ServerState: ServerVars,
-    });
-    for (const ws of clients) {
-        try {
-            ws.send(posSyncData);
-        } catch (e) {
-            console.error("Failed to send message:", e)
-        }
-    }
 
-    // if (Globals.score1 >= 11 || Globals.score2 >= 11) {
-    //     // const p1Token = Array.from(clients).find(c => c.data.index === 0)?.data.playerId;
-    //     // const p2Token = Array.from(clients).find(c => c.data.index === 1)?.data.playerId;
-    //
-    //     // // TODO: Map session tokens to User IDs through DB/Session lookups
-    //     // // await recordMatch({
-    //     // //    game: "pong",
-    //     // //    playerIds: [p1Token, p2Token],
-    //     // //    scores: [Globals.score1, Globals.score2],
-    //     // //    winnerId: Globals.score1 > Globals.score2 ? p1Token : p2Token
-    //     // // });
-    //
-    //     // Globals.score1 = 0;
-    //     // Globals.score2 = 0;
-    //     // Globals.ballDelta.setAll(0);
-    // }
+  const posSyncData = JSON.stringify({
+      type: "physics_sync",
+	ServerState: ServerVars,
+  });
 
+  for (const ws of clients) {
+      try {
+          ws.send(posSyncData);
+      } catch (e) {
+          console.error("Failed to send message:", e)
+      }
+  }
 }
 
 setInterval(gameTick, TICK_INTERVAL);
 
 console.log("WebSocket server running on http://localhost:3001/ws");
+
+function freshMatch() {
+  ServerVars.p1Pos.setAll(0)
+  ServerVars.p2Pos.setAll(0)
+  ServerVars.score1 = 0
+  ServerVars.score2 = 0
+  ServerVars.currentState = GameState.WaitingPlayers
+}
+
+function winnerTakesItAll() {
+  if (ServerVars.score1 > ServerVars.score2) {
+    playerQueue.push(playerOne);
+    playerOne = playerQueue.shift();
+  } else {
+    playerQueue.push(playerTwo);
+    playerTwo = playerQueue.shift();
+  }
+}

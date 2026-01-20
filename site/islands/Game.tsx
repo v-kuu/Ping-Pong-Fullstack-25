@@ -10,8 +10,8 @@ import { updateScore } from "@/utils/client/babylon_ui.ts";
 import { setState } from "../utils/client/babylon_states.ts"
 
 export function Game({user}: {user: { id: number; username: string } | null}) {
-  const username = user ? user.username : "Guest";
-  const playerId = user ? user.id : 0;
+  const username = user?.username;
+  const playerId = user?.id;
 	Globals.userName = username;
 	useEffect(() => {
 		const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
