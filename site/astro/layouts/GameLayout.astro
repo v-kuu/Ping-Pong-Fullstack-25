@@ -85,9 +85,9 @@ const user = Astro.locals.user ?? null;
     <main class={`game-canvas-wrapper ${className ?? ""}`} id="game-canvas">
       <slot />
     </main>
-    <button 
-      class="menu-toggle fixed bottom-3 right-3 z-[102] w-10 h-10 rounded-lg bg-black/40 backdrop-blur border border-white/10 text-white text-xl cursor-pointer flex items-center justify-center transition-all hover:bg-black/60 active:scale-95" 
-      id="menu-toggle" 
+    <button
+      class="menu-toggle fixed bottom-3 right-3 z-102 w-10 h-10 rounded-lg bg-black/40 backdrop-blur border border-white/10 text-white text-xl cursor-pointer flex items-center justify-center transition-all hover:bg-black/60 active:scale-95"
+      id="menu-toggle"
       aria-label="Toggle menu"
     >☰</button>
     <div class="pause-hint" id="pause-hint">

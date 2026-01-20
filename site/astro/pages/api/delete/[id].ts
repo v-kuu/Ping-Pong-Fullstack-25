@@ -29,7 +29,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
 
     await db.delete(Matches)
       .where(
-        sql`${Matches.playerIds} LIKE ${"%" + userId + "%"}`
+        sql`${Matches.playerIds} LIKE ${userId}`
       );
 
     await db.delete(Users)
