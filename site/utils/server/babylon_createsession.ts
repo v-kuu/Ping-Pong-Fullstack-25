@@ -41,6 +41,6 @@ export function createSession(engine: NullEngine): Scene
 		}
 	});
 
-	setState(GameState.Countdown, scene);
+	setState(GameState.WaitingPlayers, scene);
 	return scene;
 };
