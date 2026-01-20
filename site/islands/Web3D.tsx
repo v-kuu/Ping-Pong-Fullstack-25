@@ -72,18 +72,12 @@ export function Web3D({user}: {user: { id: number; username: string } | null}) {
     // Connect to the game server.
     let socket: WebSocket | null = null;
     if (username && playerId) {
-      socket = new WebSocket("ws://" + location.hostname + ":3002/web3d");
+      const url = new URL("ws://" + location.hostname + ":3002/web3d");
+      url.searchParams.set("username", username);
+      url.searchParams.set("id", playerId);
+      socket = new WebSocket(url);
       socket.binaryType = "arraybuffer";
       socket.onmessage = event => handleMessage(event.data);
-      socket.onopen = _event => {
-        if (username && playerId && socket) {
-          const encodedName = new TextEncoder().encode(username);
-          const data = new ArrayBuffer(8 + encodedName.length);
-          new Uint8Array(data, 8).set(encodedName);
-          new DataView(data).setFloat64(0, playerId, true);
-          socket.send(data);
-        }
-      };
     }
 
     // Make a callback function for updating the frame
