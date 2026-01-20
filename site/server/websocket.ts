@@ -20,8 +20,9 @@ const clients = new Set<ServerWebSocket<unknown>>();
 var engine = new NullEngine();
 var scene = createSession(engine);
 engine.runRenderLoop(function () {
-    scene.render();
+      scene.render();
 });
+
 
 Bun.serve({
     port: 3001,
@@ -85,7 +86,7 @@ function gameTick() {
     const p1Mesh = scene.getMeshByName("player1");
     const p2Mesh = scene.getMeshByName("player2");
 
-    if (clients.size < 2)
+    if (clients.size % 2)
         AI_moves(scene);
 
     const posSyncData = JSON.stringify({
@@ -110,23 +111,22 @@ function gameTick() {
     // if (Globals.score1 >= 11 || Globals.score2 >= 11) {
     //     // const p1Token = Array.from(clients).find(c => c.data.index === 0)?.data.playerId;
     //     // const p2Token = Array.from(clients).find(c => c.data.index === 1)?.data.playerId;
-    //     
+    //
     //     // // TODO: Map session tokens to User IDs through DB/Session lookups
     //     // // await recordMatch({
     //     // //    game: "pong",
-    //     // //    playerIds: [p1Token, p2Token], 
+    //     // //    playerIds: [p1Token, p2Token],
     //     // //    scores: [Globals.score1, Globals.score2],
     //     // //    winnerId: Globals.score1 > Globals.score2 ? p1Token : p2Token
     //     // // });
-    //     
-    //     // Globals.score1 = 0; 
+    //
+    //     // Globals.score1 = 0;
     //     // Globals.score2 = 0;
     //     // Globals.ballDelta.setAll(0);
     // }
 
-    setTimeout(gameTick, TICK_INTERVAL)
 }
 
-gameTick();
+setInterval(gameTick, TICK_INTERVAL);
 
 console.log("WebSocket server running on http://localhost:3001/ws");
