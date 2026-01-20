@@ -9,17 +9,11 @@ import {
 } from "@babylonjs/core"
 import { Inspector } from "@babylonjs/inspector"
 import { setupEntities } from "./babylon_entities.ts"
-import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
-import { GameState, Globals } from "../shared/babylon_globals.ts"
-import {
-	setState
-} from "./babylon_states.ts"
 import { initUI } from "./babylon_ui.ts"
 import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
-	//registerBuiltInLoaders();
 	let scene = new Scene(engine);
 	const envTexture = new CubeTexture("/clouds.env", scene);
 	let helper = scene.createDefaultEnvironment({

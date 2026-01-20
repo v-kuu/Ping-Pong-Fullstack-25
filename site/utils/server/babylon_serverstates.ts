@@ -1,9 +1,9 @@
-import { GameState, Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
 import { Scene, Tools } from "@babylonjs/core"
 
 export function setState(newState: GameState, scene: Scene)
 {
-	Globals.currentState = newState;
+	ServerVars.currentState = newState;
 
 	switch (newState)
 	{

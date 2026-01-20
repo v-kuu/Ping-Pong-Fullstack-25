@@ -8,7 +8,7 @@ export enum GameState
 	GameOver,
 }
 
-export interface GlobalState
+export type GlobalState =
 {
 	mapWidth: number;
 	mapHeight: number;
@@ -16,14 +16,10 @@ export interface GlobalState
 	playerHeight: number,
 	playerDepth: number;
 	playing: boolean;
-	score1: number;
-	score2: number;
 	maxScore: number;
 	moveSpeed: number;
 	ballSpeed: number;
-	currentState: GameState;
 	ballVel: Vector3;
-	ballDelta: Vector3;
 	vel1: Vector3;
 	vel2: Vector3;
 	player1KeyDown: boolean;
@@ -35,6 +31,26 @@ export interface GlobalState
 	score2Mesh: Mesh | null;
 }
 
+export interface ServerState
+{
+	ballPos: Vector3;
+	p1Pos: Vector3;
+	p2Pos: Vector3;
+	score1: number;
+	score2: number;
+	currentState: GameState;
+}
+
+export const ServerVars: ServerState =
+{
+	ballPos: new Vector3(),
+	p1Pos: new Vector3(),
+	p2Pos: new Vector3(),
+	score1: 0,
+	score2: 0,
+	currentState: GameState.WaitingPlayers
+}
+
 export const Globals: GlobalState =
 {
 	mapWidth: 14,
@@ -43,14 +59,10 @@ export const Globals: GlobalState =
 	playerHeight: 0.3,
 	playerDepth: 2,
 	playing: false,
-	score1: 0,
-	score2: 0,
 	maxScore: 5,
 	moveSpeed: 6,
 	ballSpeed: 6,
-	currentState: GameState.WaitingPlayers,
 	ballVel: new Vector3(-1, 0, 0),
-	ballDelta: new Vector3(),
 	vel1: new Vector3(),
 	vel2: new Vector3(),
 	player1KeyDown: false,
@@ -61,3 +73,4 @@ export const Globals: GlobalState =
 	score1Mesh: null,
 	score2Mesh: null,
 };
+

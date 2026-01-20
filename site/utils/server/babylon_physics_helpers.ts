@@ -3,7 +3,7 @@ import {
 	Scene,
 } from "@babylonjs/core"
 import { Sides } from "./babylon_serverentities.ts"
-import { GameState, Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
 import {
 	setState,
 } from "./babylon_serverstates.ts"
@@ -59,10 +59,10 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 				ball.position.y = 0.25;
 				ball.position.z = 0;
 				if (dir > 0)
-					Globals.score1++;
+					ServerVars.score1++;
 				else
-					Globals.score2++;
-				if (Globals.score1 >= Globals.maxScore || Globals.score2 >= Globals.maxScore)
+					ServerVars.score2++;
+				if (ServerVars.score1 >= Globals.maxScore || ServerVars.score2 >= Globals.maxScore)
 					setState(GameState.GameOver, scene);
 				else
 					setState(GameState.Countdown, scene);

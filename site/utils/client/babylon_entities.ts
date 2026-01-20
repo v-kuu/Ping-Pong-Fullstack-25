@@ -8,7 +8,7 @@ import {
 	DirectionalLight,
 	CascadedShadowGenerator,
 } from "@babylonjs/core"
-import { Globals } from "../shared/babylon_globals.ts"
+import { Globals, ServerVars } from "../shared/babylon_globals.ts"
 
 export enum Sides
 {
@@ -161,18 +161,10 @@ export function setupEntities(light: DirectionalLight, scene: Scene)
 		const p2Mesh = scene.getMeshByName("player2");
 
 		if (ballMesh)
-		{
-			if (Globals.playing)
-			{
-				ballMesh.position.x += Globals.ballDelta.x;
-				ballMesh.position.z += Globals.ballDelta.z;
-			}
-			const error = Globals.ballVel.subtract(ballMesh.position);
-			ballMesh.position.addInPlace(error.scaleInPlace(0.6));
-		}
+			ballMesh.position.copyFrom(ServerVars.ballPos);
 		if (p1Mesh)
-			p1Mesh.position.copyFrom(Globals.vel1);
+			p1Mesh.position.copyFrom(ServerVars.p1Pos);
 		if (p2Mesh)
-			p2Mesh.position.copyFrom(Globals.vel2);
+			p2Mesh.position.copyFrom(ServerVars.p2Pos);
 	});
 }
