@@ -17,15 +17,21 @@ interface PlayerData {
     room?: string;
 }
 
+const TICK_RATE = 60;
+const TICK_INTERVAL = 1000 / TICK_RATE;
+let lastTick = Date.now();
+let newMatch, ai = true;
 const clients = new Set<ServerWebSocket<unknown>>();
 let playerQueue = [];
 var engine = new NullEngine();
 var scene = createSession(engine);
 let playerOne, playerTwo = 0;
+
 engine.runRenderLoop(function () {
       scene.render();
 });
 
+setInterval(gameTick, TICK_INTERVAL);
 
 Bun.serve({
     port: 3001,
@@ -78,34 +84,13 @@ Bun.serve({
     },
 });
 
-const TICK_RATE = 60;
-const TICK_INTERVAL = 1000 / TICK_RATE;
-let lastTick = Date.now();
-let newMatch = true;
-async function gameTick() {
+console.log("WebSocket server running on http://localhost:3001/ws");
+
+function gameTick() {
   const now = Date.now();
   lastTick = now;
 
-  if (ServerVars.currentState === GameState.GameOver && newMatch) {
-    await recordMatch({
-        game: "pong",
-        playerIds: [playerOne, playerTwo],
-        scores: [ServerVars.score1, ServerVars.score2],
-    });
-    winnerTakesItAll();
-  } else if (clients.size === 0) {
-   	ServerVars.GameState = GameState.WaitingPlayers;
-    return;
-  } else if (clients.size === 1) {
-    AI_moves(scene);
-    if (newMatch) playerOne = playerQueue.shift();
-    newMatch = false;
-  } else if (clients.size === 2 && !newMatch) {
-    if (!newMatch) playerTwo = playerQueue.shift();
-    newMatch = true;
-    freshMatch();
-    ServerVars.GameState = GameState.WaitingPlayers;
-  }
+  handleState();
 
   const ballMesh = scene.getMeshByName("ball");
   const p1Mesh = scene.getMeshByName("player1");
@@ -129,10 +114,6 @@ async function gameTick() {
   }
 }
 
-setInterval(gameTick, TICK_INTERVAL);
-
-console.log("WebSocket server running on http://localhost:3001/ws");
-
 function freshMatch() {
   ServerVars.p1Pos.setAll(0)
   ServerVars.p2Pos.setAll(0)
@@ -143,10 +124,36 @@ function freshMatch() {
 
 function winnerTakesItAll() {
   if (ServerVars.score1 > ServerVars.score2) {
-    playerQueue.push(playerOne);
-    playerOne = playerQueue.shift();
-  } else {
     playerQueue.push(playerTwo);
     playerTwo = playerQueue.shift();
+  } else {
+    playerQueue.push(playerOne);
+    playerOne = playerQueue.shift();
+  }
+}
+
+async function handleState() {
+  if (ServerVars.currentState === GameState.GameOver && newMatch) {
+    await recordMatch({
+        game: "pong",
+        playerIds: [playerOne, playerTwo],
+        scores: [ServerVars.score1, ServerVars.score2],
+    });
+    winnerTakesItAll();
+    newMatch = false;
+  } else if (clients.size === 0) {
+   	ServerVars.GameState = GameState.WaitingPlayers;
+    newMatch = true;
+    return;
+  } else if (clients.size === 1) {
+    AI_moves(scene);
+    ai = true;
+    if (newMatch) playerOne = playerQueue.shift();
+    newMatch = false;
+  } else if (clients.size >= 2 && !newMatch) {
+    newMatch = true;
+    if (ai) playerTwo = playerQueue.shift();
+    ai = false;
+    freshMatch();
   }
 }
