@@ -73,4 +73,3 @@ export const Globals: GlobalState =
 	score1Mesh: null,
 	score2Mesh: null,
 };
-

@@ -13,11 +13,29 @@ function bounceOffPlayer(
 {
 	const bbox = player.mesh.getBoundingInfo().boundingBox;
 	const paddleHeight = bbox.maximum.z - bbox.minimum.z;
+	const paddleWidth = bbox.maximum.x - bbox.minimum.x;
 	const paddleCenter = player.mesh.position.z;
+	
+	const dx = ball.position.x - player.mesh.position.x;
+	const dz = ball.position.z - player.mesh.position.z;
+
+	const halfWidth = paddleWidth / 2;
+	const halfHeight = paddleHeight / 2;
+	const ballRadius = 0.25;
+
+	const overlapX = halfWidth + ballRadius - Math.abs(dx);
+	const overlapZ = halfHeight + ballRadius - Math.abs(dz);
+
+	//side hit
+	if (overlapZ < overlapX)
+	{
+		ballVel.z *= -1;
+		return ballVel;
+	}
 
 	const relativeIntersectZ = ball.position.z - paddleCenter;
 	const normalizedRelativeIntersectionZ =
-		relativeIntersectZ / (paddleHeight / 2);
+		relativeIntersectZ / halfHeight;
 
 	const maxAngle = Math.PI / 3;
 	const angle = normalizedRelativeIntersectionZ * maxAngle;
