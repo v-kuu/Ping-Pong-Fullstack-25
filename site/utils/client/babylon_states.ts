@@ -9,6 +9,7 @@ export function setState(newState: GameState, scene: Scene)
 	switch (newState)
 	{
 		case GameState.WaitingPlayers:
+			resetGame(scene);
 			Globals.playing = false;
 			break;
 
@@ -26,4 +27,10 @@ export function setState(newState: GameState, scene: Scene)
 			Globals.playing = false;
 			break ;
 	}
+}
+
+function resetGame(scene: Scene)
+{
+	let gameOver = scene.getMeshByName("GameOver");
+	gameOver?.dispose();
 }
