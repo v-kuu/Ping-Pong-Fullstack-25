@@ -6,14 +6,12 @@ interface Friend {
   id: number;
   username: string;
   status: "online" | "offline" | "playing";
-  elo: number;
 }
 
 interface PendingRequest {
   id: number;
   userId: number;
   username: string;
-  elo: number;
 }
 
 export function FriendsList() {
@@ -187,7 +185,6 @@ export function FriendsList() {
                     >
                       {request.username}
                     </a>
-                    <p class="text-sm opacity-70">ELO: {request.elo}</p>
                   </div>
                 </div>
                 <div class="flex gap-2">
@@ -231,7 +228,6 @@ export function FriendsList() {
                     >
                       {friend.username}
                     </a>
-                    <p class="text-sm opacity-70">ELO: {friend.elo}</p>
                   </div>
                 </div>
                 <div class="flex items-center gap-4">
