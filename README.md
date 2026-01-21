@@ -107,15 +107,15 @@ The database is built using Astro DB with Drizzle ORM. It consists of five table
 
 ## Individual Contributions
 
-**abostrom**: Created Web3D game using WebAssembly, implemented Web3D WebSocket server. Challenge: Learning WebAssembly and C programming for game logic compilation.
+**abostrom**: Created Web3D game using WebAssembly, implemented Web3D WebSocket server.
 
-**vkuusela**: Implemented 3D Pong game using BabylonJS, created game assets and visual effects. Challenge: Integrating BabylonJS with Astro and managing 3D scene states.
+**vkuusela**: Implemented 3D Pong game using BabylonJS, created game assets and visual effects.
 
-**vlopatin**: Implemented server-side Pong logic and AI opponent. Challenge: Synchronizing game physics between server and multiple clients with minimal latency.
+**vlopatin**: Implemented server-side Pong logic and AI opponent. 
 
-**jtuomi**: Frontend and backend development, REST API endpoints, UI design. Challenge: Managing Astro's island architecture with Preact and implementing form validation.
+**jtuomi**: Frontend and backend development, REST API endpoints, UI design.
 
-**maoliiny**: Frontend, backend, and database development, system architecture. Challenge: Designing database schema for multi-table relationships and implementing real-time messaging system.
+**maoliiny**: Frontend, backend, and database development, system architecture.
 
 ## Modules
 
