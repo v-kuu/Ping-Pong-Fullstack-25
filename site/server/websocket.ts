@@ -8,7 +8,7 @@ import { NullEngine, Scene } from "@babylonjs/core";
 import { createSession } from "../utils/server/babylon_createsession.ts";
 import { setState } from "@/utils/server/babylon_serverstates.ts"
 import { GameState, Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
-import { AI_moves } from "../utils/server/AI_opponent.ts";
+import { AI_moves, AI_moves_one } from "../utils/server/AI_opponent.ts";
 import { unauthorized } from "@/utils/site/apiHelpers.ts";
 
 interface PlayerData {
@@ -25,7 +25,7 @@ const clients = new Set<ServerWebSocket<unknown>>();
 let playerQueue = [];
 var engine = new NullEngine();
 var scene = createSession(engine);
-let playerOne, playerTwo = 0;
+let playerOne, playerTwo, disconnectedPlayer = 0;
 
 engine.runRenderLoop(function () {
       scene.render();
@@ -73,13 +73,27 @@ Bun.serve({
         open(ws) {
             ws.data.index = clients.size;
             clients.add(ws)
-            playerQueue.push(ws.data.playerId);
-            console.log("Client connected. Total:", clients.size, ws.data.playerId);
+            if (ws.data.playerId === disconnectedPlayer) {
+              disconnectedPlayer = 0;
+              playerOne ? playerTwo = ws.data.playerId : playerOne = ws.data.playerId;
+              console.log(`Client ${ws.data.playerId} reconnected. Total:`, clients.size);
+            } else {
+              playerQueue.push(ws.data.playerId);
+              console.log(`Client ${ws.data.playerId} connected. Total:`, clients.size);
+            }
         },
         close(ws) {
-            playerQueue = playerQueue.filter(id => id !== ws.data.playerId);
+            if (playerOne === ws.data.playerId) {
+              playerOne = 0;
+              disconnectedPlayer = ws.data.playerId;
+            } else if (playerTwo === ws.data.playerId) {
+              playerTwo = 0;
+              disconnectedPlayer = ws.data.playerId;
+            } else {
+              playerQueue = playerQueue.filter(id => id !== ws.data.playerId);
+            }
             clients.delete(ws)
-            console.log("Client disconnected. Total:", clients.size);
+            console.log(`Client ${ws.data.playerId} disconnected. Total:`, clients.size);
         },
     },
 });
@@ -90,7 +104,7 @@ function gameTick() {
   const now = Date.now();
   lastTick = now;
 
-  handleState();
+  if (!handleState()) return;
 
   const ballMesh = scene.getMeshByName("ball");
   const p1Mesh = scene.getMeshByName("player1");
@@ -102,7 +116,7 @@ function gameTick() {
 
   const posSyncData = JSON.stringify({
       type: "physics_sync",
-	ServerState: ServerVars,
+      ServerState: ServerVars,
   });
 
   for (const ws of clients) {
@@ -122,38 +136,49 @@ function freshMatch() {
   ServerVars.currentState = GameState.WaitingPlayers
 }
 
-function winnerTakesItAll() {
-  if (ServerVars.score1 > ServerVars.score2) {
+async function winnerTakesItAll() {
+  await recordMatch({
+      game: "pong",
+      playerIds: [playerOne, playerTwo],
+      scores: [ServerVars.score1, ServerVars.score2],
+  });
+
+  if (playerDisconnected()) {
+    playerOne
+    ? playerTwo = playerQueue.shift()
+    : playerOne = playerQueue.shift();
+  } else if (ServerVars.score1 > ServerVars.score2) {
     playerQueue.push(playerTwo);
     playerTwo = playerQueue.shift();
   } else {
     playerQueue.push(playerOne);
     playerOne = playerQueue.shift();
   }
+
 }
 
-async function handleState() {
+function playerDisconnected() {
+  return !(playerOne && playerTwo);
+}
+
+function handleState() : boolean {
   if (ServerVars.currentState === GameState.GameOver && newMatch) {
-    await recordMatch({
-        game: "pong",
-        playerIds: [playerOne, playerTwo],
-        scores: [ServerVars.score1, ServerVars.score2],
-    });
     winnerTakesItAll();
     newMatch = false;
   } else if (clients.size === 0) {
    	ServerVars.GameState = GameState.WaitingPlayers;
     newMatch = true;
-    return;
-  } else if (clients.size === 1) {
-    AI_moves(scene);
+    return false;
+  } else if (clients.size === 1 || playerDisconnected()) {
+    playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
-    if (newMatch) playerOne = playerQueue.shift();
+    if (newMatch) playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
     newMatch = false;
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
-    if (ai) playerTwo = playerQueue.shift();
+    if (ai) playerTwo ? playerOne = playerQueue.shift() : playerTwo = playerQueue.shift();
     ai = false;
     freshMatch();
   }
+  return true;
 }
