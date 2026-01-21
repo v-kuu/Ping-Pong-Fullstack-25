@@ -181,7 +181,10 @@ function handleState() : boolean {
   } else if (clients.size === 1) {
     playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
-	if (newMatch) playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
+	if (newMatch) {
+		playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
+		setState(GameState.Countdown);
+	}
     newMatch = false;
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
