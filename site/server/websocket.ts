@@ -79,6 +79,7 @@ Bun.serve({
             if (ws.data.playerId === disconnectedPlayer) {
               disconnectedPlayer = 0;
               playerOne ? playerTwo = ws.data.playerId : playerOne = ws.data.playerId;
+              newMatch = true;
               console.log(`Client ${ws.data.playerId} reconnected. Total:`, clients.size);
             } else {
               playerQueue.push(ws.data.playerId);
@@ -146,7 +147,7 @@ async function winnerTakesItAll() {
       scores: [ServerVars.score1, ServerVars.score2],
   });
 
-  if (playerDisconnected()) {
+  if (playerDisconnected() && playerQueue.length) {
     playerOne
     ? playerTwo = playerQueue.shift()
     : playerOne = playerQueue.shift();
@@ -165,9 +166,10 @@ function playerDisconnected() {
 }
 
 function handleState() : boolean {
-  if (ServerVars.currentState === GameState.GameOver && newMatch) {
+    if (ServerVars.currentState === GameState.GameOver && newMatch && !playerDisconnected()) {
     winnerTakesItAll();
     newMatch = false;
+    ai = false;
   } else if (clients.size === 0) {
     ServerVars.GameState = GameState.WaitingPlayers;
     newMatch = true;
