@@ -25,7 +25,7 @@ export function Game({user}: {user: { id: number; username: string } | null}) {
 		addEventListener("resize", () => engine.resize());
 
 		// Open WebSocket
-		const ws = new WebSocket("ws://" + location.hostname + ":3001/ws" + "?id=" + encodeURIComponent(playerId));
+		const ws = new WebSocket("ws://" + location.hostname + ":3001/ws" + "?id=" + encodeURIComponent(playerId) + "?username=" + encodeURIComponent(username));
 
 		ws.onopen = () => {
 			console.log("Connected to server");

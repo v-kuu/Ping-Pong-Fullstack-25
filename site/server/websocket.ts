@@ -22,6 +22,7 @@ const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 let newMatch, ai = true;
 const clients = new Set<ServerWebSocket<unknown>>();
+let names = new Map<number, string>();
 let playerQueue = [];
 var engine = new NullEngine();
 var scene = createSession(engine);
@@ -44,6 +45,7 @@ Bun.serve({
     fetch(req, server) {
         const url = new URL(req.url)
         const playerId = +url.searchParams.get("id");
+        const username = url.searchParams.get("username");
         if (url.pathname === "/ws" && playerId) {
             server.upgrade(req, {
                 data: {
