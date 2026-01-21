@@ -25,10 +25,14 @@ engine.runRenderLoop(function () {
 
 Bun.serve({
     port: 3001,
+	tls: {
+		certFile: "../../certs/cert.pem",
+		keyFile: "../../certs/key.pem"
+	},
     fetch(req, server) {
         const url = new URL(req.url)
 
-        if (url.pathname === "/ws") {
+        if (url.pathname === "/wss") {
             const playerId = crypto.randomUUID();
             server.upgrade(req, {
                 data: {
@@ -110,16 +114,16 @@ function gameTick() {
     // if (Globals.score1 >= 11 || Globals.score2 >= 11) {
     //     // const p1Token = Array.from(clients).find(c => c.data.index === 0)?.data.playerId;
     //     // const p2Token = Array.from(clients).find(c => c.data.index === 1)?.data.playerId;
-    //     
+    //
     //     // // TODO: Map session tokens to User IDs through DB/Session lookups
     //     // // await recordMatch({
     //     // //    game: "pong",
-    //     // //    playerIds: [p1Token, p2Token], 
+    //     // //    playerIds: [p1Token, p2Token],
     //     // //    scores: [Globals.score1, Globals.score2],
     //     // //    winnerId: Globals.score1 > Globals.score2 ? p1Token : p2Token
     //     // // });
-    //     
-    //     // Globals.score1 = 0; 
+    //
+    //     // Globals.score1 = 0;
     //     // Globals.score2 = 0;
     //     // Globals.ballDelta.setAll(0);
     // }
