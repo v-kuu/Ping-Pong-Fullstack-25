@@ -50,7 +50,7 @@ Bun.serve({
             server.upgrade(req, {
                 data: {
                     playerId,
-					username,
+                    username,
                 }
             })
             return;
@@ -83,7 +83,7 @@ Bun.serve({
               console.log(`Client ${ws.data.playerId} reconnected. Total:`, clients.size);
             } else {
               playerQueue.push(ws.data.playerId);
-			  names.set(ws.data.playerId, ws.data.username);
+              names.set(ws.data.playerId, ws.data.username);
               console.log(`Client ${ws.data.playerId} connected. Total:`, clients.size);
             }
         },
@@ -115,7 +115,7 @@ function gameTick() {
   const p1Mesh = scene.getMeshByName("player1");
   const p2Mesh = scene.getMeshByName("player2");
 
-    ServerVars.ballPos.copyFrom(ballMesh.position);
+  ServerVars.ballPos.copyFrom(ballMesh.position);
 	ServerVars.p1Pos.copyFrom(p1Mesh.position);
 	ServerVars.p2Pos.copyFrom(p2Mesh.position);
 
@@ -134,22 +134,25 @@ function gameTick() {
 }
 
 function freshMatch() {
+	disconnectedPlayer = 0;
 	ServerVars.score1 = 0;
 	ServerVars.score2 = 0;
 	ServerVars.p1Pos.z = 0;
 	ServerVars.p2Pos.z = 0;
 	ServerVars.player1 = names.get(playerOne);
 	ServerVars.player2 = names.get(playerTwo);
-	if (ServerVars.currentState == GameState.WaitingPlayers)
+	if (ServerVars.currentState === GameState.WaitingPlayers)
 		setState(GameState.Countdown);
 }
 
 async function winnerTakesItAll() {
-  await recordMatch({
-      game: "pong",
-      playerIds: [playerOne, playerTwo],
-      scores: [ServerVars.score1, ServerVars.score2],
-  });
+  if (!playerDisconnected()) {
+    await recordMatch({
+        game: "pong",
+        playerIds: [playerOne, playerTwo],
+        scores: [ServerVars.score1, ServerVars.score2],
+    });
+  }
 
   if (playerDisconnected() && playerQueue.length) {
     playerOne
@@ -170,7 +173,9 @@ function playerDisconnected() {
 }
 
 function handleState() : boolean {
-    if (ServerVars.currentState === GameState.GameOver && newMatch && !playerDisconnected()) {
+    if (ServerVars.currentState === GameState.GameOver
+      && newMatch
+      && !playerDisconnected()) {
     winnerTakesItAll();
     newMatch = false;
     ai = false;
@@ -179,17 +184,25 @@ function handleState() : boolean {
     newMatch = true;
     return false;
   } else if (clients.size === 1) {
-    playerOne ? AI_moves(scene) : AI_moves_one(scene);
+    playerOne
+    ? AI_moves(scene)
+    : AI_moves_one(scene);
     ai = true;
-	if (newMatch) {
-		playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
-		setState(GameState.Countdown);
-	}
-    newMatch = false;
+  	if (newMatch) {
+  		playerOne
+      ? playerTwo = playerQueue.shift()
+      : playerOne = playerQueue.shift();
+  		setState(GameState.Countdown);
+      newMatch = false;
+  	}
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
-    if (ai) playerTwo ? playerOne = playerQueue.shift() : playerTwo = playerQueue.shift();
-    ai = false;
+    if (ai) {
+      playerTwo
+      ? playerOne = playerQueue.shift()
+      : playerTwo = playerQueue.shift();
+      ai = false;
+    }
     freshMatch();
   } else if (playerDisconnected()) {
       playerOne ? AI_moves(scene) : AI_moves_one(scene);
