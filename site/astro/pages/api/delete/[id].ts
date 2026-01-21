@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { sql, db, Users, Matches, Sessions, Friendships, eq, or, inArray } from "astro:db";
+import { sql, db, Users, Matches, Sessions, Friendships, Messages, eq, or, inArray } from "astro:db";
 import { internalError, noContent } from "@/utils/site/apiHelpers.ts";
 
 const AVATARS_DIR = import.meta.env.PROD
@@ -12,7 +12,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   if (locals.user) {
     const avatarPath = `${AVATARS_DIR}/${locals.user.username}.png`;
     const file = Bun.file(avatarPath);
-    if(await file.exists()) {
+    if (await file.exists()) {
       await file.delete();
     }
   }
@@ -24,6 +24,13 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       or(
         eq(Friendships.userId, userId),
         eq(Friendships.friendId, userId)
+      )
+    );
+
+    await db.delete(Messages).where(
+      or(
+        eq(Messages.fromId, userId),
+        eq(Messages.toId, userId)
       )
     );
 

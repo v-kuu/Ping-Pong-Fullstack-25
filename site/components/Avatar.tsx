@@ -15,7 +15,9 @@ export function UserAvatar({ username, class: className, cacheKey }: UserAvatarP
     }
   };
 
-  const avatarUrl = `/api/avatars/${username}${cacheKey ? `?t=${cacheKey}` : ""}`;
+  // Auto cache-bust every 30 seconds if no explicit cacheKey provided
+  const timeBucket = cacheKey || Math.floor(Date.now() / 30000);
+  const avatarUrl = `/api/avatars/${username}?t=${timeBucket}`;
 
   return (
     <div class={clsx("w-12 h-12 rounded-full overflow-hidden bg-base-300", className)}>

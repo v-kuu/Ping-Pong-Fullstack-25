@@ -241,7 +241,16 @@ export function FriendsList() {
                     />
                     <span class="capitalize text-sm">{friend.status}</span>
                   </div>
-                  <button class="btn btn-sm btn-outline">Request Game</button>
+                  <button
+                    class="btn btn-sm btn-outline"
+                    onClick={() => {
+                      sessionStorage.setItem("profileTab", "messages");
+                      sessionStorage.setItem("messageUserId", String(friend.id));
+                      window.location.href = "/profile";
+                    }}
+                  >
+                    Send Message
+                  </button>
                 </div>
               </div>
             ))}
