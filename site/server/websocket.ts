@@ -114,6 +114,8 @@ function gameTick() {
   const ballMesh = scene.getMeshByName("ball");
   const p1Mesh = scene.getMeshByName("player1");
   const p2Mesh = scene.getMeshByName("player2");
+	ServerVars.player1 = names.get(playerOne);
+	ServerVars.player2 = names.get(playerTwo);
 
     ServerVars.ballPos.copyFrom(ballMesh.position);
 	ServerVars.p1Pos.copyFrom(p1Mesh.position);
@@ -138,8 +140,6 @@ function freshMatch() {
 	ServerVars.score2 = 0;
 	ServerVars.p1Pos.z = 0;
 	ServerVars.p2Pos.z = 0;
-	ServerVars.player1 = names.get(playerOne);
-	ServerVars.player2 = names.get(playerTwo);
 	if (ServerVars.currentState == GameState.WaitingPlayers)
 		setState(GameState.Countdown);
 }
