@@ -8,7 +8,6 @@ export function setState(newState: GameState, scene: Scene)
 	switch (newState)
 	{
 		case GameState.WaitingPlayers:
-			resetGame();
 			Globals.playing = false;
 			Tools.DelayAsync(5000).then(() =>
 			{
@@ -36,10 +35,4 @@ export function setState(newState: GameState, scene: Scene)
 			});
 			break ;
 	}
-}
-
-function resetGame()
-{
-	ServerVars.score1 = 0;
-	ServerVars.score2 = 0;
 }

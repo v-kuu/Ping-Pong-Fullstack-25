@@ -39,6 +39,8 @@ export interface ServerState
 	score1: number;
 	score2: number;
 	currentState: GameState;
+	player1: string;
+	player2: string;
 }
 
 export const ServerVars: ServerState =
@@ -48,7 +50,9 @@ export const ServerVars: ServerState =
 	p2Pos: new Vector3(),
 	score1: 0,
 	score2: 0,
-	currentState: GameState.WaitingPlayers
+	currentState: GameState.WaitingPlayers,
+	player1: "",
+	player2: ""
 }
 
 export const Globals: GlobalState =

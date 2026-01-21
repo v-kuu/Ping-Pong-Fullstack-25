@@ -9,12 +9,14 @@ import { Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
 import { updateScore } from "@/utils/client/babylon_ui.ts";
 import { setState } from "../utils/client/babylon_states.ts"
 
-export function Game({user}: {user: { id: number; username: string } | null}) {
-  if (!user) return null;
-  const username = user!.username;
-  const playerId = user!.id;
+export function Game({user}: {user: { id: number; username: string } | null})
+{
+	if (!user) return null;
+	const username = user!.username;
+	const playerId = user!.id;
 	Globals.userName = username;
-	useEffect(() => {
+	useEffect(() =>
+	{
 		const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 		const engine = new Engine(canvas, true, { stencil: true });
 		const preventScroll = (e: WheelEvent) => e.preventDefault();
@@ -38,6 +40,11 @@ export function Game({user}: {user: { id: number; username: string } | null}) {
 				ServerVars.ballPos.copyFrom(newState.ballPos);
 				ServerVars.p1Pos.copyFrom(newState.p1Pos);
 				ServerVars.p2Pos.copyFrom(newState.p2Pos);
+
+				if (ServerVars.player1 !== newState.player1)
+					ServerVars.player1 = newState.player1;
+				if (ServerVars.player2 !== newState.player2)
+					ServerVars.player2 = newState.player2;
 
 				if (ServerVars.score1 !== newState.score1) {
 					ServerVars.score1 = newState.score1;

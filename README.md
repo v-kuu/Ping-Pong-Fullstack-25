@@ -22,7 +22,7 @@ bun i && bun dev
 
 ## Team & roles
 [abostrom](https://intra.42.fr/users/abostrom) </br>
-[vkuusela](https://intra.42.fr/vkuusela) </br>
+[vkuusela](https://intra.42.fr/users/vkuusela) </br>
 [vlopatin](https://intra.42.fr/users/vlopatin) </br>
 [jtuomi](https://intra.42.fr/users/jtuomi)</br>
 [maoliiny](https://intra.42.fr/users/maoliiny)
