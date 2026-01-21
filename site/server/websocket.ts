@@ -136,12 +136,7 @@ function gameTick() {
 }
 
 function freshMatch() {
-	ServerVars.score1 = 0;
-	ServerVars.score2 = 0;
-	ServerVars.p1Pos.z = 0;
-	ServerVars.p2Pos.z = 0;
-	if (ServerVars.currentState == GameState.WaitingPlayers)
-		setState(GameState.Countdown);
+	setState(GameState.WaitingPlayers, scene);
 }
 
 async function winnerTakesItAll() {
@@ -175,16 +170,13 @@ function handleState() : boolean {
     newMatch = false;
     ai = false;
   } else if (clients.size === 0) {
-   	setState(GameState.WaitingPlayers);
     newMatch = true;
     return false;
   } else if (clients.size === 1) {
     playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
-	if (newMatch) {
+	if (newMatch)
 		playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
-		setState(GameState.Countdown);
-	}
     newMatch = false;
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
