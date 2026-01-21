@@ -113,7 +113,7 @@ function gameTick() {
   const p1Mesh = scene.getMeshByName("player1");
   const p2Mesh = scene.getMeshByName("player2");
 
-	ServerVars.ballPos.copyFrom(ballMesh.position);
+    ServerVars.ballPos.copyFrom(ballMesh.position);
 	ServerVars.p1Pos.copyFrom(p1Mesh.position);
 	ServerVars.p2Pos.copyFrom(p2Mesh.position);
 
@@ -169,10 +169,10 @@ function handleState() : boolean {
     winnerTakesItAll();
     newMatch = false;
   } else if (clients.size === 0) {
-   	ServerVars.GameState = GameState.WaitingPlayers;
+    ServerVars.GameState = GameState.WaitingPlayers;
     newMatch = true;
     return false;
-  } else if (clients.size === 1 || playerDisconnected()) {
+  } else if (clients.size === 1) {
     playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
     if (newMatch) playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
@@ -182,6 +182,8 @@ function handleState() : boolean {
     if (ai) playerTwo ? playerOne = playerQueue.shift() : playerTwo = playerQueue.shift();
     ai = false;
     freshMatch();
+  } else if (playerDisconnected()) {
+      playerOne ? AI_moves(scene) : AI_moves_one(scene);
   }
   return true;
 }

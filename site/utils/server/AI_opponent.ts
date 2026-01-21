@@ -40,7 +40,7 @@ export function AI_moves_one(scene: Scene) {
 		return ;
 
 	// Ball moving away from AI
-	if (Globals.ballVel.x < 0)
+	if (Globals.ballVel.x > 0)
 	{
 		if (p1Mesh?.position.z < -0.1)
 			Globals.player1KeyUp = true;
