@@ -46,11 +46,11 @@ Bun.serve({
         const url = new URL(req.url)
         const playerId = +url.searchParams.get("id");
         const username = url.searchParams.get("username");
-        console.log(url, playerId, username);
         if (url.pathname === "/ws" && playerId) {
             server.upgrade(req, {
                 data: {
                     playerId,
+					username,
                 }
             })
             return;
@@ -83,6 +83,7 @@ Bun.serve({
               console.log(`Client ${ws.data.playerId} reconnected. Total:`, clients.size);
             } else {
               playerQueue.push(ws.data.playerId);
+			  names.set(ws.data.playerId, ws.data.username);
               console.log(`Client ${ws.data.playerId} connected. Total:`, clients.size);
             }
         },
@@ -133,11 +134,13 @@ function gameTick() {
 }
 
 function freshMatch() {
-  ServerVars.p1Pos.setAll(0)
-  ServerVars.p2Pos.setAll(0)
-  ServerVars.score1 = 0
-  ServerVars.score2 = 0
-  ServerVars.currentState = GameState.WaitingPlayers
+  ServerVars.p1Pos.z = 0;
+  ServerVars.p2Pos.z = 0;
+  ServerVars.score1 = 0;
+  ServerVars.score2 = 0;
+  ServerVars.player1 = names.get(playerOne);
+  ServerVars.player2 = names.get(playerTwo);
+  setState(GameState.Countdown);
 }
 
 async function winnerTakesItAll() {
@@ -170,17 +173,21 @@ function handleState() : boolean {
     winnerTakesItAll();
     newMatch = false;
     ai = false;
+	console.log("winner");
   } else if (clients.size === 0) {
-    ServerVars.GameState = GameState.WaitingPlayers;
+   	setState(GameState.WaitingPlayers);
     newMatch = true;
+	console.log("0 clients");
     return false;
   } else if (clients.size === 1) {
+	console.log("ai game");
     playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
     if (newMatch) playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
     newMatch = false;
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
+	console.log("new match");
     if (ai) playerTwo ? playerOne = playerQueue.shift() : playerTwo = playerQueue.shift();
     ai = false;
     freshMatch();

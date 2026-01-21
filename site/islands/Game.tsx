@@ -6,7 +6,7 @@ import { useEffect } from "preact/hooks";
 import { CanvasPong } from "../components/Canvas.tsx";
 import { createScene } from "../utils/client/babylon_scene.ts";
 import { Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
-import { updateScore } from "@/utils/client/babylon_ui.ts";
+import { updateScore, createAvatar } from "@/utils/client/babylon_ui.ts";
 import { setState } from "../utils/client/babylon_states.ts"
 
 export function Game({user}: {user: { id: number; username: string } | null})
@@ -45,10 +45,15 @@ export function Game({user}: {user: { id: number; username: string } | null})
 				ServerVars.p2Pos.copyFrom(newState.p2Pos);
 
 				if (ServerVars.player1 !== newState.player1)
+				{
 					ServerVars.player1 = newState.player1;
+					createAvatar(scene, 1);
+				}
 				if (ServerVars.player2 !== newState.player2)
+				{
 					ServerVars.player2 = newState.player2;
-
+					createAvatar(scene, 2);
+				}
 				if (ServerVars.score1 !== newState.score1)
 				{
 					ServerVars.score1 = newState.score1;

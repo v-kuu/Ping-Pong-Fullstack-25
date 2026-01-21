@@ -1,5 +1,5 @@
 import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
-import { startCountdown, messageGameOver } from "./babylon_ui.ts"
+import { startCountdown, messageGameOver, updateScore } from "./babylon_ui.ts"
 import { Scene } from "@babylonjs/core"
 
 export function setState(newState: GameState, scene: Scene)

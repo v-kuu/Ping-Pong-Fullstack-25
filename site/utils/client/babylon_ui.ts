@@ -144,23 +144,29 @@ function initAvatars(scene: Scene)
 	createAvatar(scene, 2);
 }
 
-async function createAvatar(scene: Scene, id: number)
+export async function createAvatar(scene: Scene, id: number)
 {
+	let prev = scene.getMeshByName("avatar" + id);
+	prev?.dispose();
+
 	let url = "/avatar.png";
-	if (Globals.userName != "Guest") {
-  	try
-  	{
-  		let res = await fetch("/api/avatars/" + Globals.userName);
-  		if (!res.ok)
-  			throw new Error("Failed to fetch avatar");
-  		url = res.url;
-  	}
-  	catch (error)
-  	{
-  		console.error(error);
-  	}
+	let userName;
+	id === 1 ? userName = ServerVars.player1 : userName = ServerVars.player2;
+	if (userName != "Guest")
+	{
+		try
+		{
+			let res = await fetch("/api/avatars/" + userName);
+			if (!res.ok)
+				throw new Error("Failed to fetch avatar");
+			url = res.url;
+		}
+		catch (error)
+		{
+			console.error(error);
+		}
 	}
-	let avatar = MeshBuilder.CreatePlane("avatar", { size: 2 }, scene);
+	let avatar = MeshBuilder.CreatePlane("avatar" + id, { size: 2 }, scene);
 	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
 	let avatarMat = new StandardMaterial("avatarMat", scene);

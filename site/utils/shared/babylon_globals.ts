@@ -51,8 +51,8 @@ export const ServerVars: ServerState =
 	score1: 0,
 	score2: 0,
 	currentState: GameState.WaitingPlayers,
-	player1: "",
-	player2: ""
+	player1: "Guest",
+	player2: "Guest"
 }
 
 export const Globals: GlobalState =
