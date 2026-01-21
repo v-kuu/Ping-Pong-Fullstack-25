@@ -8,9 +8,7 @@ export function setState(newState: GameState, scene: Scene)
 	switch (newState)
 	{
 		case GameState.WaitingPlayers:
-			Globals.playing = false;
-			ServerVars.score1 = 0;
-			ServerVars.score2 = 0;
+			resetGame();
 			break;
 
 		case GameState.Countdown:
@@ -33,4 +31,13 @@ export function setState(newState: GameState, scene: Scene)
 			});
 			break ;
 	}
+}
+
+function resetGame()
+{
+	Globals.playing = false;
+	ServerVars.p1Pos.z = 0;
+	ServerVars.p2Pos.z = 0;
+	ServerVars.score1 = 0;
+	ServerVars.score2 = 0;
 }

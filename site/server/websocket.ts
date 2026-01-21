@@ -134,13 +134,14 @@ function gameTick() {
 }
 
 function freshMatch() {
-  ServerVars.p1Pos.z = 0;
-  ServerVars.p2Pos.z = 0;
-  ServerVars.score1 = 0;
-  ServerVars.score2 = 0;
-  ServerVars.player1 = names.get(playerOne);
-  ServerVars.player2 = names.get(playerTwo);
-	setState(GameState.Countdown);
+	ServerVars.score1 = 0;
+	ServerVars.score2 = 0;
+	ServerVars.p1Pos.z = 0;
+	ServerVars.p2Pos.z = 0;
+	ServerVars.player1 = names.get(playerOne);
+	ServerVars.player2 = names.get(playerTwo);
+	if (ServerVars.currentState == GameState.WaitingPlayers)
+		setState(GameState.Countdown);
 }
 
 async function winnerTakesItAll() {
@@ -173,7 +174,6 @@ function handleState() : boolean {
     winnerTakesItAll();
     newMatch = false;
     ai = false;
-	console.log("winner");
   } else if (clients.size === 0) {
    	setState(GameState.WaitingPlayers);
     newMatch = true;
@@ -181,16 +181,10 @@ function handleState() : boolean {
   } else if (clients.size === 1) {
     playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
-    if (newMatch)
-	{
-		console.log("ai game");
-		playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
-		freshMatch();
-		newMatch = false;
-	}
+	if (newMatch) playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
+    newMatch = false;
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
-	console.log("new match");
     if (ai) playerTwo ? playerOne = playerQueue.shift() : playerTwo = playerQueue.shift();
     ai = false;
     freshMatch();
