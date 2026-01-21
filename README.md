@@ -53,7 +53,7 @@ Second game built using [this].
 
 ## Database Schema
 
-The database is built using Astro DB with Drizzle ORM. It consists of four tables:
+The database is built using Astro DB with Drizzle ORM. It consists of five tables:
 
 ### Users
 | Field | Type | Description |
@@ -62,8 +62,6 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 | username | text | Unique username |
 | password | text | Hashed password |
 | email | text | Unique email address |
-| createdAt | date | Account creation timestamp |
-| updatedAt | date | Last update timestamp |
 | elo | number | ELO rating (default: 1000) |
 | lastSeen | date | Last activity timestamp (optional) |
 
@@ -72,12 +70,9 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 |-------|------|-------------|
 | id | number | Primary key, auto-incremented |
 | game | text | Game identifier |
-| player1Id | number | Foreign key to Users |
-| player2Id | number | Foreign key to Users |
-| winnerId | number | Foreign key to winning user (optional) |
-| startedAt | date | Match start timestamp |
-| completedAt | date | Match completion timestamp (optional) |
-| score | text | Match score details (optional) |
+| playerIds | json | Array of player user IDs |
+| scores | json | Array of scores corresponding to players |
+| createdAt | date | Match creation timestamp |
 
 ### Sessions
 | Field | Type | Description |
@@ -93,10 +88,20 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 | friendId | number | Foreign key to Users |
 | status | text | Friendship status |
 
+### Messages
+| Field | Type | Description |
+|-------|------|-------------|
+| id | number | Primary key, auto-incremented |
+| fromId | number | Foreign key to Users (sender) |
+| toId | number | Foreign key to Users (receiver) |
+| content | text | Message content |
+| createdAt | date | Message timestamp |
+| read | boolean | Read status (default: false) |
+
 **Relationships:**
-- Matches references Users for player1Id, player2Id, and winnerId
 - Sessions references Users for userId
-- Friendships references Users for userId and friendId (many-to-many relationship via junction table)
+- Friendships references Users for userId and friendId
+- Messages references Users for fromId and toId
 
 ## Individual Contributions
 

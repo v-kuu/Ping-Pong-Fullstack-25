@@ -17,11 +17,17 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordMismatch, setPasswordMismatch] = useState(false);
-  const [currentPasswordError, setCurrentPasswordError] = useState<string | null>(null);
+  const [currentPasswordError, setCurrentPasswordError] = useState<
+    string | null
+  >(null);
 
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] =
+    useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [initialUsername] = useState(username);
   const [initialEmail] = useState(email);
@@ -127,7 +133,11 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
         setNewPassword("");
         setConfirmPassword("");
         if (data.newUsername && data.newUsername !== initialUsername) {
-          window.dispatchEvent(new CustomEvent("username-updated", { detail: { newUsername: data.newUsername } }));
+          window.dispatchEvent(
+            new CustomEvent("username-updated", {
+              detail: { newUsername: data.newUsername },
+            }),
+          );
         }
         if (data.avatarRenamed) {
           window.dispatchEvent(new CustomEvent("avatar-updated"));
@@ -151,7 +161,7 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
   };
 
   return (
-    <div class="w-full max-w-md">
+    <div class="w-full max-w-md mx-auto">
       <form
         class="flex flex-col gap-4 rounded-box bg-base-200 border border-base-content/20 p-6"
         onSubmit={handleSubmit}
@@ -161,36 +171,40 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
         <h2 class="text-2xl font-bold">Account Settings</h2>
 
         {message && (
-          <div class={`alert ${message.type === "success" ? "alert-success" : "alert-error"}`}>
+          <div
+            class={`alert ${message.type === "success" ? "alert-success" : "alert-error"}`}
+          >
             <span>{message.text}</span>
           </div>
         )}
 
         <div class="space-y-1">
-          <label class="label-text">Username
-          <input
-            type="text"
-            class={`input input-bordered w-full ${usernameError ? "input-error" : ""}`}
-            value={usernameValue}
-            onInput={(e: any) => setUsernameValue(e.target.value)}
-            pattern="[A-Za-z][A-Za-z0-9\-]*"
-            minLength={3}
-            maxLength={30}
-            name="nick"
-          />
+          <label class="label-text">
+            Username
+            <input
+              type="text"
+              class={`input input-bordered w-full ${usernameError ? "input-error" : ""}`}
+              value={usernameValue}
+              onInput={(e: any) => setUsernameValue(e.target.value)}
+              pattern="[A-Za-z][A-Za-z0-9\-]*"
+              minLength={3}
+              maxLength={30}
+              name="nick"
+            />
           </label>
           {usernameError && <p class="text-xs text-error">{usernameError}</p>}
         </div>
 
         <div class="space-y-1">
-          <label class="label-text">Email
-          <input
-            type="email"
-            class={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
-            value={emailValue}
-            onInput={(e: any) => setEmailValue(e.target.value)}
-            name="mail"
-          />
+          <label class="label-text">
+            Email
+            <input
+              type="email"
+              class={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
+              value={emailValue}
+              onInput={(e: any) => setEmailValue(e.target.value)}
+              name="mail"
+            />
           </label>
           {emailError && <p class="text-xs text-error">{emailError}</p>}
         </div>
@@ -198,15 +212,16 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
         <div class="divider my-1">Change Password</div>
 
         <div class="space-y-1">
-          <label class="label-text">New Password
-          <input
-            type="password"
-            class={`input input-bordered w-full ${passwordError ? "input-error" : ""}`}
-            value={newPassword}
-            onInput={(e: any) => setNewPassword(e.target.value)}
-            placeholder="Leave blank to keep current"
-            name="newPassword"
-          />
+          <label class="label-text">
+            New Password
+            <input
+              type="password"
+              class={`input input-bordered w-full ${passwordError ? "input-error" : ""}`}
+              value={newPassword}
+              onInput={(e: any) => setNewPassword(e.target.value)}
+              placeholder="Leave blank to keep current"
+              name="newPassword"
+            />
           </label>
           {showPasswordRequirements && (
             <p class="text-xs text-error">12+ chars and strong enough</p>
@@ -215,35 +230,41 @@ export function AccountSettings({ username, email }: AccountSettingsProps) {
 
         {newPassword.length > 0 && (
           <div class="space-y-1">
-            <label class="label-text">Confirm New Password
-            <input
-              type="password"
-              class={`input input-bordered w-full ${passwordMismatch ? "input-error" : ""}`}
-              value={confirmPassword}
-              onInput={(e: any) => setConfirmPassword(e.target.value)}
-              name="confirmPassword"
-            />
+            <label class="label-text">
+              Confirm New Password
+              <input
+                type="password"
+                class={`input input-bordered w-full ${passwordMismatch ? "input-error" : ""}`}
+                value={confirmPassword}
+                onInput={(e: any) => setConfirmPassword(e.target.value)}
+                name="confirmPassword"
+              />
             </label>
-            {passwordMismatch && <p class="text-xs text-error">Passwords do not match</p>}
+            {passwordMismatch && (
+              <p class="text-xs text-error">Passwords do not match</p>
+            )}
           </div>
         )}
 
         <div class="divider my-1">Verify Identity</div>
 
         <div class="space-y-1">
-          <label class="label-text">Current Password
-          <input
-            type="password"
-            class={`input input-bordered w-full ${currentPasswordError ? "input-error" : ""}`}
-            value={currentPassword}
-            onInput={(e: any) => {
-              setCurrentPassword(e.target.value);
-              setCurrentPasswordError(null);
-            }}
-            name="currentPassword"
-          />
+          <label class="label-text">
+            Current Password
+            <input
+              type="password"
+              class={`input input-bordered w-full ${currentPasswordError ? "input-error" : ""}`}
+              value={currentPassword}
+              onInput={(e: any) => {
+                setCurrentPassword(e.target.value);
+                setCurrentPasswordError(null);
+              }}
+              name="currentPassword"
+            />
           </label>
-          {currentPasswordError && <p class="text-xs text-error">{currentPasswordError}</p>}
+          {currentPasswordError && (
+            <p class="text-xs text-error">{currentPasswordError}</p>
+          )}
         </div>
 
         <button
