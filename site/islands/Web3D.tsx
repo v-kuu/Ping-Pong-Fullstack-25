@@ -15,6 +15,14 @@ enum MessageType {
     Catch,
 }
 
+// Mapping of KeyboardEvent.code strings to integer indices.
+const inputKeys = ["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE"];
+const keyBindings = Object.fromEntries(inputKeys.map((v, i) => [v, i]));
+function keyIndex(event: KeyboardEvent, ignoreInput: boolean): number {
+    const index = keyBindings[event.code];
+    return ignoreInput || index === undefined ? -1 : index;
+}
+
 // Send a message to the server.
 export function sendMessage(socket: WebSocket, ...args: number[]) {
   if (socket && socket.readyState === WebSocket.OPEN)
@@ -74,7 +82,7 @@ export function Web3D({user}: {user: { id: number; username: string } | null}) {
     if (username && playerId) {
       const url = new URL("ws://" + location.hostname + ":3002/web3d");
       url.searchParams.set("username", username);
-      url.searchParams.set("id", playerId);
+      url.searchParams.set("id", playerId.toString());
       socket = new WebSocket(url);
       socket.binaryType = "arraybuffer";
       socket.onmessage = event => handleMessage(event.data);
@@ -95,21 +103,11 @@ export function Web3D({user}: {user: { id: number; username: string } | null}) {
     };
     document.addEventListener('gamepause', handlePause as EventListener);
 
-    onkeydown = event => {
-      if (ignoreInput) return;
-      web3d.keydown(event.keyCode);
-    };
-    onkeyup = event => {
-      if (ignoreInput) return;
-      web3d.keyup(event.keyCode);
-    };
+    onkeydown = event => web3d.keydown(keyIndex(event, ignoreInput));
+    onkeyup = event => web3d.keyup(keyIndex(event, ignoreInput));
     canvas.oncontextmenu = (event) => event.preventDefault();
     web3d.init();
     render(performance.now());
-
-    return () => {
-      document.removeEventListener('gamepause', handlePause as EventListener);
-    };
   });
   return <CanvasWeb3D />;
 }

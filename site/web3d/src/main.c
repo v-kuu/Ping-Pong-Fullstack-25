@@ -187,39 +187,23 @@ static float raycast(float ax, float ay, float bx, float by, float t)
     return 1e9f;
 }
 
-// Map a KeyboardEvent keyCode number to an input key.
-static unsigned int key_index(int keycode)
-{
-    switch (keycode) {
-        case 'W': case 38: return KEY_FORWARD;
-        case 'S': case 40: return KEY_BACK;
-        case 'A': case 37: return KEY_LEFT;
-        case 'D': case 39: return KEY_RIGHT;
-        case 'Q': return KEY_LSTRAFE;
-        case 'E': return KEY_RSTRAFE;
-        default: return KEY_MAX;
-    }
-}
-
 // Handle a `keyup` event from the browser side.
 __attribute__((export_name("keyup")))
-void keyup(int keycode)
+void keyup(size_t key)
 {
-    unsigned int index = key_index(keycode);
-    if (index < KEY_MAX) {
-        key_up[index] = true;
-        key_held[index] = false;
+    if (key < KEY_MAX) {
+        key_up[key] = true;
+        key_held[key] = false;
     }
 }
 
 // Handle a `keydown` event from the browser side.
 __attribute__((export_name("keydown")))
-void keydown(int keycode)
+void keydown(size_t key)
 {
-    int index = key_index(keycode);
-    if (index < KEY_MAX) {
-        key_down[index] = true;
-        key_held[index] = true;
+    if (key < KEY_MAX) {
+        key_down[key] = true;
+        key_held[key] = true;
     }
 }
 
