@@ -27,7 +27,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 
 	//camera setup
 	let camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 15, new Vector3(0, 0, 0), scene);
-	camera.attachControl(canvas, true);
 	camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;
 	camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;
 	camera.panningAxis = new Vector3(1, 1, 0);
