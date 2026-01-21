@@ -102,6 +102,7 @@ export function setupServerEntities(scene: Scene)
 		{
 			player1.position.z = 0;
 			player2.position.z = 0;
+			ball.position.setAll(0);
 		}
 
 	});

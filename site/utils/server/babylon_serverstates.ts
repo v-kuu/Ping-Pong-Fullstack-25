@@ -11,10 +11,6 @@ export function setState(newState: GameState, scene: Scene)
 			Globals.playing = false;
 			ServerVars.score1 = 0;
 			ServerVars.score2 = 0;
-			/*Tools.DelayAsync(5000).then(() =>
-			{
-				setState(GameState.Countdown, scene);
-			});*/
 			break;
 
 		case GameState.Countdown:

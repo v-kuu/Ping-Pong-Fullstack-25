@@ -140,7 +140,7 @@ function freshMatch() {
   ServerVars.score2 = 0;
   ServerVars.player1 = names.get(playerOne);
   ServerVars.player2 = names.get(playerTwo);
-  setState(GameState.Countdown);
+	setState(GameState.Countdown);
 }
 
 async function winnerTakesItAll() {
@@ -177,14 +177,17 @@ function handleState() : boolean {
   } else if (clients.size === 0) {
    	setState(GameState.WaitingPlayers);
     newMatch = true;
-	console.log("0 clients");
     return false;
   } else if (clients.size === 1) {
-	console.log("ai game");
     playerOne ? AI_moves(scene) : AI_moves_one(scene);
     ai = true;
-    if (newMatch) playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
-    newMatch = false;
+    if (newMatch)
+	{
+		console.log("ai game");
+		playerOne ? playerTwo = playerQueue.shift() : playerOne = playerQueue.shift();
+		freshMatch();
+		newMatch = false;
+	}
   } else if (clients.size >= 2 && !newMatch) {
     newMatch = true;
 	console.log("new match");
