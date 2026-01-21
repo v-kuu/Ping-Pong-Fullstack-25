@@ -114,6 +114,8 @@ function gameTick() {
   const ballMesh = scene.getMeshByName("ball");
   const p1Mesh = scene.getMeshByName("player1");
   const p2Mesh = scene.getMeshByName("player2");
+	ServerVars.player1 = names.get(playerOne);
+	ServerVars.player2 = names.get(playerTwo);
 
   ServerVars.ballPos.copyFrom(ballMesh.position);
 	ServerVars.p1Pos.copyFrom(p1Mesh.position);
@@ -134,15 +136,8 @@ function gameTick() {
 }
 
 function freshMatch() {
-	disconnectedPlayer = 0;
-	ServerVars.score1 = 0;
-	ServerVars.score2 = 0;
-	ServerVars.p1Pos.z = 0;
-	ServerVars.p2Pos.z = 0;
-	ServerVars.player1 = names.get(playerOne);
-	ServerVars.player2 = names.get(playerTwo);
-	if (ServerVars.currentState === GameState.WaitingPlayers)
-		setState(GameState.Countdown);
+  disconnectedPlayer = 0;
+	setState(GameState.WaitingPlayers, scene);
 }
 
 async function winnerTakesItAll() {
@@ -180,7 +175,6 @@ function handleState() : boolean {
     newMatch = false;
     ai = false;
   } else if (clients.size === 0) {
-   	setState(GameState.WaitingPlayers);
     newMatch = true;
     return false;
   } else if (clients.size === 1) {
@@ -192,7 +186,6 @@ function handleState() : boolean {
   		playerOne
       ? playerTwo = playerQueue.shift()
       : playerOne = playerQueue.shift();
-  		setState(GameState.Countdown);
       newMatch = false;
   	}
   } else if (clients.size >= 2 && !newMatch) {
