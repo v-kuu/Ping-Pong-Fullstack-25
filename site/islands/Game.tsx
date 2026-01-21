@@ -29,13 +29,16 @@ export function Game({user}: {user: { id: number; username: string } | null})
 		// Open WebSocket
 		const ws = new WebSocket("ws://" + location.hostname + ":3001/ws" + "?id=" + encodeURIComponent(playerId) + "&username=" + encodeURIComponent(username));
 
-		ws.onopen = () => {
+		ws.onopen = () =>
+		{
 			console.log("Connected to server");
 		};
 
-		ws.onmessage = (e) => {
+		ws.onmessage = (e) =>
+		{
 			const data = JSON.parse(e.data);
-			if (data.type === "physics_sync") {
+			if (data.type === "physics_sync")
+			{
 				let newState = data.ServerState;
 				ServerVars.ballPos.copyFrom(newState.ballPos);
 				ServerVars.p1Pos.copyFrom(newState.p1Pos);
@@ -46,15 +49,18 @@ export function Game({user}: {user: { id: number; username: string } | null})
 				if (ServerVars.player2 !== newState.player2)
 					ServerVars.player2 = newState.player2;
 
-				if (ServerVars.score1 !== newState.score1) {
+				if (ServerVars.score1 !== newState.score1)
+				{
 					ServerVars.score1 = newState.score1;
 					updateScore(scene, 1);
 				}
-				if (ServerVars.score2 !== newState.score2) {
+				if (ServerVars.score2 !== newState.score2)
+				{
 					ServerVars.score2 = newState.score2;
 					updateScore(scene, 2);
 				}
-				if (ServerVars.currentState !== newState.currentState) {
+				if (ServerVars.currentState !== newState.currentState)
+				{
 					setState(newState.currentState, scene);
 				}
 			}
@@ -62,14 +68,17 @@ export function Game({user}: {user: { id: number; username: string } | null})
 
 		// Input handling
 		const keys = new Set<string>();
-		const onKeyDown = (e: KeyboardEvent) => {
+		const onKeyDown = (e: KeyboardEvent) =>
+		{
 			if (e.key === "w" || e.key === "s")
 				keys.add(e.key)
 		}
-		const onKeyUp = (e: KeyboardEvent) => {
+		const onKeyUp = (e: KeyboardEvent) =>
+		{
 			keys.delete(e.key)
 		}
-		const sendInput = () => {
+		const sendInput = () =>
+		{
 			if (ws.readyState !== WebSocket.OPEN)
 				return;
 			ws.send(JSON.stringify({
@@ -82,7 +91,8 @@ export function Game({user}: {user: { id: number; username: string } | null})
 		window.addEventListener("keyup", onKeyUp);
 		const inputInterval = setInterval(sendInput, 16);
 
-		return () => {
+		return () =>
+		{
 			removeEventListener("resize", () => engine.resize());
 			window.removeEventListener("keydown", onKeyDown);
 			window.removeEventListener("keyup", onKeyUp);
