@@ -46,6 +46,7 @@ Bun.serve({
         const url = new URL(req.url)
         const playerId = +url.searchParams.get("id");
         const username = url.searchParams.get("username");
+        console.log(url, playerId, username);
         if (url.pathname === "/ws" && playerId) {
             server.upgrade(req, {
                 data: {
