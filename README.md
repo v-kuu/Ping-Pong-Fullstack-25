@@ -18,7 +18,7 @@ bun i && bun dev
 
 ### Production
 
-**Prerequisites:** Docker, mkcert
+**Prerequisites:** Docker, openssl
 
 ```bash
 ./run.sh -u
