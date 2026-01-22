@@ -40,7 +40,6 @@ export const GET: APIRoute = async ({ locals }) => {
             .select({
                 id: Users.id,
                 username: Users.username,
-                elo: Users.elo,
                 lastSeen: Users.lastSeen,
             })
             .from(Users)
@@ -49,7 +48,6 @@ export const GET: APIRoute = async ({ locals }) => {
         const formattedFriends = friends.map((f) => ({
             id: f.id,
             username: f.username,
-            elo: f.elo,
             status: getOnlineStatus(f.lastSeen),
         }));
 

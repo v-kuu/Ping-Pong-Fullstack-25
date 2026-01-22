@@ -1,15 +1,15 @@
 import { db, Users, Matches, Friendships } from "astro:db";
 
 const users = [
-  { username: "maks", email: "maks@hive.fi", password: "maks@hive.fi", elo: 1200 },
-  { username: "joonas", email: "joonas@hive.fi", password: "joonas@hive.fi", elo: 1150 },
-  { username: "ville", email: "ville@hive.fi", password: "ville@hive.fi", elo: 1100 },
-  { username: "vallu", email: "vallu@hive.fi", password: "vallu@hive.fi", elo: 1250 },
-  { username: "axel", email: "axel@hive.fi", password: "axel@hive.fi", elo: 1300 },
-  { username: "teemu", email: "teemu@hive.fi", password: "teemu@hive.fi", elo: 1050 },
-  { username: "juhani", email: "juhani@hive.fi", password: "juhani@hive.fi", elo: 1080 },
-  { username: "aapeli", email: "aapeli@hive.fi", password: "aapeli@hive.fi", elo: 1120 },
-  { username: "test", email: "test@test.com", password: "testtest", elo: 1000 },
+  { username: "maks", email: "maks@hive.fi", password: "maks@hive.fi" },
+  { username: "joonas", email: "joonas@hive.fi", password: "joonas@hive.fi" },
+  { username: "ville", email: "ville@hive.fi", password: "ville@hive.fi" },
+  { username: "vallu", email: "vallu@hive.fi", password: "vallu@hive.fi" },
+  { username: "axel", email: "axel@hive.fi", password: "axel@hive.fi" },
+  { username: "teemu", email: "teemu@hive.fi", password: "teemu@hive.fi" },
+  { username: "juhani", email: "juhani@hive.fi", password: "juhani@hive.fi" },
+  { username: "aapeli", email: "aapeli@hive.fi", password: "aapeli@hive.fi" },
+  { username: "test", email: "test@test.com", password: "testtest" },
 ];
 
 export default async function seed() {
