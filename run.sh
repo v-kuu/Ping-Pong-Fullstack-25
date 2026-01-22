@@ -16,16 +16,6 @@ Setup()
     echo "Creating data directories"
     mkdir -p data/db data/avatars certs
 
-    # if ! command -v mkcert &> /dev/null; then
-    #     echo "Error: mkcert is not installed."
-    #     echo "Install it with:"
-    #     echo "  - Arch Linux: pacman -S mkcert"
-    #     echo "  - macOS: brew install mkcert"
-    #     echo "  - Debian/Ubuntu: apt install mkcert"
-    #     echo "  - Other: see https://github.com/FiloSottile/mkcert"
-    #     return 1
-    # fi
-
 	# HTTPS / WSS cert
 	if [ ! -f certs/cert.pem ] || [ ! -f certs/key.pem ]; then
 		echo "Generating SSL certificates with openssl"

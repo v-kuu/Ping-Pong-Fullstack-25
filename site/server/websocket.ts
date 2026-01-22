@@ -16,7 +16,9 @@ interface PlayerData {
     room?: string;
 }
 
-// Define the paths first
+const PORT = 3001;
+
+// Paths of key and cert
 const certPath = join(import.meta.dir, "../../certs/cert.pem");
 const keyPath = join(import.meta.dir, "../../certs/key.pem");
 
@@ -29,8 +31,7 @@ engine.runRenderLoop(function () {
 });
 
 Bun.serve({
-    port: 3001,
-    hostname: "0.0.0.0",
+    port: PORT,
     tls: {
         cert: Bun.file(certPath),
         key: Bun.file(keyPath),
@@ -140,4 +141,4 @@ function gameTick() {
 
 gameTick();
 
-// console.log(`Server started on wss://${server.hostname}:${server.port}`);
+console.log(`Server started on wss://localhost:${PORT}`);
