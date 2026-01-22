@@ -10,7 +10,7 @@ The project includes a complete web application with user management, interactiv
 
 ### Development
 
-**Prerequisites:** Bun, mkcert, Docker
+**Prerequisites:** Bun, openssl, Docker
 
 ```bash
 bun i && bun dev
