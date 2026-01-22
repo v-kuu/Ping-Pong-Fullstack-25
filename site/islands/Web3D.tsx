@@ -1,7 +1,5 @@
 import { CanvasWeb3D } from "../components/Canvas.tsx";
 import { useEffect } from "preact/hooks";
-
-// @ts-ignore
 import * as web3d from "../web3d/web3d.wasm";
 
 // Mapping of KeyboardEvent.code strings to integer indices.
