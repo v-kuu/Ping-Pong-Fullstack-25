@@ -204,7 +204,16 @@ function handleState() : boolean {
     }
     freshMatch();
   } else if (playerDisconnected()) {
-      playerOne ? AI_moves(scene) : AI_moves_one(scene);
+    playerOne
+    ? AI_moves(scene)
+    : playerTwo
+    ? AI_moves_one(scene)
+    : AI_moves_both();
   }
   return true;
+}
+
+function AI_moves_both() {
+    AI_moves(scene);
+    AI_moves_one(scene);
 }
