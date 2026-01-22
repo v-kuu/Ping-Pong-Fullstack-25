@@ -25,6 +25,7 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "astro": "6.0.0-beta.1",
+    "bunx": "^0.1.0",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.14",
     "earcut": "^3.0.2",

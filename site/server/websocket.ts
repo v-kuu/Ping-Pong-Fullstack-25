@@ -8,12 +8,17 @@ import { NullEngine, Scene } from "@babylonjs/core";
 import { createSession } from "../utils/server/babylon_createsession.ts";
 import { Globals } from "../utils/shared/babylon_globals.ts";
 import { AI_moves } from "../utils/server/AI_opponent.ts";
+import { join } from "path";
 
 interface PlayerData {
     playerId: string;
     index?: number;
     room?: string;
 }
+
+// Define the paths first
+const certPath = join(import.meta.dir, "../../certs/cert.pem");
+const keyPath = join(import.meta.dir, "../../certs/key.pem");
 
 const clients = new Set<ServerWebSocket<unknown>>();
 
@@ -25,13 +30,15 @@ engine.runRenderLoop(function () {
 
 Bun.serve({
     port: 3001,
-	tls: {
-		certFile: "../../certs/cert.pem",
-		keyFile: "../../certs/key.pem"
-	},
+    hostname: "0.0.0.0",
+    tls: {
+        cert: Bun.file(certPath),
+        key: Bun.file(keyPath),
+    },
     fetch(req, server) {
+        console.log("Incoming request:", req.url);
+        console.log(`Request to: ${server.hostname}`);
         const url = new URL(req.url)
-
         if (url.pathname === "/wss") {
             const playerId = crypto.randomUUID();
             server.upgrade(req, {
@@ -41,7 +48,7 @@ Bun.serve({
             })
             return;
         }
-        return new Response("WebSocket server");
+        return new Response("WebSocket server is alive");
     },
     websocket: {
         message(ws, msg) {
@@ -133,4 +140,4 @@ function gameTick() {
 
 gameTick();
 
-console.log("WebSocket server running on http://localhost:3001/ws");
+// console.log(`Server started on wss://${server.hostname}:${server.port}`);
