@@ -27,15 +27,23 @@ export function Game({user}: {user: { id: number; username: string } | null})
 		addEventListener("resize", () => engine.resize());
 
 		// Open WebSocket
-		const ws = new WebSocket("ws://" + location.hostname + ":3001/ws" + "?id=" + encodeURIComponent(playerId) + "&username=" + encodeURIComponent(username));
+		console.log("location.hostname", location.hostname)
+		const ws = new WebSocket("wss://" + location.hostname + ":3001/wss");
 
 		ws.onopen = () =>
 		{
 			console.log("Connected to server");
 		};
 
-		ws.onmessage = (e) =>
-		{
+		ws.onclose = (event: CloseEvent): void => {
+			console.log("Connection closed", event.code, event.reason, event.wasClean);
+		};
+
+		ws.onerror = (event: Event): void => {
+			console.log("Connection closed due to error");
+		};
+
+		ws.onmessage = (e) => {
 			const data = JSON.parse(e.data);
 			if (data.type === "physics_sync")
 			{

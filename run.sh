@@ -16,37 +16,22 @@ Setup()
     echo "Creating data directories"
     mkdir -p data/db data/avatars certs
 
-    if ! command -v mkcert &> /dev/null; then
-        echo "Error: mkcert is not installed."
-        echo "Install it with:"
-        echo "  - Arch Linux: pacman -S mkcert"
-        echo "  - macOS: brew install mkcert"
-        echo "  - Debian/Ubuntu: apt install mkcert"
-        echo "  - Other: see https://github.com/FiloSottile/mkcert"
-        return 1
-    fi
-
-    if [ ! -f certs/cert.pem ] || [ ! -f certs/key.pem ]; then
-        echo "Generating SSL certificates with mkcert"
-        if ! mkcert -cert-file certs/cert.pem -key-file certs/key.pem localhost 127.0.0.1 ::1; then
-            echo "Error: Failed to generate certificates"
-            return 1
-        fi
-        echo "Certificates generated successfully!"
-    else
-        echo "Certificates already exist in certs/"
-    fi
-
-    if [ ! -f certs/pong.pem ] || [ ! -f certs/pong-key.pem ]; then
-        echo "Generating SSL certificates for pong with mkcert"
-        if ! mkcert -cert-file certs/pong.pem -key-file certs/key.pem localhost 127.0.0.1 ::1; then
-            echo "Error: Failed to generate pong certificates"
-            return 1
-        fi
-        echo "Pong certificates generated successfully!"
-    else
-        echo "Pong certificates already exist in certs/"
-    fi
+	# HTTPS / WSS cert
+	if [ ! -f certs/cert.pem ] || [ ! -f certs/key.pem ]; then
+		echo "Generating SSL certificates with openssl"
+		if ! openssl req -x509 -nodes -days 365 \
+			-newkey rsa:2048 \
+			-keyout certs/key.pem \
+			-out certs/cert.pem \
+			-subj "/CN=localhost" \
+			-addext "subjectAltName=DNS:localhost,IP:127.0.0.1"; then
+			echo "Error: Failed to generate certificates"
+			return 1
+		fi
+		echo "Certificates generated successfully!"
+	else
+		echo "Certificates already exist in certs/"
+	fi
 
     echo "Setup complete!"
     return 0

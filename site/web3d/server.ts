@@ -14,8 +14,8 @@ enum MessageType {
 
 // Server configuration.
 const PORT = 3002; // Port used for the server.
-const KEY = import.meta.dir + "/../certs/key.pem";
-const CERT = import.meta.dir + "/../certs/cert.pem";
+const KEY = `${import.meta.dir}/../../certs/key.pem`;
+const CERT = `${import.meta.dir}/../../certs/cert.pem`;
 const MATCH_COUNTDOWN = 5; // Length of countdown for a match, in seconds.
 const MAX_GEMS = 50n; // Gems to collect per match.
 const ALL_GEMS = (1n << MAX_GEMS) - 1n; // Bit mask for all gems.

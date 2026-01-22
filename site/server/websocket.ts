@@ -10,6 +10,9 @@ import { setState } from "@/utils/server/babylon_serverstates.ts"
 import { GameState, Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
 import { AI_moves, AI_moves_one } from "../utils/server/AI_opponent.ts";
 import { unauthorized } from "@/utils/site/apiHelpers.ts";
+import { Globals } from "../utils/shared/babylon_globals.ts";
+import { AI_moves } from "../utils/server/AI_opponent.ts";
+import { join } from "path";
 
 interface PlayerData {
     playerId: string;
@@ -17,10 +20,14 @@ interface PlayerData {
     room?: string;
 }
 
+
 const TICK_RATE = 60;
 const TICK_INTERVAL = 1000 / TICK_RATE;
 let lastTick = Date.now();
 let newMatch, ai = true;
+const PORT = 3001;
+const certPath = join(import.meta.dir, "/../../certs/cert.pem");
+const keyPath = join(import.meta.dir, "/../../certs/key.pem");
 const clients = new Set<ServerWebSocket<unknown>>();
 let names = new Map<number, string>();
 let playerQueue = [];
@@ -35,18 +42,18 @@ engine.runRenderLoop(function () {
 setInterval(gameTick, TICK_INTERVAL);
 
 Bun.serve({
-    port: 3001,
-    // process.env.PRODUCTION === "true" ?
-    //   tls: {
-    //     key: Bun.file(process.env.PONG_KEY_PATH),
-    //     cert: Bun.file(process.env.PONG_CERT_PATH),
-    //   },
-    // :
+    port: PORT,
+    tls: {
+        cert: Bun.file(certPath),
+        key: Bun.file(keyPath),
+    },
     fetch(req, server) {
+        console.log("Incoming request:", req.url);
+        console.log(`Request to: ${server.hostname}`);
         const url = new URL(req.url)
         const playerId = +url.searchParams.get("id");
         const username = url.searchParams.get("username");
-        if (url.pathname === "/ws" && playerId) {
+        if (url.pathname === "/wss" && playerId) {
             server.upgrade(req, {
                 data: {
                     playerId,
@@ -103,8 +110,6 @@ Bun.serve({
     },
 });
 
-console.log("WebSocket server running on http://localhost:3001/ws");
-
 function gameTick() {
   const now = Date.now();
   lastTick = now;
@@ -142,6 +147,7 @@ function freshMatch() {
 	setState(GameState.Countdown, scene);
   });
 }
+
 
 async function winnerTakesItAll() {
   if (!playerDisconnected()) {
@@ -217,3 +223,5 @@ function AI_moves_both() {
     AI_moves(scene);
     AI_moves_one(scene);
 }
+
+console.log(`Server started on wss://localhost:${PORT}`);
