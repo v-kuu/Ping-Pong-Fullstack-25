@@ -27,6 +27,13 @@ bool map_inside(int x, int y)
         && 0 <= y && y < MAP_H;
 }
 
+// Check if a map tile is a wall. Coordinates outside of the map are treated as
+// walls.
+bool map_wall(int x, int y)
+{
+    return map_get(x, y) > 0;
+}
+
 // Get the tile value at map coordinates (x, y). Returns -1 for coordinates that
 // lie outside of the map.
 int map_get(int x, int y)
@@ -250,4 +257,25 @@ void map_generate(void)
         int next_y = map_room_y(j);
         make_path(this_x, this_y, next_x, next_y);
     }
+}
+
+// Cast a ray from coordinates (ax, ay) toward (bx, by), starting at distance t
+// along the ray, return the t-value of the first intersection with a wall.
+float map_raycast(float ax, float ay, float bx, float by, float t)
+{
+    int ix = floor(ax), sx = (bx > 0.0f) - (bx < 0.0f);
+    int iy = floor(ay), sy = (by > 0.0f) - (by < 0.0f);
+    float dx = abs(1 / bx), tx = dx * ((sx > 0) - sx * fract(ax));
+    float dy = abs(1 / by), ty = dy * ((sy > 0) - sy * fract(ay));
+    for (int l = 0; l < 100; l++) {
+        int axis = !sy || tx < ty;
+        int px = ix, py = iy;
+        ix += sx * axis;
+        iy += sy * !axis;
+        if (min(tx, ty) > t && (!map_inside(ix, iy) || (map_wall(ix, iy) != map_wall(px, py))))
+            return min(tx, ty);
+        tx += dx * axis;
+        ty += dy * !axis;
+    }
+    return 1e9f;
 }

@@ -80,19 +80,6 @@ typedef struct {
 static Gem gem_array[MAX_GEMS];
 static uint64_t gem_mask;
 
-// Particles.
-#define MAX_PARTICLES 100
-typedef struct {
-    float x, y, z;      // Position (z = height).
-    float vx, vy, vz;   // Velocity.
-    float lifespan;     // How long the particle should live.
-    float counter;      // How long the particle has existed.
-    float size;         // Size of the particle.
-    uint32_t color;     // Drawing color.
-} Particle;
-static Particle particle_array[MAX_PARTICLES];
-static int particle_count;
-
 static Texture texture_floor = { .data = (uint8_t[]) {
     #embed "../assets/floor.gif"
 }};
@@ -128,32 +115,6 @@ static Font font_tiny = { .data = (uint8_t[]) {
 static Font font_big = { .data = (uint8_t[]) {
     #embed "../assets/font_big.gif"
 }};
-
-// Check if a map tile is a wall. Coordinates outside of the map are treated as
-// walls.
-static bool is_wall(int x, int y)
-{
-    return map_get(x, y) > 0;
-}
-
-static float raycast(float ax, float ay, float bx, float by, float t)
-{
-    int ix = floor(ax), sx = (bx > 0.0f) - (bx < 0.0f);
-    int iy = floor(ay), sy = (by > 0.0f) - (by < 0.0f);
-    float dx = abs(1 / bx), tx = dx * ((sx > 0) - sx * fract(ax));
-    float dy = abs(1 / by), ty = dy * ((sy > 0) - sy * fract(ay));
-    for (int l = 0; l < 100; l++) {
-        int axis = !sy || tx < ty;
-        int px = ix, py = iy;
-        ix += sx * axis;
-        iy += sy * !axis;
-        if (min(tx, ty) > t && (!map_inside(ix, iy) || (is_wall(ix, iy) != is_wall(px, py))))
-            return min(tx, ty);
-        tx += dx * axis;
-        ty += dy * !axis;
-    }
-    return 1e9f;
-}
 
 // Handle a `keyup` event from the browser side.
 __attribute__((export_name("keyup")))
@@ -231,7 +192,7 @@ static void new_game(double timestamp, uint64_t gems)
     for (int i = 0; i < MAX_GEMS;) {
         int x = random_int(0, MAP_W - 1);
         int y = random_int(0, MAP_H - 1);
-        if (!is_wall(x, y)) {
+        if (!map_wall(x, y)) {
             map_set(x, y, 'g'); // Mark this grid cell as occupied.
             Gem* gem = &gem_array[i++];
             gem->x = x + 0.5f;
@@ -288,16 +249,6 @@ static uint32_t apply_fog(uint32_t color, float amount, int x, int y)
     return (r << 0) | (g << 8) | (b << 16) | (0xff << 24);
 }
 
-typedef struct {
-    int x;                   // Frame x position.
-    float vx, vy;            // View direction.
-    float px, py;            // Ray origin.
-    float dx, dy;            // Ray direction.
-    uint32_t color[FRAME_H]; // Color of each pixel in the column.
-    float light[FRAME_H];    // Light received by each pixel in the column.
-    float depth[FRAME_H];    // Depth of each pixel in the column.
-} Column;
-
 static void draw_sky(Column* col)
 {
     for (int y = 0; y < FRAME_H / 2; y++) {
@@ -320,7 +271,7 @@ static void draw_floor(Column* col)
         float v = fract(hit_y * 2.0f);
         int tile_x = floor(hit_x);
         int tile_y = floor(hit_y);
-        if (is_wall(tile_x, tile_y)) {
+        if (map_wall(tile_x, tile_y)) {
             col->color[y] = texture_sample(&texture_wall, u, v);
             col->light[y] = t;
         } else {
@@ -337,7 +288,7 @@ static void draw_walls(Column* col)
     float depth = 0.0f;
     int limit = player_self == player_ghost ? 10 : 1;
     for (int i = 0; i < limit && (depth - 2.0f) * 0.3f < 1.0f; i++) {
-        depth = raycast(col->px, col->py, col->dx, col->dy, depth);
+        depth = map_raycast(col->px, col->py, col->dx, col->dy, depth);
         const float y0 = FRAME_H * 0.5f + 0.5f - WALL_HEIGHT / depth;
         const float y1 = FRAME_H * 0.5f + 0.5f + WALL_HEIGHT / depth;
         const int y0_clamped = max(0, min(y0, FRAME_H));
@@ -419,87 +370,12 @@ static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, 
     }
 }
 
-static void spawn_particles(float x, float y, float z, uint32_t color)
-{
-    for (int i = 0; i < 30; i++) {
-        if (particle_count < MAX_PARTICLES) {
-            Particle* particle = &particle_array[particle_count++];
-            particle->x = x + random_float(-0.2f, +0.2f);
-            particle->y = y + random_float(-0.2f, +0.2f);
-            particle->z = z + random_float(-0.2f, +0.2f);
-            particle->vx = random_float(-1.0f, +1.0f);
-            particle->vy = random_float(-1.0f, +1.0f);
-            particle->vz = random_float(+2.0f, +3.0f);
-            particle->lifespan = random_float(0.1f, 0.3f);
-            particle->counter = 0.0f;
-            particle->size = random_float(0.1f, 0.4f) * 0.8f;
-            int brighten = random_int(0, 200);
-            uint32_t r = min(255, ((color >>  0) & 0xff) + brighten + random_int(-25, 25));
-            uint32_t g = min(255, ((color >>  8) & 0xff) + brighten + random_int(-25, 25));
-            uint32_t b = min(255, ((color >> 16) & 0xff) + brighten + random_int(-25, 25));
-            particle->color = r | (g << 8) | (b << 16) | (0xff << 24);
-        }
-    }
-}
-
-static void update_particles(float dt)
-{
-    // Update each particle's state.
-    for (int i = 0; i < particle_count; i++) {
-        Particle* particle = &particle_array[i];
-        particle->x += particle->vx * dt;
-        particle->y += particle->vy * dt;
-        particle->z += particle->vz * dt;
-        particle->vz -= 15.0f * dt;
-
-        // Destroy the particle when its lifetime runs out.
-        if (particle->z < 0.0f || (particle->counter += dt) > particle->lifespan)
-            particle_array[i--] = particle_array[--particle_count];
-    }
-}
-
 static void update_players(float dt)
 {
     for (size_t i = 0; i < player_count; i++) {
         Player* player = &players[i];
         player->vx = smooth(player->vx, player->x, 10.0f * dt);
         player->vy = smooth(player->vy, player->y, 10.0f * dt);
-    }
-}
-
-static void draw_particles(Column* col)
-{
-    for (int i = 0; i < particle_count; i++) {
-
-        // Find the intersection with the particle billboard.
-        Particle* particle = &particle_array[i];
-        const float w = particle->size * (1.0f - particle->counter / particle->lifespan * 0.8f);
-        const float px = particle->x - col->px;
-        const float py = particle->y - col->py;
-        const float scale = -1.0f / (col->dx * col->vx + col->dy * col->vy);
-        const float t = scale * (-px * col->vx - py * col->vy);
-        const float s = scale * (+px * col->dy - py * col->dx) / w;
-        if (t < 0.0f)
-            continue; // No intersection.
-
-        const float y0 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (particle->z + w) * 160) / t;
-        const float y1 = FRAME_H * 0.5f + 0.5f + (WALL_HEIGHT - (particle->z + 0) * 160) / t;
-        const int y0_clamped = max(0, min(y0, FRAME_H));
-        const int y1_clamped = max(0, min(y1, FRAME_H));
-
-        // Draw the sprite itself.
-        if (-0.5f < s && s < 0.5f) {
-            for (int y = y0_clamped; y < y1_clamped; y++) {
-                if (t > col->depth[y])
-                    continue;
-                float v = (y - y0 + 1.0f) / (y1 - y0) - 0.5f;
-                if (s * s + v * v < 0.25f && dither(col->x, y) > particle->counter / particle->lifespan * 2.0f - 1.0f) {
-                    col->color[y] = particle->color;
-                    col->depth[y] = t;
-                    col->light[y] = t;
-                }
-            }
-        }
     }
 }
 
@@ -903,10 +779,10 @@ void* draw(__externref_t socket, double timestamp, double date_now, bool logged_
         for (int tx = ix - 1; tx <= ix + 1; tx++) {
             float dx = tx + 0.5f - player_x;
             float dy = ty + 0.5f - player_y;
-            if (abs(dx) < 0.5f + half && abs(dy) < 0.5f + half && is_wall(tx, ty)) {
-                if (!is_wall(tx - sign(dx), ty) && abs(dx) > abs(dy))
+            if (abs(dx) < 0.5f + half && abs(dy) < 0.5f + half && map_wall(tx, ty)) {
+                if (!map_wall(tx - sign(dx), ty) && abs(dx) > abs(dy))
                     player_x = tx + (dx < 0.0f) - half * sign(dx);
-                if (!is_wall(tx, ty - sign(dy)) && abs(dx) < abs(dy))
+                if (!map_wall(tx, ty - sign(dy)) && abs(dx) < abs(dy))
                     player_y = ty + (dy < 0.0f) - half * sign(dy);
             }
         }

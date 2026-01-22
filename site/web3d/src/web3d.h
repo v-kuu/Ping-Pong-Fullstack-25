@@ -59,6 +59,27 @@ typedef struct {
     void* data;                         // GIF or texel data (same as Texture).
 } Font;
 
+// Particle effect type.
+typedef struct {
+    float x, y, z;    // Position (z = height).
+    float vx, vy, vz; // Velocity.
+    float lifespan;   // How long the particle should live.
+    float counter;    // How long the particle has existed.
+    float size;       // Size of the particle.
+    uint32_t color;   // Drawing color.
+} Particle;
+
+// Per-column data used while rendering a frame.
+typedef struct {
+    int x;                   // Frame x position.
+    float vx, vy;            // View direction.
+    float px, py;            // Ray origin.
+    float dx, dy;            // Ray direction.
+    uint32_t color[FRAME_H]; // Color of each pixel in the column.
+    float light[FRAME_H];    // Light received by each pixel in the column.
+    float depth[FRAME_H];    // Depth of each pixel in the column.
+} Column;
+
 // gif.c
 int gif_get_image_w(const uint8_t* gif);
 int gif_get_image_h(const uint8_t* gif);
@@ -78,11 +99,13 @@ uint32_t* get_frame_data(void);
 
 // map.c
 bool map_inside(int x, int y);
+bool map_wall(int x, int y);
 int map_get(int x, int y);
 void map_set(int x, int y, char value);
 int map_room_x(size_t room_index);
 int map_room_y(size_t room_index);
 void map_generate(void);
+float map_raycast(float ax, float ay, float bx, float by, float t);
 
 // math.c
 float min(float x, float y);
@@ -95,6 +118,11 @@ float smooth(float source, float target, float rate);
 float dither(int x, int y);
 float lerp(float x0, float x1, float t);
 float sign(float x);
+
+// particles.c
+void spawn_particles(float x, float y, float z, uint32_t color);
+void update_particles(float dt);
+void draw_particles(Column* col);
 
 // random.c
 void random_seed(size_t seed);
