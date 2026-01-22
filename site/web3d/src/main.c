@@ -363,22 +363,22 @@ void respawn(void)
     player_y = player_y_smooth = map_room_y(player_room) + 0.5f;
 }
 
-#define MAX_MESSAGE_LENGTH 64 // How much text fits in a message.
-#define MAX_MESSAGES 22 // How many messages fit on screen.
-#define MESSAGE_DELAY 5 // How long before a message disappears.
+#define MAX_LOG_MESSAGE_LENGTH 64 // How much text fits in a message.
+#define MAX_LOG_MESSAGES 22 // How many messages fit on screen.
+#define LOG_MESSAGE_DELAY 5 // How long before a message disappears.
 typedef struct {
     double timestamp;
-    char text[MAX_MESSAGE_LENGTH];
-} Message;
-static Message messages[MAX_MESSAGES];
-static size_t message_index;
+    char text[MAX_LOG_MESSAGE_LENGTH];
+} LogMessage;
+static LogMessage log_messages[MAX_LOG_MESSAGES];
+static size_t log_index;
 
-static void draw_messages(void)
+static void draw_log(void)
 {
-    for (size_t i = 0; i < MAX_MESSAGES; i++) {
-        size_t index = (message_index + MAX_MESSAGES - 1 - i) % MAX_MESSAGES;
-        Message* message = &messages[index];
-        if (time_now < message->timestamp + MESSAGE_DELAY * 1000.0) {
+    for (size_t i = 0; i < MAX_LOG_MESSAGES; i++) {
+        size_t idx = (log_index + MAX_LOG_MESSAGES - 1 - i) % MAX_LOG_MESSAGES;
+        LogMessage* message = &log_messages[idx];
+        if (time_now < message->timestamp + LOG_MESSAGE_DELAY * 1000.0) {
             int x = 5;
             int y = FRAME_H - 30 - 8 * i;
             font_draw(&font_tiny, x + 1, y + 1, 0xff000000, message->text);
@@ -387,12 +387,12 @@ static void draw_messages(void)
     }
 }
 
-static void push_message(char* text)
+static void log_message(char* text)
 {
-    Message* message = &messages[message_index++ % MAX_MESSAGES];
+    LogMessage* message = &log_messages[log_index++ % MAX_LOG_MESSAGES];
     message->timestamp = time_now;
     size_t length = 0;
-    while (length < MAX_MESSAGE_LENGTH - 1 && *text)
+    while (length < MAX_LOG_MESSAGE_LENGTH - 1 && *text)
         message->text[length++] = *text++;
     message->text[length] = '\0';
 }
@@ -856,7 +856,7 @@ static void draw_user_interface(bool logged_in)
         draw_scores();
 
     // Draw the message log.
-    draw_messages();
+    draw_log();
 }
 
 static void draw_players(Column* col)
@@ -904,7 +904,7 @@ static void recv_join(uint32_t id, int score, char* name)
         char buffer[64] = {0};
         string_join(buffer, sizeof(buffer), player->name);
         string_join(buffer, sizeof(buffer), " joined");
-        push_message(buffer);
+        log_message(buffer);
     }
 }
 
@@ -923,7 +923,7 @@ void recv_quit(uint32_t id)
     char buffer[64] = {0};
     string_join(buffer, sizeof(buffer), player->name);
     string_join(buffer, sizeof(buffer), " quit");
-    push_message(buffer);
+    log_message(buffer);
 
     // If the match hadn't started yet, remove the player completely.
     if (time_match < time_next_match) {
@@ -940,7 +940,7 @@ void recv_begin(uint32_t self, double timestamp, uint64_t gems)
     // Update the game state.
     time_match = timestamp;
     if (player_self) {
-        push_message("A new match started!");
+        log_message("A new match started!");
     } else {
         player_self = self;
     }
@@ -975,14 +975,14 @@ void recv_end(void)
 
     // If there's a tie, don't announce a winner.
     if (player_count > 1 && players[0].score == players[1].score) {
-        push_message("It's a tie!");
+        log_message("It's a tie!");
 
     // Otherwise, mention the player's name.
     } else {
         char message[64] = {0};
         string_join(message, sizeof(message), players[0].name);
         string_join(message, sizeof(message), " wins the match!");
-        push_message(message);
+        log_message(message);
     }
 
     // Clear all gems.
@@ -1047,7 +1047,7 @@ typedef struct {
         struct { double time; uint64_t gems; };
         struct { uint32_t new_score; int32_t gem; };
     };
-} Msg;
+} Message;
 
 __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
 void send_message(__externref_t socket, const void* data, size_t size);
@@ -1058,7 +1058,7 @@ void get_array(__externref_t array, void* data, size_t size);
 __attribute__((export_name("receive")))
 void receive(__externref_t array)
 {
-    Msg m = {0};
+    Message m = {0};
     get_array(array, &m, sizeof(m));
     switch (m.type) {
         case MESSAGE_JOIN: return recv_join(m.id, m.score, m.name);
@@ -1074,14 +1074,14 @@ void receive(__externref_t array)
 
 void send_move(__externref_t socket, float x, float y, float dx, float dy)
 {
-    Msg msg = {MESSAGE_MOVE, player_self, .x = x, .y = y, .dx = dx, .dy = dy};
-    send_message(socket, &msg, sizeof(msg));
+    Message m = {MESSAGE_MOVE, player_self, .x = x, .y = y, .dx = dx, .dy = dy};
+    send_message(socket, &m, sizeof(m));
 }
 
 void send_collect(__externref_t socket, int gem_index)
 {
-    Msg msg = {MESSAGE_COLLECT, player_self, .gem = gem_index};
-    send_message(socket, &msg, sizeof(msg));
+    Message m = {MESSAGE_COLLECT, player_self, .gem = gem_index};
+    send_message(socket, &m, sizeof(m));
 }
 
 // Render the next frame of the game.

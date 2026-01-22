@@ -38,51 +38,46 @@ function countBitsSet(value: BigInt): number {
     return count;
 }
 
+function newMessage(type: MessageType, player: Player, size: number): Buffer {
+    const message = Buffer.allocUnsafe(size);
+    message.writeUInt32LE(type, 0);
+    message.writeUInt32LE(player.id, 4);
+    return message;
+}
+
 function sendJoinMessage(target: Player, source: Player) {
-    const message = Buffer.allocUnsafe(8 + MAX_PLAYER_NAME);
-    message.writeUInt32LE(MessageType.Join, 0);
-    message.writeUInt32LE(source.id, 4);
+    const message = newMessage(MessageType, source, 8 + MAX_PLAYER_NAME);
     message.writeUInt32LE(source.score, 8);
     message.write(source.name.slice(0, MAX_PLAYER_NAME - 1) + "\0", 12);
     target.sendBinary(message);
 }
 
 function sendQuitMessage(target: Player, source: Player) {
-    const message = Buffer.allocUnsafe(8);
-    message.writeUInt32LE(MessageType.Quit, 0);
-    message.writeUInt32LE(source.id, 4);
+    const message = newMessage(MessageType.Quit, source, 8);
     target.sendBinary(message);
 }
 
 function sendBeginMessage(target: Player) {
-    const message = Buffer.allocUnsafe(24);
-    message.writeUInt32LE(MessageType.Begin, 0);
-    message.writeUInt32LE(target.id, 4);
+    const message = newMessage(MessageType.Begin, target, 24);
     message.writeDoubleLE(startTime, 8);
     message.writeBigUInt64LE(gemMask, 16);
     target.sendBinary(message);
 }
 
 function sendCountMessage(target: Player) {
-    const message = Buffer.allocUnsafe(16);
-    message.writeUInt32LE(MessageType.Count, 0);
-    message.writeUInt32LE(target.id, 4);
+    const message = newMessage(MessageType.Count, target, 16);
     message.writeDoubleLE(nextMatch, 8);
     target.sendBinary(message);
 }
 
 function sendEndMessage(target: Player) {
-    const message = Buffer.allocUnsafe(8);
-    message.writeUInt32LE(MessageType.End, 0);
-    message.writeUInt32LE(target.id, 4);
+    const message = newMessage(MessageType.End, target, 8);
     target.sendBinary(message);
 }
 
 function sendMoveMessage(target: Player, source: Player, coords: Float32Array) {
     const [x, y, dx, dy] = coords;
-    const message = Buffer.allocUnsafe(24);
-    message.writeUInt32LE(MessageType.Move, 0);
-    message.writeUInt32LE(source.id, 4);
+    const message = newMessage(MessageType.Move, source, 24);
     message.writeFloatLE(x, 8);
     message.writeFloatLE(y, 12);
     message.writeFloatLE(dx, 16);
@@ -91,9 +86,7 @@ function sendMoveMessage(target: Player, source: Player, coords: Float32Array) {
 }
 
 function sendCollectMessage(target: Player, source: Player, gemIndex: number) {
-    const message = Buffer.allocUnsafe(16);
-    message.writeUInt32LE(MessageType.Collect, 0);
-    message.writeUInt32LE(source.id, 4);
+    const message = newMessage(MessageType.Collect, source, 16);
     message.writeUInt32LE(source.score, 8);
     message.writeInt32LE(gemIndex, 12);
     target.sendBinary(message);
