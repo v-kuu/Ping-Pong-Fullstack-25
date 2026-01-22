@@ -181,13 +181,13 @@ function handleState() : boolean {
     newMatch = true;
 	setState(GameState.WaitingPlayers, scene);
     return false;
-  } else if (clients.size === 1) {
+  } else if (clients.size === 1 && !disconnectedPlayer) {
     playerOne
     ? AI_moves(scene)
     : AI_moves_one(scene);
     ai = true;
   	if (newMatch) {
-  		playerOne
+  	  playerOne
       ? playerTwo = playerQueue.shift()
       : playerOne = playerQueue.shift();
       newMatch = false;
