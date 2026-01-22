@@ -1,6 +1,6 @@
 NAME := web3d.wasm
 CONTAINER := clang20
-CFLAGS := -std=c23 --target=wasm32 -nostdlib -Os -s -Wall -Wextra -Wpedantic \
+CFLAGS := -std=c23 --target=wasm32 -nostdlib -Os -s -Wall -Wextra \
           -mbulk-memory -Wl,--no-entry -flto -ffast-math
 
 .PHONY: all

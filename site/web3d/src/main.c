@@ -639,10 +639,6 @@ static void string_from_timestamp(char buffer[9], double time)
     buffer[8] = '\0';
 }
 
-// Get a string from the JavaScript side.
-__attribute__((import_module("islands/Web3D"), import_name("getString")))
-size_t string_from_extern(__externref_t, char* buffer, size_t buffer_size);
-
 static void spawn_particles(float x, float y, float z, uint32_t color)
 {
     for (int i = 0; i < 30; i++) {
@@ -887,8 +883,7 @@ static void draw_gems(Column* col)
     }
 }
 
-__attribute__((export_name("recvJoin")))
-void recv_join(uint32_t id, int score, __externref_t name)
+static void recv_join(uint32_t id, int score, char* name)
 {
     // If it's not a returning player, add another player to the array.
     Player* player = get_player_by_id(id);
@@ -901,7 +896,7 @@ void recv_join(uint32_t id, int score, __externref_t name)
     player->id = id;
     player->score = score;
     player->active = true;
-    string_from_extern(name, player->name, MAX_PLAYER_NAME);
+    memcpy(player->name, name, MAX_PLAYER_NAME);
     player_active++;
 
     // Show a join message.
@@ -913,7 +908,6 @@ void recv_join(uint32_t id, int score, __externref_t name)
     }
 }
 
-__attribute__((export_name("recvQuit")))
 void recv_quit(uint32_t id)
 {
     // Find a player with a matching ID.
@@ -941,11 +935,9 @@ void recv_quit(uint32_t id)
     }
 }
 
-__attribute__((export_name("recvBegin")))
-void recv_begin(uint32_t self, uint32_t ghost, double timestamp, double gems)
+void recv_begin(uint32_t self, double timestamp, uint64_t gems)
 {
     // Update the game state.
-    player_ghost = ghost;
     time_match = timestamp;
     if (player_self) {
         push_message("A new match started!");
@@ -962,13 +954,11 @@ void recv_begin(uint32_t self, uint32_t ghost, double timestamp, double gems)
     }
 }
 
-__attribute__((export_name("recvCount")))
 void recv_count(double timestamp)
 {
     time_next_match = timestamp;
 }
 
-__attribute__((export_name("recvEnd")))
 void recv_end(void)
 {
     // Mark all players who participated in the game.
@@ -999,7 +989,6 @@ void recv_end(void)
     gem_mask = 0;
 }
 
-__attribute__((export_name("recvMove")))
 void recv_move(uint32_t id, float x, float y, float dx, float dy)
 {
     Player* player = get_player_by_id(id);
@@ -1017,7 +1006,6 @@ void recv_move(uint32_t id, float x, float y, float dx, float dy)
     }
 }
 
-__attribute__((export_name("recvCollect")))
 void recv_collect(uint32_t id, int gem_index, int updated_score)
 {
     // Update the player's score.
@@ -1041,22 +1029,59 @@ void recv_collect(uint32_t id, int gem_index, int updated_score)
 
 // Message types (these should match MessageType in server.ts).
 enum {
-    MESSAGE_MOVE = 5,
+    MESSAGE_JOIN,
+    MESSAGE_QUIT,
+    MESSAGE_BEGIN,
+    MESSAGE_COUNT,
+    MESSAGE_END,
+    MESSAGE_MOVE,
     MESSAGE_COLLECT,
 };
 
+typedef struct {
+    uint32_t type;
+    uint32_t id;
+    union {
+        struct { uint32_t score; char name[MAX_PLAYER_NAME]; };
+        struct { float x, y, dx, dy; };
+        struct { double time; uint64_t gems; };
+        struct { uint32_t new_score; int32_t gem; };
+    };
+} Msg;
+
+__attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
+void send_message(__externref_t socket, const void* data, size_t size);
+
+__attribute__((import_module("islands/Web3D"), import_name("getArray")))
+void get_array(__externref_t array, void* data, size_t size);
+
+__attribute__((export_name("receive")))
+void receive(__externref_t array)
+{
+    Msg m = {0};
+    get_array(array, &m, sizeof(m));
+    switch (m.type) {
+        case MESSAGE_JOIN: return recv_join(m.id, m.score, m.name);
+        case MESSAGE_QUIT: return recv_quit(m.id);
+        case MESSAGE_BEGIN: return recv_begin(m.id, m.time, m.gems);
+        case MESSAGE_COUNT: return recv_count(m.time);
+        case MESSAGE_END: return recv_end();
+        case MESSAGE_MOVE: return recv_move(m.id, m.x, m.y, m.dx, m.dy);
+        case MESSAGE_COLLECT: return recv_collect(m.id, m.gem, m.score);
+        default: break;
+    }
+}
+
 void send_move(__externref_t socket, float x, float y, float dx, float dy)
 {
-    __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
-    void send_move_message(__externref_t, int, int, float, float, float, float);
-    send_move_message(socket, MESSAGE_MOVE, player_self, x, y, dx, dy);
+    Msg msg = {MESSAGE_MOVE, player_self, .x = x, .y = y, .dx = dx, .dy = dy};
+    send_message(socket, &msg, sizeof(msg));
 }
 
 void send_collect(__externref_t socket, int gem_index)
 {
-    __attribute__((import_module("islands/Web3D"), import_name("sendMessage")))
-    void send_collect_message(__externref_t, int, int, int);
-    send_collect_message(socket, MESSAGE_COLLECT, player_self, gem_index);
+    Msg msg = {MESSAGE_COLLECT, player_self, .gem = gem_index};
+    send_message(socket, &msg, sizeof(msg));
 }
 
 // Render the next frame of the game.

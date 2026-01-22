@@ -9,7 +9,6 @@ enum MessageType {
     End,
     Move,
     Collect,
-    Catch,
 }
 
 // Server configuration.
@@ -20,14 +19,14 @@ const ALL_GEMS = (1n << MAX_GEMS) - 1n; // Bit mask for all gems.
 const MAX_PLAYER_NAME = 32; // Maximum player name length.
 
 // server state.
-const clients = new Set<ServerWebSocket>; // Currently connected clients.
-let players = new Set<ServerWebSocket>; // Players in the current match.
+type Player = ServerWebSocket;
+const clients = new Set<Player>; // Currently connected clients.
+let players = new Set<Player>; // Players in the current match.
 let clientIdCounter = 0; // Counter used for assigning client IDs.
 let startTime = Date.now(); // Time of the start of the game (and also the RNG seed).
 let nextMatchTimer = 0; // Timer ID for the start of the next match.
 let nextMatch = startTime; // Timestamp for the start of the next match.
 let gemMask = 0n; // Bit mask of gems that have not been collected.
-let ghostId = 0; // Client ID of the current ghost.
 
 // Count the number of ones in the binary representation of a BigInt.
 function countBitsSet(value: BigInt): number {
@@ -39,37 +38,65 @@ function countBitsSet(value: BigInt): number {
     return count;
 }
 
-// Send a join message.
-function sendJoinMessage(recipient: ServerWebSocket, joined: ServerWebSocket) {
-    const name = joined.name.slice(0, MAX_PLAYER_NAME - 1);
-    const data = Buffer.allocUnsafe(56);
-    data.writeDoubleLE(MessageType.Join, 0);
-    data.writeDoubleLE(joined.id, 8);
-    data.writeDoubleLE(joined.score, 16);
-    data.write(name, 24);
-    data.writeUInt8(0, 24 + name.length);
-    recipient.sendBinary(data);
+function sendJoinMessage(target: Player, source: Player) {
+    const message = Buffer.allocUnsafe(8 + MAX_PLAYER_NAME);
+    message.writeUInt32LE(MessageType.Join, 0);
+    message.writeUInt32LE(source.id, 4);
+    message.writeUInt32LE(source.score, 8);
+    message.write(source.name.slice(0, MAX_PLAYER_NAME - 1) + "\0", 12);
+    target.sendBinary(message);
 }
 
-// Send a message to a client.
-function sendMessage(client: ServerWebSocket, ...args: number[]) {
-    client.sendBinary(new Float64Array([...args]));
+function sendQuitMessage(target: Player, source: Player) {
+    const message = Buffer.allocUnsafe(8);
+    message.writeUInt32LE(MessageType.Quit, 0);
+    message.writeUInt32LE(source.id, 4);
+    target.sendBinary(message);
 }
 
-// Repeat a message for all connected clients.
-function repeatMessage(message: Float64Array) {
-    for (const client of clients)
-        client.sendBinary(message);
+function sendBeginMessage(target: Player) {
+    const message = Buffer.allocUnsafe(24);
+    message.writeUInt32LE(MessageType.Begin, 0);
+    message.writeUInt32LE(target.id, 4);
+    message.writeDoubleLE(startTime, 8);
+    message.writeBigUInt64LE(gemMask, 16);
+    target.sendBinary(message);
 }
 
-// Broadcast a message to all connected clients.
-function broadcastMessage(...args: number[]) {
-    repeatMessage(new Float64Array([...args]));
+function sendCountMessage(target: Player) {
+    const message = Buffer.allocUnsafe(16);
+    message.writeUInt32LE(MessageType.Count, 0);
+    message.writeUInt32LE(target.id, 4);
+    message.writeDoubleLE(nextMatch, 8);
+    target.sendBinary(message);
 }
 
-// Handle a player movement message from a client.
-function handleMoveMessage(message: Float64Array) {
-    repeatMessage(message);
+function sendEndMessage(target: Player) {
+    const message = Buffer.allocUnsafe(8);
+    message.writeUInt32LE(MessageType.End, 0);
+    message.writeUInt32LE(target.id, 4);
+    target.sendBinary(message);
+}
+
+function sendMoveMessage(target: Player, source: Player, coords: Float32Array) {
+    const [x, y, dx, dy] = coords;
+    const message = Buffer.allocUnsafe(24);
+    message.writeUInt32LE(MessageType.Move, 0);
+    message.writeUInt32LE(source.id, 4);
+    message.writeFloatLE(x, 8);
+    message.writeFloatLE(y, 12);
+    message.writeFloatLE(dx, 16);
+    message.writeFloatLE(dy, 20);
+    target.sendBinary(message);
+}
+
+function sendCollectMessage(target: Player, source: Player, gemIndex: number) {
+    const message = Buffer.allocUnsafe(16);
+    message.writeUInt32LE(MessageType.Collect, 0);
+    message.writeUInt32LE(source.id, 4);
+    message.writeUInt32LE(source.score, 8);
+    message.writeInt32LE(gemIndex, 12);
+    target.sendBinary(message);
 }
 
 // Start a new match.
@@ -79,7 +106,7 @@ function startMatch() {
     gemMask = ALL_GEMS;
     for (const client of clients) {
         client.score = 0;
-        sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
+        sendBeginMessage(client);
     }
     console.log("A new match started!");
 }
@@ -96,7 +123,8 @@ function endMatch() {
 
     // Notify the clients that the game ended.
     players = new Set(clients);
-    broadcastMessage(MessageType.End);
+    for (const player of players)
+        sendEndMessage(player);
     gemMask = 0n;
     console.log("The match ended!");
 }
@@ -105,27 +133,10 @@ function endMatch() {
 function beginCountdown() {
     if (nextMatchTimer === 0) {
         nextMatch = Date.now() + MATCH_COUNTDOWN * 1000;
-        broadcastMessage(MessageType.Count, nextMatch);
+        for (const player of players)
+            sendCountMessage(player);
         nextMatchTimer = setTimeout(startMatch, MATCH_COUNTDOWN * 1000);
         console.log("Starting a new match in", MATCH_COUNTDOWN, "seconds");
-    }
-}
-
-// Handle a gem collect message from a client.
-function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
-    const gemIndex = message[2];
-    const gemBit = 1n << BigInt(gemIndex);
-    if ((gemMask & gemBit) && Date.now() >= startTime + 1000) {
-        client.score++;
-        gemMask &= ~gemBit; // Mark the gem as collected.
-        broadcastMessage(MessageType.Collect, client.id, gemIndex, client.score);
-    }
-
-    // Start a new match when all gems have been collected.
-    if (gemMask === 0n && clients.size > 1) {
-        console.log("All gems were collected!");
-        endMatch();
-        beginCountdown();
     }
 }
 
@@ -148,22 +159,39 @@ const server = Bun.serve({
     websocket: {
 
         // Handle client → server messages.
-        message(client: ServerWebSocket, data: Buffer) {
-            const message = new Float64Array(data.buffer);
-            const type = message[0];
-            message[1] = client.id; // Set the playerId.
-            switch (type) {
-                case MessageType.Move: return handleMoveMessage(message);
-                case MessageType.Collect: return handleCollectMessage(client, message);
-                default: return console.log(`Unrecognized message type: ${type}`);
+        message(client: Player, data: Buffer) {
+            const type = data.readUInt32LE(0);
+            data.writeUInt32LE(client.id, 4);
+
+            // Handle a player movement message.
+            if (type === MessageType.Move) {
+                const coords = new Float32Array(data.buffer, 8, 4);
+                for (const player of players)
+                    sendMoveMessage(player, client, coords);
+
+            // Handle a gem collect message.
+            } else if (type == MessageType.Collect) {
+                const gemIndex = data.readUInt32LE(12);
+                const gemBit = 1n << BigInt(gemIndex);
+                if ((gemMask & gemBit) && Date.now() >= startTime + 100) {
+                    client.score++;
+                    gemMask &= ~gemBit;
+                    for (const player of players)
+                        sendCollectMessage(player, client, gemIndex);
+                }
+
+                // Start a new match if all gems were collected.
+                if (gemMask === 0n && clients.size > 1) {
+                    endMatch();
+                    beginCountdown();
+                }
             }
         },
 
         // Handle client connection.
-        open(client: ServerWebSocket) {
+        open(client: Player) {
 
             // Check that the user is not already connected.
-            const secondPlayerJoined = clients.size === 1;
             for (const other of clients) {
                 if (other.id === client.data.id) {
                     console.log(`Duplicate login for ${client.data.username}`);
@@ -172,6 +200,7 @@ const server = Bun.serve({
             }
 
             // Add a new client.
+            const secondPlayerJoined = clients.size === 1;
             clients.add(client);
             players.add(client);
             client.name = client.data.username;
@@ -182,7 +211,7 @@ const server = Bun.serve({
             // Send join and begin messages to the new client.
             for (const other of players)
                 sendJoinMessage(client, other);
-            sendMessage(client, MessageType.Begin, client.id, ghostId, startTime, Number(gemMask));
+            sendBeginMessage(client);
 
             // Send join messages to all other clients.
             for (const other of clients)
@@ -196,14 +225,15 @@ const server = Bun.serve({
         },
 
         // Handle client disconnection.
-        close(client: ServerWebSocket) {
+        close(client: Player) {
             if (!clients.has(client))
                 return;
             console.log(client.name, "disconnected");
             clients.delete(client);
             if (nextMatchTimer !== 0)
                 players.delete(client);
-            broadcastMessage(MessageType.Quit, client.id);
+            for (const player of players)
+                sendQuitMessage(player, client);
 
             // When there's only one player left...
             if (clients.size === 1) {
@@ -219,7 +249,7 @@ const server = Bun.serve({
                     console.log("All but one player left, match ends!");
                     const lastPlayer = clients.values().next().value;
                     lastPlayer.score += countBitsSet(gemMask);
-                    broadcastMessage(MessageType.Collect, lastPlayer.id, -1, lastPlayer.score);
+                    sendCollectMessage(lastPlayer, lastPlayer, -1);
                     endMatch();
                 }
             }

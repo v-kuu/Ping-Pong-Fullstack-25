@@ -4,17 +4,6 @@ import { useEffect } from "preact/hooks";
 // @ts-ignore
 import * as web3d from "../web3d/web3d.wasm";
 
-enum MessageType {
-    Join = 0,
-    Quit,
-    Begin,
-    Count,
-    End,
-    Move,
-    Collect,
-    Catch,
-}
-
 // Mapping of KeyboardEvent.code strings to integer indices.
 const inputKeys = ["KeyW", "KeyS", "KeyA", "KeyD", "KeyQ", "KeyE"];
 const keyBindings = Object.fromEntries(inputKeys.map((v, i) => [v, i]));
@@ -24,42 +13,15 @@ function keyIndex(event: KeyboardEvent, ignoreInput: boolean): number {
 }
 
 // Send a message to the server.
-export function sendMessage(socket: WebSocket, ...args: number[]) {
-  if (socket && socket.readyState === WebSocket.OPEN)
-    socket.send(new Float64Array(args));
+export function sendMessage(socket: WebSocket, addr: number, size: number) {
+    if (socket && socket.readyState === WebSocket.OPEN)
+        socket.send(new DataView(web3d.memory.buffer, addr, size));
 }
 
-// Convert a string to UTF-8 and write the bytes to a buffer in WebAssembly
-// memory. The string is truncated if it's too long to fit the buffer, but is
-// always null-terminated. Returns the length of the string (sans null
-// terminator).
-export function getString(str: string, addr: number, length: number) {
-    const textEncoder = new TextEncoder();
-    const source = textEncoder.encode(str);
-    length = Math.min(source.length, length - 1);
-    const target = new Uint8Array(web3d.memory.buffer, addr, length + 1);
-    target.set(source.subarray(0, length));
-    target[length] = 0;
-    return length;
-}
-
-// Handle a message from the server.
-function handleMessage(data: ArrayBuffer) {
-  const [type, ...args] = new Float64Array(data);
-  switch (type) {
-    case MessageType.Join: {
-      const [playerId, score] = args;
-      const name = new TextDecoder().decode(new DataView(data, 24));
-      web3d.recvJoin(playerId, score, name);
-    } break;
-    case MessageType.Quit: return web3d.recvQuit(...args);
-    case MessageType.Begin: return web3d.recvBegin(...args);
-    case MessageType.Count: return web3d.recvCount(...args);
-    case MessageType.End: return web3d.recvEnd(...args);
-    case MessageType.Move: return web3d.recvMove(...args);
-    case MessageType.Collect: return web3d.recvCollect(...args);
-    default: return console.log("Invalid message type", type);
-  }
+// Copy the contents of a Uint8Array into WebAssembly memory.
+export function getArray(source: Uint8Array, addr: number, size: number) {
+    const target = new Uint8Array(web3d.memory.buffer, addr, size);
+    target.set(source.subarray(0, Math.min(size, source.byteLength)));
 }
 
 export function Web3D({user}: {user: { id: number; username: string } | null}) {
@@ -85,7 +47,7 @@ export function Web3D({user}: {user: { id: number; username: string } | null}) {
       url.searchParams.set("id", playerId.toString());
       socket = new WebSocket(url);
       socket.binaryType = "arraybuffer";
-      socket.onmessage = event => handleMessage(event.data);
+      socket.onmessage = event => web3d.receive(new Uint8Array(event.data));
     }
 
     // Make a callback function for updating the frame

@@ -25,6 +25,7 @@ typedef __SIZE_TYPE__ size_t;
 #define abs(...) __builtin_fabsf(__VA_ARGS__)
 #define floor(...) __builtin_floorf(__VA_ARGS__)
 #define memset(...) __builtin_memset(__VA_ARGS__)
+#define memcpy(...) __builtin_memcpy(__VA_ARGS__)
 
 // Dimensions of the tile map.
 #define MAP_W 25
