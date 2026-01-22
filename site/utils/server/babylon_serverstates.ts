@@ -29,7 +29,8 @@ export function setState(newState: GameState, scene: Scene)
 			Globals.playing = false;
 			Tools.DelayAsync(5000).then(() =>
 			{
-				setState(GameState.WaitingPlayers, scene);
+				if (ServerVars.currentState === GameState.GameOver)
+					setState(GameState.WaitingPlayers, scene);
 			});
 			break ;
 	}
