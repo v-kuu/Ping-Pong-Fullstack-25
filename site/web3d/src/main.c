@@ -1,18 +1,7 @@
 #include "web3d.h"
 
-// Dimensions of the frame buffer.
-#define FRAME_W 360
-#define FRAME_H 200
-
 #define FOV 1.0f
 #define WALL_HEIGHT 150
-
-// Layout of font images.
-#define FONT_GLYPH_MIN ' '
-#define FONT_GLYPH_MAX '~'
-#define FONT_GLYPH_COUNT (FONT_GLYPH_MAX - FONT_GLYPH_MIN + 1)
-#define FONT_GLYPHS_PER_ROW 16
-#define FONT_GLYPHS_PER_COL 6
 
 // How close the player must get to a gem to collect it.
 #define PLAYER_REACH 1.0f
@@ -24,6 +13,7 @@
 #define PLAYER_RUN_SPEED 5.0
 #define PLAYER_TURN_SPEED 2.5
 
+// Keyboard state.
 enum {
     KEY_FORWARD,
     KEY_BACK,
@@ -33,14 +23,7 @@ enum {
     KEY_RSTRAFE,
     KEY_MAX
 };
-
-// Frame buffer.
-static uint32_t frame[FRAME_W * FRAME_H];
-
-// Keyboard state.
-static bool key_up[KEY_MAX];
-static bool key_down[KEY_MAX];
-static bool key_held[KEY_MAX];
+static bool keyboard[KEY_MAX];
 
 // Player state.
 static float player_x;
@@ -84,14 +67,6 @@ static double time_match;   // Timestamp for the current/next match.
 static double time_next_match;  // Timestamp for the next match.
 static double time_now;     // Timestamp for the current frame.
 static float time_delta;    // Time delta since the last frame (in seconds).
-
-// Textures.
-typedef struct {
-    uint16_t w, h;  // Size of the texture.
-    uint16_t pitch; // Texels per row.
-    uint32_t color; // Average color (used for particle effects).
-    void* data;     // GIF file data (before load) or texel data (after load).
-} Texture;
 
 // Gems.
 #define GEM_TYPES 14
@@ -147,13 +122,6 @@ static Texture texture_guy_right = { .data = (uint8_t[]) {
 }};
 static Texture texture_gem[GEM_TYPES];
 
-// Fonts.
-typedef struct {
-    uint16_t w, h;                      // Size of the font texture.
-    uint16_t width[FONT_GLYPH_COUNT];   // Per-glyph width.
-    void* data;                         // GIF or texel data (same as Texture).
-} Font;
-
 static Font font_tiny = { .data = (uint8_t[]) {
     #embed "../assets/font_tiny.gif"
 }};
@@ -191,168 +159,16 @@ static float raycast(float ax, float ay, float bx, float by, float t)
 __attribute__((export_name("keyup")))
 void keyup(size_t key)
 {
-    if (key < KEY_MAX) {
-        key_up[key] = true;
-        key_held[key] = false;
-    }
+    if (key < KEY_MAX)
+        keyboard[key] = false;
 }
 
 // Handle a `keydown` event from the browser side.
 __attribute__((export_name("keydown")))
 void keydown(size_t key)
 {
-    if (key < KEY_MAX) {
-        key_down[key] = true;
-        key_held[key] = true;
-    }
-}
-
-// Very stupid and simple arena allocator.
-static void* malloc(size_t size)
-{
-    const size_t alignment = 16;
-    static char buffer[1 << 18];
-    static size_t position;
-    void* result = buffer + position;
-    position = (position + size + alignment - 1) & -alignment;
-    return result;
-}
-
-// Sample a texture using unnormalized texture coordinates (x, y).
-static uint32_t texture_fetch(const Texture* tex, size_t x, size_t y)
-{
-    uint32_t* pixels = (uint32_t*) tex->data;
-    return x < tex->w && y < tex->h ? pixels[x + y * tex->pitch] : 0;
-}
-
-// Sample a texture using normalized texture coordinates (u, v).
-static uint32_t texture_sample(const Texture* tex, float u, float v)
-{
-    int x = floor(tex->w * u);
-    int y = floor(tex->h * v);
-    return texture_fetch(tex, x, y);
-}
-
-// Initialize the `glyph_width` array for a font texture. Any opaque pixel
-// within a glyph's rectangle counts toward the glyph's visible width.
-void font_load(Font* font)
-{
-    // Load the GIF image.
-    font->w = gif_get_image_w(font->data);
-    font->h = gif_get_image_h(font->data);
-    uint32_t* pixels = malloc(font->w * font->h * sizeof(*pixels));
-    font->data = gif_get_pixels(font->data, pixels);
-
-    const int glyph_w = font->w / FONT_GLYPHS_PER_ROW;
-    const int glyph_h = font->h / FONT_GLYPHS_PER_COL;
-    for (int i = 0; i < FONT_GLYPH_COUNT; i++) {
-        int glyph_x = i % FONT_GLYPHS_PER_ROW * glyph_w;
-        int glyph_y = i / FONT_GLYPHS_PER_ROW * glyph_h;
-        for (int y = glyph_y; y < glyph_y + glyph_h; y++)
-        for (int x = glyph_x; x < glyph_x + glyph_w; x++)
-            if (pixels[x + y * font->w])
-                font->width[i] = max(font->width[i], x - glyph_x + 1);
-    }
-}
-
-// Get the average color of a texture, not counting transparent pixels.
-static uint32_t average_color(Texture* tex)
-{
-    uint32_t r = 0;
-    uint32_t g = 0;
-    uint32_t b = 0;
-    uint8_t (*pixels)[4] = tex->data;
-    for (int y = 0; y < tex->h; y++)
-    for (int x = 0; x < tex->w; x++) {
-        uint8_t* pixel = pixels[x + y * tex->pitch];
-        if (pixel[0] + pixel[1] + pixel[2]) {
-            r += pixel[0];
-            g += pixel[1];
-            b += pixel[2];
-        }
-    }
-    r /= tex->w * tex->h;
-    g /= tex->w * tex->h;
-    b /= tex->w * tex->h;
-    return r | (g << 8) | (b << 16) | (0xff << 24);
-}
-
-// Load a texture from a GIF file.
-void texture_load(Texture* tex)
-{
-    tex->w = gif_get_image_w(tex->data);
-    tex->h = gif_get_image_h(tex->data);
-    tex->data = gif_get_pixels(tex->data, malloc(tex->w * tex->h * 4));
-    tex->pitch = tex->w;
-}
-
-// Create a texture from a sub-region of an existing texture.
-void texture_sub(Texture* tex, Texture* src, int x, int y, int w, int h)
-{
-    tex->w = w;
-    tex->h = h;
-    tex->data = (uint32_t*) src->data + x + y * src->pitch;
-    tex->pitch = src->pitch;
-}
-
-void texture_draw(Texture* tex, int x, int y)
-{
-    uint32_t* pixels = tex->data;
-    const int x0 = max(0, min(x, FRAME_W));
-    const int y0 = max(0, min(y, FRAME_H));
-    const int x1 = min(x0 + tex->w, FRAME_W);
-    const int y1 = min(y0 + tex->h, FRAME_H);
-    for (int y = y0; y < y1; y++)
-    for (int x = x0; x < x1; x++) {
-        uint32_t texel = pixels[(x - x0) + (y - y0) * tex->pitch];
-        if (texel)
-            frame[x + y * FRAME_W] = texel;
-    }
-}
-
-void font_draw_glyph(Font* font, int dx, int dy, int x, int y, int w, int h, uint32_t color)
-{
-    uint32_t* pixels = (uint32_t*) font->data + x + y * font->w;
-    const int x0 = max(0, min(dx, FRAME_W));
-    const int y0 = max(0, min(dy, FRAME_H));
-    const int x1 = min(x0 + w, FRAME_W);
-    const int y1 = min(y0 + h, FRAME_H);
-    for (int y = y0; y < y1; y++)
-    for (int x = x0; x < x1; x++) {
-        uint32_t texel = pixels[(x - x0) + (y - y0) * font->w];
-        if (texel)
-            frame[x + y * FRAME_W] = texel & color;
-    }
-}
-
-void font_draw(Font* font, int x, int y, uint32_t color, const char* string)
-{
-    const int rect_w = font->w / FONT_GLYPHS_PER_ROW;
-    const int rect_h = font->h / FONT_GLYPHS_PER_COL;
-    while (*string != '\0') {
-        int glyph = *string++ - FONT_GLYPH_MIN;
-        if (glyph < 0 || glyph >= FONT_GLYPH_COUNT)
-            glyph = '?' - FONT_GLYPH_MIN;
-        int glyph_x = glyph % FONT_GLYPHS_PER_ROW * rect_w;
-        int glyph_y = glyph / FONT_GLYPHS_PER_ROW * rect_h;
-        int glyph_w = font->width[glyph];
-        int glyph_h = rect_h;
-        if (glyph)
-            font_draw_glyph(font, x, y, glyph_x, glyph_y, glyph_w, glyph_h, color);
-        x += glyph_w + 1;
-    }
-}
-
-int font_width(Font* font, const char* string)
-{
-    int width = 0;
-    while (*string != '\0') {
-        int glyph = *string++ - FONT_GLYPH_MIN;
-        if (glyph < 0 || glyph >= FONT_GLYPH_COUNT)
-            glyph = '?' - FONT_GLYPH_MIN;
-        width += font->width[glyph] + 1;
-    }
-    return width - !width;
+    if (key < KEY_MAX)
+        keyboard[key] = true;
 }
 
 void respawn(void)
@@ -601,42 +417,6 @@ static void draw_sprite(Column* col, Texture* tex, float sx, float sy, float w, 
             }
         }
     }
-}
-
-// Join two null-terminated strings.
-static void string_join(char* buffer, size_t buffer_size, char* string)
-{
-    for (; *buffer; buffer_size--)
-        buffer++;
-    while (*string && --buffer_size)
-        *buffer++ = *string++;
-    *buffer = '\0';
-}
-
-// Convert an unsigned integer to a string.
-static char* string_from_int(char* buffer, unsigned int value)
-{
-    if (value >= 10)
-        buffer = string_from_int(buffer, value / 10);
-    buffer[0] = '0' + value % 10;
-    buffer[1] = '\0';
-    return buffer + 1;
-}
-
-// Convert a timestamp (in seconds) to a nine-character string (including the
-// null-terminator).
-static void string_from_timestamp(char buffer[9], double time)
-{
-    int cents = floor(time * 100.0);
-    buffer[0] = '0' + cents / 60000 % 10; // Tens of minutes.
-    buffer[1] = '0' + cents /  6000 % 10; // Minutes.
-    buffer[2] = ':';
-    buffer[3] = '0' + cents / 1000 % 6 % 10; // Tens of seconds.
-    buffer[4] = '0' + cents /  100 % 10; // Seconds.
-    buffer[5] = ':';
-    buffer[6] = '0' + cents / 10 % 10; // Tenths of a second.
-    buffer[7] = '0' + cents /  1 % 10; // Hundredths of a second.
-    buffer[8] = '\0';
 }
 
 static void spawn_particles(float x, float y, float z, uint32_t color)
@@ -1104,13 +884,13 @@ void* draw(__externref_t socket, double timestamp, double date_now, bool logged_
     // Handle player movement.
     const float rotate_speed = logged_in * time_delta * PLAYER_TURN_SPEED;
     const float run_speed = logged_in * time_delta * PLAYER_RUN_SPEED;
-    float run_f = key_held[KEY_FORWARD] - key_held[KEY_BACK];
-    float run_s = key_held[KEY_RSTRAFE] - key_held[KEY_LSTRAFE];
+    float run_f = keyboard[KEY_FORWARD] - keyboard[KEY_BACK];
+    float run_s = keyboard[KEY_RSTRAFE] - keyboard[KEY_LSTRAFE];
     if (run_f != 0.0f && run_s != 0.0f) {
         run_f *= ROOT_HALF;
         run_s *= ROOT_HALF;
     }
-    player_angle += rotate_speed * (key_held[KEY_RIGHT] - key_held[KEY_LEFT]);
+    player_angle += rotate_speed * (keyboard[KEY_RIGHT] - keyboard[KEY_LEFT]);
     player_x += run_speed * (run_f * cosf(player_angle) - run_s * sinf(player_angle));
     player_y += run_speed * (run_f * sinf(player_angle) + run_s * cosf(player_angle));
 
@@ -1199,15 +979,11 @@ void* draw(__externref_t socket, double timestamp, double date_now, bool logged_
 
         // Write out the pixels for this column.
         for (int y = 0; y < FRAME_H; y++)
-            frame[x + y * FRAME_W] = apply_fog(col.color[y], col.light[y], x, y);
+            set_pixel(x, y, apply_fog(col.color[y], col.light[y], x, y));
     }
 
     draw_user_interface(logged_in);
 
-    // Reset keyboard state.
-    memset(key_down, 0, sizeof(key_down));
-    memset(key_up, 0, sizeof(key_up));
-
     // Return the finished frame so that it can be presented to the canvas.
-    return frame;
+    return get_frame_data();
 }

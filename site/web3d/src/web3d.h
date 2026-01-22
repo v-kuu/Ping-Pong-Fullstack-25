@@ -33,10 +33,48 @@ typedef __SIZE_TYPE__ size_t;
 #define MAP_SIZE (MAP_W * MAP_H)
 #define MAP_ROOMS 20
 
+// Dimensions of the frame buffer.
+#define FRAME_W 360
+#define FRAME_H 200
+
+// Layout of font images.
+#define FONT_GLYPH_MIN ' '
+#define FONT_GLYPH_MAX '~'
+#define FONT_GLYPH_COUNT (FONT_GLYPH_MAX - FONT_GLYPH_MIN + 1)
+#define FONT_GLYPHS_PER_ROW 16
+#define FONT_GLYPHS_PER_COL 6
+
+// Type used for loading and drawing image textures.
+typedef struct {
+    uint16_t w, h;  // Size of the texture.
+    uint16_t pitch; // Texels per row.
+    uint32_t color; // Average color (used for particle effects).
+    void* data;     // GIF file data (before load) or texel data (after load).
+} Texture;
+
+// Type used for loading and drawing fonts.
+typedef struct {
+    uint16_t w, h;                      // Size of the font texture.
+    uint16_t width[FONT_GLYPH_COUNT];   // Per-glyph width.
+    void* data;                         // GIF or texel data (same as Texture).
+} Font;
+
 // gif.c
 int gif_get_image_w(const uint8_t* gif);
 int gif_get_image_h(const uint8_t* gif);
 void* gif_get_pixels(const uint8_t* gif, void* pixels);
+
+// graphics.c
+uint32_t texture_sample(const Texture* tex, float u, float v);
+void font_load(Font* font);
+void texture_load(Texture* tex);
+void texture_sub(Texture* tex, Texture* src, int x, int y, int w, int h);
+void texture_draw(Texture* tex, int x, int y);
+void font_draw(Font* font, int x, int y, uint32_t color, const char* string);
+int font_width(Font* font, const char* string);
+uint32_t average_color(Texture* tex);
+void set_pixel(int x, int y, uint32_t color);
+uint32_t* get_frame_data(void);
 
 // map.c
 bool map_inside(int x, int y);
@@ -65,3 +103,8 @@ float random_float(float min, float max);
 int random_hash(size_t index, size_t range);
 int random_hash_x(size_t index, size_t range);
 int random_hash_y(size_t index, size_t range);
+
+// string.c
+void string_join(char* buffer, size_t buffer_size, char* string);
+char* string_from_int(char* buffer, unsigned int value);
+void string_from_timestamp(char buffer[9], double time);
