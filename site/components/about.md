@@ -42,8 +42,8 @@ Database is built using [Astro DB](https://astro.build/db) which uses [Drizzle O
 [BabylonJS](https://babylonjs.com) is used for 3D rendering on the client end. </br>
 And a backend server is used for calculating the state and communicating that to clients using WebSockets. </br>
 
-### Games -> InsertGameName
-Second game built using [this].
+### Games -> Web3D
+A second game built with WebAssembly for competitive gem collection. Players compete to collect gems in a real-time multiplayer environment. Uses WASM compiled from C for high-performance gameplay.
 
 ## Resources
 
@@ -53,7 +53,7 @@ Second game built using [this].
 
 ## Database Schema
 
-The database is built using Astro DB with Drizzle ORM. It consists of four tables:
+The database is built using Astro DB with Drizzle ORM. It consists of five tables:
 
 ### Users
 | Field | Type | Description |
@@ -62,9 +62,6 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 | username | text | Unique username |
 | password | text | Hashed password |
 | email | text | Unique email address |
-| createdAt | date | Account creation timestamp |
-| updatedAt | date | Last update timestamp |
-| elo | number | ELO rating (default: 1000) |
 | lastSeen | date | Last activity timestamp (optional) |
 
 ### Matches
@@ -72,12 +69,9 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 |-------|------|-------------|
 | id | number | Primary key, auto-incremented |
 | game | text | Game identifier |
-| player1Id | number | Foreign key to Users |
-| player2Id | number | Foreign key to Users |
-| winnerId | number | Foreign key to winning user (optional) |
-| startedAt | date | Match start timestamp |
-| completedAt | date | Match completion timestamp (optional) |
-| score | text | Match score details (optional) |
+| playerIds | json | Array of player user IDs |
+| scores | json | Array of scores corresponding to players |
+| createdAt | date | Match creation timestamp |
 
 ### Sessions
 | Field | Type | Description |
@@ -93,10 +87,20 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 | friendId | number | Foreign key to Users |
 | status | text | Friendship status |
 
+### Messages
+| Field | Type | Description |
+|-------|------|-------------|
+| id | number | Primary key, auto-incremented |
+| fromId | number | Foreign key to Users (sender) |
+| toId | number | Foreign key to Users (receiver) |
+| content | text | Message content |
+| createdAt | date | Message timestamp |
+| read | boolean | Read status (default: false) |
+
 **Relationships:**
-- Matches references Users for player1Id, player2Id, and winnerId
 - Sessions references Users for userId
-- Friendships references Users for userId and friendId (many-to-many relationship via junction table)
+- Friendships references Users for userId and friendId
+- Messages references Users for fromId and toId
 
 ## Individual Contributions
 
@@ -109,26 +113,26 @@ The database is built using Astro DB with Drizzle ORM. It consists of four table
 ## Modules
 
 ### Major Modules
-- Full-stack framework (Astro + Preact) - 2 points
+- Use a framework for both the frontend and backend (Astro + Preact) - 2 points
+- Implement real-time features using WebSockets or similar technology - 2 points
+- Allow users to interact with other users (chat, profile, friends system) - 2 points
 - Standard user management and authentication - 2 points
-- Remote players (real-time multiplayer) - 2 points
-- AI opponent for games - 2 points
-- Another game with user history and matchmaking - 2 points
-- Web-based game (Pong) - 2 points
-- Advanced 3D techniques (BabylonJS) - 2 points
-- Server-side Pong with API implementation - 2 points
+- Introduce an AI Opponent for games - 2 points
+- Implement a complete web-based game where users can play against each other (3D Pong) - 2 points
+- Remote players — Enable two players on separate computers to play the same game in real-time - 2 points
+- Implement advanced 3D graphics using a library like Three.js or Babylon.js - 2 points
+- Add another game with user history and matchmaking (Web3D) - 2 points
 
 ### Minor Modules
-- ORM for database (Drizzle) - 1 point
-- Expanding browser compatibility - 1 point
+- Use an ORM for the database (Drizzle via Astro DB) - 1 point
 - Server-Side Rendering (SSR) - 1 point
 
 Total: 20 points
 
 ## AI Usage
 
-Gemini 3 Pro was used to create privacy policy & ToS.</br> Github Copilot did at least one code review.</br>ChatGPT was consulted on TypeScript usage. 
+Gemini 3 Pro was used to create privacy policy & ToS.</br> Github Copilot did at least one code review.</br>ChatGPT was consulted on TypeScript usage.
 
 ## Features List
 
-You can go login, play games with friends and have limited usage history.
+You can login, play games with friends, and chat with other users.

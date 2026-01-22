@@ -6,7 +6,6 @@ const Users = defineTable({
         username: column.text({ unique: true }),
         password: column.text(),
         email: column.text({ unique: true }),
-        elo: column.number({ default: 1000 }),
         lastSeen: column.date({ optional: true }),
     }
 });

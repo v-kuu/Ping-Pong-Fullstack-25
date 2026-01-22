@@ -10,26 +10,29 @@ The project includes a complete web application with user management, interactiv
 
 ### Development
 
+**Prerequisites:** Bun, openssl, Docker
+
 ```bash
 bun i && bun dev
 ```
 
 ### Production
 
+**Prerequisites:** Docker, openssl
+
 ```bash
 ./run.sh -u
 ```
 
 ## Team & roles
-[abostrom](https://intra.42.fr/users/abostrom) </br>
-[vkuusela](https://intra.42.fr/users/vkuusela) </br>
-[vlopatin](https://intra.42.fr/users/vlopatin) </br>
-[jtuomi](https://intra.42.fr/users/jtuomi)</br>
-[maoliiny](https://intra.42.fr/users/maoliiny)
+**PO (Product Owner)**: ville - Defined product vision, prioritized features, maintained product backlog</br>
+**PM (Project Manager)**: jtuomi - Organized team meetings, tracked progress, ensured team communication</br>
+**Architect**: maoliiny - Defined technical architecture, made technology stack decisions, ensured code quality</br>
+**Developers**: abostrom, maoliiny, jtuomi, vkuusela, vlopatin - Implemented features, participated in code reviews</br>
 
 ## Project Management
 
-Communication is handled through a Discord group. The GitHub repository is set up with issue-driven development where tasks are tracked as issues and assigned to team members. All pull requests to the main branch require at least one review before merging. Core team decisions are documented, and meetings are held in the reserved rooms when needed.
+Communication is handled through a Discord group where the team coordinated daily. The team met at least once every two weeks in person at the campus reserved rooms. The GitHub repository is set up with issue-driven development where tasks are tracked as issues and assigned to team members. All pull requests to the main branch require at least one review before merging. Core team decisions are documented.
 
 ## Tech stack
 
@@ -42,8 +45,8 @@ Database is built using [Astro DB](https://astro.build/db) which uses [Drizzle O
 [BabylonJS](https://babylonjs.com) is used for 3D rendering on the client end. </br>
 And a backend server is used for calculating the state and communicating that to clients using WebSockets. </br>
 
-### Games -> InsertGameName
-Second game built using [this].
+### Games -> Web3D
+A second game built with WebAssembly for competitive gem collection. Players compete to collect gems in a real-time multiplayer environment. Uses WASM compiled from C for high-performance gameplay.
 
 ## Resources
 
@@ -62,7 +65,6 @@ The database is built using Astro DB with Drizzle ORM. It consists of five table
 | username | text | Unique username |
 | password | text | Hashed password |
 | email | text | Unique email address |
-| elo | number | ELO rating (default: 1000) |
 | lastSeen | date | Last activity timestamp (optional) |
 
 ### Matches
@@ -105,30 +107,38 @@ The database is built using Astro DB with Drizzle ORM. It consists of five table
 
 ## Individual Contributions
 
-- abostrom: Created Web3D game using WASM, supported development coordination with other teams
-- vkuusela: Implemented 3D Pong game using BabylonJS
-- jtuomi: Frontend and backend development
-- maoliiny: Frontend, backend, and database development
-- vlopatin: Server-side Pong implementation and AI opponent
+**abostrom**: Created Web3D game using WebAssembly, implemented Web3D WebSocket server.
+
+**vkuusela**: Implemented 3D Pong game using BabylonJS, created game assets and visual effects.
+
+**vlopatin**: Implemented server-side Pong logic and AI opponent. 
+
+**jtuomi**: Frontend and backend development, REST API endpoints, UI design.
+
+**maoliiny**: Frontend, backend, and database development, system architecture.
 
 ## Modules
 
-### Major Modules
-- Full-stack framework (Astro + Preact) - 2 points
-- Standard user management and authentication - 2 points
-- Remote players (real-time multiplayer) - 2 points
-- AI opponent for games - 2 points
-- Another game with user history and matchmaking - 2 points
-- Web-based game (Pong) - 2 points
-- Advanced 3D techniques (BabylonJS) - 2 points
-- Server-side Pong with API implementation - 2 points
+### Major Modules (2 points each)
+| Module | Justification | Implemented By |
+|--------|---------------|----------------|
+| Framework for frontend and backend (Astro + Preact) | Astro provides SSR and island architecture; Preact is lightweight and fast | maoliiny, jtuomi |
+| Real-time features using WebSockets | Needed for multiplayer game synchronization and live messaging | vlopatin, abostrom, jtuomi |
+| User interaction (chat, friends, profiles) | Core social features for a multiplayer platform | maoliiny |
+| User management and authentication | Security and session management for user accounts | maoliiny, jtuomi |
+| AI Opponent for games | Single-player Pong experience when no opponents available | vlopatin |
+| Complete web-based game (3D Pong) | Main competitive game with BabylonJS rendering | vkuusela, vlopatin, jtuomi |
+| Remote players (real-time multiplayer) | Two players on separate computers playing together | vlopatin, vkuusela, jtuomi, abostrom |
+| Advanced 3D graphics (BabylonJS) | 3D rendering for immersive Pong gameplay | vkuusela |
+| Second game with history and matchmaking (Web3D) | WASM-based gem collection game for variety | abostrom |
 
-### Minor Modules
-- ORM for database (Drizzle) - 1 point
-- Expanding browser compatibility - 1 point
-- Server-Side Rendering (SSR) - 1 point
+### Minor Modules (1 point each)
+| Module | Justification | Implemented By |
+|--------|---------------|----------------|
+| ORM for database (Drizzle via Astro DB) | Type-safe database operations and migrations | maoliiny |
+| Server-Side Rendering (SSR) | SEO-friendly initial page loads | maoliiny |
 
-Total: 20 points
+**Total: 20 points**
 
 ## AI Usage
 
@@ -136,4 +146,31 @@ Gemini 3 Pro was used to create privacy policy & ToS.</br> Github Copilot did at
 
 ## Features List
 
-You can go login, play games with friends and have limited usage history.
+### Authentication & User Management
+- User registration and login (jtuomi, maoliiny)
+- Session management with httpOnly cookies (maoliiny)
+- Profile management and avatar upload (maoliiny)
+- Password strength validation (jtuomi)
+
+### Social Features
+- Friends system (add/remove friends, online status) (maoliiny)
+- Direct messaging between users (maoliiny)
+- Friend requests handling (maoliiny)
+
+### Games
+- 3D Pong game with BabylonJS (vkuusela)
+- Pong WebSocket server for real-time multiplayer (vlopatin)
+- AI opponent for Pong (vlopatin)
+- Web3D WASM-based game (abostrom)
+- Web3D WebSocket server (abostrom)
+
+### Backend & Database
+- Astro DB schema and migrations (maoliiny)
+- REST API endpoints for all features (jtuomi, maoliiny)
+- WebSocket servers for game synchronization (vlopatin, abostrom)
+
+### Frontend
+- Astro + Preact component architecture (jtuomi)
+- TailwindCSS + DaisyUI styling (jtuomi)
+- Responsive UI design (jtuomi)
+- Game UI overlays with BabylonJS (vkuusela)

@@ -18,7 +18,6 @@ export const GET: APIRoute = async ({ params }) => {
     .select({
       id: Users.id,
       username: Users.username,
-      elo: Users.elo,
     })
     .from(Users)
     .where(eq(Users.username, username))
@@ -51,7 +50,7 @@ export const GET: APIRoute = async ({ params }) => {
   );
 
   return success({
-    user: { id: user.id, username: user.username, elo: user.elo },
+    user: { id: user.id, username: user.username },
     matches,
   });
 };

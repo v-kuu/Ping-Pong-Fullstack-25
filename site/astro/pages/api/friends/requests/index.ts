@@ -29,7 +29,6 @@ export const GET: APIRoute = async ({ locals }) => {
             .select({
                 id: Users.id,
                 username: Users.username,
-                elo: Users.elo,
             })
             .from(Users)
             .where(inArray(Users.id, senderIds));
@@ -43,7 +42,6 @@ export const GET: APIRoute = async ({ locals }) => {
                 id: r.id,
                 userId: sender.id,
                 username: sender.username,
-                elo: sender.elo
             };
         }).filter(Boolean);
 
