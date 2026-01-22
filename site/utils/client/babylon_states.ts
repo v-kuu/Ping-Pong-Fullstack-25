@@ -1,5 +1,5 @@
 import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
-import { startCountdown, messageGameOver } from "./babylon_ui.ts"
+import { startCountdown, messageGameOver, messageReady } from "./babylon_ui.ts"
 import { Scene, Tools } from "@babylonjs/core"
 
 export function setState(newState: GameState, scene: Scene)
@@ -10,6 +10,7 @@ export function setState(newState: GameState, scene: Scene)
 	{
 		case GameState.WaitingPlayers:
 			Globals.playing = false;
+			messageReady(scene);
 			break;
 
 		case GameState.Countdown:

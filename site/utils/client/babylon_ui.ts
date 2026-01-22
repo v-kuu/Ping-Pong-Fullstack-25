@@ -221,3 +221,29 @@ export function messageGameOver(scene: Scene)
 		scoreMesh.rotation.x = Tools.ToRadians(45);
 	}
 }
+
+export function messageReady(scene: Scene)
+{
+	let prev = scene.getMeshByName("Ready");
+	prev?.dispose();
+
+	let textMat = new StandardMaterial("Ready", scene);
+	textMat.diffuseColor = Color3.Black();
+	textMat.emissiveColor = Color3.Gray();
+	let readyMesh = MeshBuilder.CreateText(
+		"Ready",
+		"READY",
+		fontData,
+		{
+			size: 1.5,
+			depth: 0.5,
+		},
+		scene,
+	);
+	if (readyMesh)
+	{
+		readyMesh.material = textMat;
+		readyMesh.position.z = Globals.mapHeight / 2 + 1.75;
+		readyMesh.rotation.x = Tools.ToRadians(45);
+	}
+}

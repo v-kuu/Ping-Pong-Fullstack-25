@@ -4,7 +4,7 @@
 
 import type { ServerWebSocket } from "bun";
 import { recordMatch } from "../utils/recordMatch.ts";
-import { NullEngine, Scene } from "@babylonjs/core";
+import { NullEngine, Tools, Scene } from "@babylonjs/core";
 import { createSession } from "../utils/server/babylon_createsession.ts";
 import { setState } from "@/utils/server/babylon_serverstates.ts"
 import { GameState, Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
@@ -25,7 +25,7 @@ const clients = new Set<ServerWebSocket<unknown>>();
 let names = new Map<number, string>();
 let playerQueue = [];
 var engine = new NullEngine();
-var scene = createSession(engine);
+var scene: Scene = createSession(engine);
 let playerOne, playerTwo, disconnectedPlayer = 0;
 
 engine.runRenderLoop(function () {
@@ -114,12 +114,12 @@ function gameTick() {
   const ballMesh = scene.getMeshByName("ball");
   const p1Mesh = scene.getMeshByName("player1");
   const p2Mesh = scene.getMeshByName("player2");
-	ServerVars.player1 = names.get(playerOne);
-	ServerVars.player2 = names.get(playerTwo);
+  ServerVars.player1 = names.get(playerOne);
+  ServerVars.player2 = names.get(playerTwo);
 
   ServerVars.ballPos.copyFrom(ballMesh.position);
-	ServerVars.p1Pos.copyFrom(p1Mesh.position);
-	ServerVars.p2Pos.copyFrom(p2Mesh.position);
+  ServerVars.p1Pos.copyFrom(p1Mesh.position);
+  ServerVars.p2Pos.copyFrom(p2Mesh.position);
 
   const posSyncData = JSON.stringify({
       type: "physics_sync",
@@ -137,7 +137,10 @@ function gameTick() {
 
 function freshMatch() {
   disconnectedPlayer = 0;
-	setState(GameState.WaitingPlayers, scene);
+  setState(GameState.WaitingPlayers, scene);
+  Tools.DelayAsync(5000).then(() => {
+	setState(GameState.Countdown, scene);
+  });
 }
 
 async function winnerTakesItAll() {
@@ -176,6 +179,7 @@ function handleState() : boolean {
     ai = false;
   } else if (clients.size === 0) {
     newMatch = true;
+	setState(GameState.WaitingPlayers, scene);
     return false;
   } else if (clients.size === 1) {
     playerOne
@@ -188,7 +192,9 @@ function handleState() : boolean {
       : playerOne = playerQueue.shift();
       newMatch = false;
   	}
-  } else if (clients.size >= 2 && !newMatch) {
+	if (ServerVars.currentState === GameState.WaitingPlayers)
+	  setState(GameState.Countdown, scene);
+  } else if (clients.size >= 2 && !newMatch && (ServerVars.currentState === GameState.WaitingPlayers || ai)) {
     newMatch = true;
     if (ai) {
       playerTwo

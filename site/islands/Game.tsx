@@ -5,7 +5,7 @@ import { Engine } from "@babylonjs/core";
 import { useEffect } from "preact/hooks";
 import { CanvasPong } from "../components/Canvas.tsx";
 import { createScene } from "../utils/client/babylon_scene.ts";
-import { Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
+import { Globals, ServerVars, GameState } from "../utils/shared/babylon_globals.ts";
 import { updateScore, createAvatar } from "@/utils/client/babylon_ui.ts";
 import { setState } from "../utils/client/babylon_states.ts"
 
@@ -66,6 +66,11 @@ export function Game({user}: {user: { id: number; username: string } | null})
 				}
 				if (ServerVars.currentState !== newState.currentState)
 				{
+					if (ServerVars.currentState === GameState.WaitingPlayers)
+					{
+						let readyMesh = scene.getMeshByName("Ready");
+						readyMesh?.dispose();
+					}
 					setState(newState.currentState, scene);
 				}
 			}
