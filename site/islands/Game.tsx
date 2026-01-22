@@ -28,7 +28,7 @@ export function Game({user}: {user: { id: number; username: string } | null})
 
 		// Open WebSocket
 		console.log("location.hostname", location.hostname)
-		const ws = new WebSocket("wss://" + location.hostname + ":3001/wss");
+		const ws = new WebSocket("wss://" + location.hostname + ":3001/wss" + "?id=" + playerId + "&username=" + encodeURIComponent(username));
 
 		ws.onopen = () =>
 		{
@@ -40,7 +40,7 @@ export function Game({user}: {user: { id: number; username: string } | null})
 		};
 
 		ws.onerror = (event: Event): void => {
-			console.log("Connection closed due to error");
+			console.error("Connection closed due to error", event);
 		};
 
 		ws.onmessage = (e) => {

@@ -214,14 +214,9 @@ function handleState() : boolean {
     ? AI_moves(scene)
     : playerTwo
     ? AI_moves_one(scene)
-    : AI_moves_both();
+    : freshMatch();
   }
   return true;
-}
-
-function AI_moves_both() {
-    AI_moves(scene);
-    AI_moves_one(scene);
 }
 
 console.log(`Server started on wss://localhost:${PORT}`);

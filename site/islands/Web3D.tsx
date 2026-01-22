@@ -72,12 +72,7 @@ export function Web3D({user}: {user: { id: number; username: string } | null}) {
     // Connect to the game server.
     let socket: WebSocket | null = null;
     if (username && playerId) {
-        try {
       socket = new WebSocket("wss://" + location.hostname + ":3002/web3d");
-        } catch (e) {
-            console.log(e);
-            return;
-        }
       socket.binaryType = "arraybuffer";
       socket.onmessage = event => handleMessage(event.data);
       socket.onopen = _event => {
