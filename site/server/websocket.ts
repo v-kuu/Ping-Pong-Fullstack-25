@@ -20,6 +20,11 @@ interface PlayerData {
     room?: string;
 }
 
+const PORT = 3001;
+
+// Paths of key and cert
+const certPath = join(import.meta.dir, "../../certs/cert.pem");
+const keyPath = join(import.meta.dir, "../../certs/key.pem");
 
 const TICK_RATE = 60;
 const TICK_INTERVAL = 1000 / TICK_RATE;
@@ -147,7 +152,6 @@ function freshMatch() {
 	setState(GameState.Countdown, scene);
   });
 }
-
 
 async function winnerTakesItAll() {
   if (!playerDisconnected()) {
