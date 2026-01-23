@@ -10,12 +10,19 @@ import { setState } from "@/utils/server/babylon_serverstates.ts"
 import { GameState, Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
 import { AI_moves, AI_moves_one } from "../utils/server/AI_opponent.ts";
 import { unauthorized } from "@/utils/site/apiHelpers.ts";
+import { join } from "path";
 
 interface PlayerData {
     playerId: string;
     index?: number;
     room?: string;
 }
+
+const PORT = 3001;
+
+// Paths of key and cert
+const certPath = join(import.meta.dir, "../../certs/cert.pem");
+const keyPath = join(import.meta.dir, "../../certs/key.pem");
 
 const TICK_RATE = 60;
 const TICK_INTERVAL = 1000 / TICK_RATE;
@@ -35,18 +42,16 @@ engine.runRenderLoop(function () {
 setInterval(gameTick, TICK_INTERVAL);
 
 Bun.serve({
-    port: 3001,
-    // process.env.PRODUCTION === "true" ?
-    //   tls: {
-    //     key: Bun.file(process.env.PONG_KEY_PATH),
-    //     cert: Bun.file(process.env.PONG_CERT_PATH),
-    //   },
-    // :
+    port: PORT,
+    tls: {
+        cert: Bun.file(certPath),
+        key: Bun.file(keyPath),
+    },
     fetch(req, server) {
         const url = new URL(req.url)
         const playerId = +url.searchParams.get("id");
         const username = url.searchParams.get("username");
-        if (url.pathname === "/ws" && playerId) {
+        if (url.pathname === "/wss" && playerId) {
             server.upgrade(req, {
                 data: {
                     playerId,
@@ -142,6 +147,8 @@ function freshMatch() {
 	setState(GameState.Countdown, scene);
   });
 }
+
+console.log(`Server started on wss://localhost:${PORT}`);
 
 async function winnerTakesItAll() {
   if (!playerDisconnected()) {
