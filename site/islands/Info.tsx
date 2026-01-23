@@ -95,6 +95,14 @@ export function PublicUserInfo({
     );
   }
 
+  const handleSendMessage = () => {
+    if (user) {
+      sessionStorage.setItem("profileTab", "messages");
+      sessionStorage.setItem("messageUserId", String(user.id));
+      window.location.href = "/profile";
+    }
+  };
+
   return (
     <div class="min-h-screen flex flex-col items-center justify-start pt-8 p-4">
       <div class="w-full max-w-7xl">
@@ -106,6 +114,13 @@ export function PublicUserInfo({
           onAddFriend={handleAddFriend}
           maxWidth="max-w-full"
         />
+        {!isOwnProfile && isLoggedIn && (
+          <div class="mt-4 flex justify-center">
+            <button class="btn btn-primary" onClick={handleSendMessage}>
+              Send Message
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

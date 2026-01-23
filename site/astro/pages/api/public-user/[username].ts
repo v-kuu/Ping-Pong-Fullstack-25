@@ -1,7 +1,10 @@
 import type { APIRoute } from "astro";
-import { db, Users, Matches, eq, or, sql, inArray } from "astro:db";
+import { db, Users, Matches, eq, inArray } from "astro:db";
 import type { MatchData } from "@/utils/site/types";
-import { processMatchData, getPlayerIdsFromMatches } from "@/utils/site/matchHelpers";
+import {
+  processMatchData,
+  getPlayerIdsFromMatches,
+} from "@/utils/site/matchHelpers";
 import { badRequest, notFound, success } from "@/utils/site/apiHelpers";
 
 export const GET: APIRoute = async ({ params }) => {
@@ -15,7 +18,6 @@ export const GET: APIRoute = async ({ params }) => {
     .select({
       id: Users.id,
       username: Users.username,
-      elo: Users.elo,
     })
     .from(Users)
     .where(eq(Users.username, username))
@@ -27,10 +29,7 @@ export const GET: APIRoute = async ({ params }) => {
 
   const user = userResult[0];
 
-  const allMatches = await db
-    .select()
-    .from(Matches)
-    .limit(100);
+  const allMatches = await db.select().from(Matches).limit(100);
 
   const userMatches = allMatches.filter((match) => {
     const playerIds = Array.isArray(match.playerIds) ? match.playerIds : [];
@@ -44,7 +43,14 @@ export const GET: APIRoute = async ({ params }) => {
       ? await db.select().from(Users).where(inArray(Users.id, playerIds))
       : [];
 
-  const matches: MatchData[] = processMatchData(userMatches, user.id, allPlayers);
+  const matches: MatchData[] = processMatchData(
+    userMatches,
+    user.id,
+    allPlayers,
+  );
 
-  return success({ user: { username: user.username, elo: user.elo }, matches });
+  return success({
+    user: { id: user.id, username: user.username },
+    matches,
+  });
 };

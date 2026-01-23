@@ -180,7 +180,7 @@ export function ChangeAvatar({ username }: AvatarProps) {
 
   if (checkingAvatar) {
     return (
-      <div class="w-full max-w-2xl">
+      <div class="w-full max-w-2xl mx-auto">
         <div class="card bg-base-200 p-6">
           <div class="flex justify-center">
             <span class="loading loading-spinner loading-lg"></span>
@@ -191,7 +191,7 @@ export function ChangeAvatar({ username }: AvatarProps) {
   }
 
   return (
-    <div class="w-full max-w-2xl">
+    <div class="w-full max-w-2xl mx-auto">
       <div class="card bg-base-200 p-6">
         <h2 class="text-2xl font-bold mb-6">Change Avatar</h2>
 
@@ -283,9 +283,8 @@ export function ChangeAvatar({ username }: AvatarProps) {
         {/* Status Messages */}
         {message && (
           <div
-            class={`alert mt-6 ${
-              message.type === "success" ? "alert-success" : "alert-error"
-            }`}
+            class={`alert mt-6 ${message.type === "success" ? "alert-success" : "alert-error"
+              }`}
           >
             <span>{message.text}</span>
           </div>

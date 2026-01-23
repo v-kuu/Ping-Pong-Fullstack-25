@@ -262,9 +262,6 @@ export function UserProfileCard({
             </button>
           )}
         </div>
-        <p class="text-lg">
-          ELO: <span class="font-bold">{user.elo}</span>
-        </p>
       </div>
 
       <div class="card bg-base-200 p-6 mt-6">

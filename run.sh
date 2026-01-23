@@ -32,7 +32,7 @@ Setup()
 	else
 		echo "Certificates already exist in certs/"
 	fi
-
+    
     echo "Setup complete!"
     return 0
 }

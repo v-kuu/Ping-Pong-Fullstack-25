@@ -87,7 +87,6 @@ export function setupServerEntities(scene: Scene)
 	let player1 = createPlayer(true, scene);
 	let player2 = createPlayer(false, scene);
 	let wallMeshes: Mesh[] = createWalls(scene);
-	let prevPos = new Vector3();
 
 	setupCollisions(player1, player2, wallMeshes, ball, scene);
 	scene.onBeforeRenderObservable.add(() =>
@@ -97,14 +96,14 @@ export function setupServerEntities(scene: Scene)
 		{
 			player1.moveWithCollisions(Globals.vel1);
 			player2.moveWithCollisions(Globals.vel2);
-			prevPos = ball.position.clone();
 			ball.moveWithCollisions(Globals.ballVel.scale(delta * Globals.ballSpeed));
-			Globals.ballDelta = ball.position.subtract(prevPos);
 		}
 		else
 		{
 			player1.position.z = 0;
 			player2.position.z = 0;
+			ball.position.x = 0;
+			ball.position.z = 0;
 		}
 
 	});

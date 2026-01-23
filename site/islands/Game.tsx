@@ -5,41 +5,32 @@ import { Engine } from "@babylonjs/core";
 import { useEffect } from "preact/hooks";
 import { CanvasPong } from "../components/Canvas.tsx";
 import { createScene } from "../utils/client/babylon_scene.ts";
-import { Globals } from "../utils/shared/babylon_globals.ts";
-import { updateScore } from "@/utils/client/babylon_ui.ts";
+import { Globals, ServerVars, GameState } from "../utils/shared/babylon_globals.ts";
+import { updateScore, createAvatar } from "@/utils/client/babylon_ui.ts";
 import { setState } from "../utils/client/babylon_states.ts"
 
-export function Game(username: string) {
+export function Game({user}: {user: { id: number; username: string } | null})
+{
+	if (!user) return null;
+	const username = user!.username;
+	const playerId = user!.id;
 	Globals.userName = username;
-	useEffect(() => {
+	useEffect(() =>
+	{
 		const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
 		const engine = new Engine(canvas, true, { stencil: true });
 		const preventScroll = (e: WheelEvent) => e.preventDefault();
 		canvas.addEventListener("wheel", preventScroll, { passive: false });
-
-		//debug info
-		const gl = engine._gl;
-		if (gl) {
-			const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-			if (debugInfo) {
-				const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-				const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-				console.log("GPU Vendor: ", vendor);
-				console.log("GPU Renderer: ", renderer);
-			}
-			else
-				console.log("WEBGL_debug_renderer_info not supported by this browser");
-		}
 
 		const scene = createScene(engine, canvas);
 		engine.runRenderLoop(() => scene.render());
 		addEventListener("resize", () => engine.resize());
 
 		// Open WebSocket
-		console.log("location.hostname", location.hostname)
-		const ws = new WebSocket("wss://" + location.hostname + ":3001/wss");
+		const ws = new WebSocket("wss://" + location.hostname + ":3001/wss" + "?id=" + encodeURIComponent(playerId) + "&username=" + encodeURIComponent(username));
 
-		ws.onopen = () => {
+		ws.onopen = () =>
+		{
 			console.log("Connected to server");
 		};
 
@@ -51,38 +42,61 @@ export function Game(username: string) {
 			console.log("Connection closed due to error");
 		};
 
-		ws.onmessage = (e) => {
+		ws.onmessage = (e) =>
+		{
 			const data = JSON.parse(e.data);
-			if (data.type === "physics_sync") {
-				Globals.ballVel.copyFrom(data.ballVel);
-				Globals.ballDelta.copyFrom(data.ballDelta);
-				Globals.vel1.copyFrom(data.vel1);
-				Globals.vel2.copyFrom(data.vel2);
+			if (data.type === "physics_sync")
+			{
+				let newState = data.ServerState;
+				ServerVars.ballPos.copyFrom(newState.ballPos);
+				ServerVars.p1Pos.copyFrom(newState.p1Pos);
+				ServerVars.p2Pos.copyFrom(newState.p2Pos);
 
-				if (Globals.score1 !== data.score1) {
-					Globals.score1 = data.score1;
+				if (ServerVars.player1 !== newState.player1)
+				{
+					ServerVars.player1 = newState.player1;
+					createAvatar(scene, 1);
+				}
+				if (ServerVars.player2 !== newState.player2)
+				{
+					ServerVars.player2 = newState.player2;
+					createAvatar(scene, 2);
+				}
+				if (ServerVars.score1 !== newState.score1)
+				{
+					ServerVars.score1 = newState.score1;
 					updateScore(scene, 1);
 				}
-				if (Globals.score2 !== data.score2) {
-					Globals.score2 = data.score2;
+				if (ServerVars.score2 !== newState.score2)
+				{
+					ServerVars.score2 = newState.score2;
 					updateScore(scene, 2);
 				}
-				if (Globals.currentState !== data.currentState) {
-					setState(data.currentState, scene);
+				if (ServerVars.currentState !== newState.currentState)
+				{
+					if (ServerVars.currentState === GameState.WaitingPlayers)
+					{
+						let readyMesh = scene.getMeshByName("Ready");
+						readyMesh?.dispose();
+					}
+					setState(newState.currentState, scene);
 				}
 			}
 		}
 
 		// Input handling
 		const keys = new Set<string>();
-		const onKeyDown = (e: KeyboardEvent) => {
+		const onKeyDown = (e: KeyboardEvent) =>
+		{
 			if (e.key === "w" || e.key === "s")
 				keys.add(e.key)
 		}
-		const onKeyUp = (e: KeyboardEvent) => {
+		const onKeyUp = (e: KeyboardEvent) =>
+		{
 			keys.delete(e.key)
 		}
-		const sendInput = () => {
+		const sendInput = () =>
+		{
 			if (ws.readyState !== WebSocket.OPEN)
 				return;
 			ws.send(JSON.stringify({
@@ -95,7 +109,8 @@ export function Game(username: string) {
 		window.addEventListener("keyup", onKeyUp);
 		const inputInterval = setInterval(sendInput, 16);
 
-		return () => {
+		return () =>
+		{
 			removeEventListener("resize", () => engine.resize());
 			window.removeEventListener("keydown", onKeyDown);
 			window.removeEventListener("keyup", onKeyUp);

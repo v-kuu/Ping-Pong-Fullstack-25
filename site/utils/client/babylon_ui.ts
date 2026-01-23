@@ -10,7 +10,7 @@ import {
 	Texture,
 } from "@babylonjs/core";
 import { FireProceduralTexture } from "@babylonjs/procedural-textures";
-import { Globals } from "../shared/babylon_globals.ts";
+import { Globals, ServerVars } from "../shared/babylon_globals.ts";
 
 async function get3dFont(): Promise<any>
 {
@@ -144,23 +144,29 @@ function initAvatars(scene: Scene)
 	createAvatar(scene, 2);
 }
 
-async function createAvatar(scene: Scene, id: number)
+export async function createAvatar(scene: Scene, id: number)
 {
+	let prev = scene.getMeshByName("avatar" + id);
+	prev?.dispose();
+
 	let url = "/avatar.png";
-	if (Globals.userName.username) {
-  	try
-  	{
-  		let res = await fetch("/api/avatars/" + Globals.userName.username.username);
-  		if (!res.ok)
-  			throw new Error("Failed to fetch avatar");
-  		url = res.url;
-  	}
-  	catch (error)
-  	{
-  		console.error(error);
-  	}
+	let userName;
+	id === 1 ? userName = ServerVars.player1 : userName = ServerVars.player2;
+	if (userName != "Guest")
+	{
+		try
+		{
+			let res = await fetch("/api/avatars/" + userName);
+			if (!res.ok)
+				throw new Error("Failed to fetch avatar");
+			url = res.url;
+		}
+		catch (error)
+		{
+			console.error(error);
+		}
 	}
-	let avatar = MeshBuilder.CreatePlane("avatar", { size: 2 }, scene);
+	let avatar = MeshBuilder.CreatePlane("avatar" + id, { size: 2 }, scene);
 	avatar.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
 	let avatarMat = new StandardMaterial("avatarMat", scene);
@@ -181,7 +187,7 @@ export function updateScore(scene: Scene, id: number)
 	else if (Globals.score2Mesh)
 		Globals.score2Mesh.dispose();
 	let name = id === 1 ? "score1" : "score2";
-	let value = id === 1 ? `${Globals.score1}` : `${Globals.score2}`;
+	let value = id === 1 ? `${ServerVars.score1}` : `${ServerVars.score2}`;
 	let color =
 		id === 1
 			? FireProceduralTexture.BlueFireColors
@@ -213,5 +219,31 @@ export function messageGameOver(scene: Scene)
 		scoreMesh.material = mat;
 		scoreMesh.position.z = Globals.mapHeight / 2 + 1;
 		scoreMesh.rotation.x = Tools.ToRadians(45);
+	}
+}
+
+export function messageReady(scene: Scene)
+{
+	let prev = scene.getMeshByName("Ready");
+	prev?.dispose();
+
+	let textMat = new StandardMaterial("Ready", scene);
+	textMat.diffuseColor = Color3.Black();
+	textMat.emissiveColor = Color3.Gray();
+	let readyMesh = MeshBuilder.CreateText(
+		"Ready",
+		"READY",
+		fontData,
+		{
+			size: 1.5,
+			depth: 0.5,
+		},
+		scene,
+	);
+	if (readyMesh)
+	{
+		readyMesh.material = textMat;
+		readyMesh.position.z = Globals.mapHeight / 2 + 1.75;
+		readyMesh.rotation.x = Tools.ToRadians(45);
 	}
 }
