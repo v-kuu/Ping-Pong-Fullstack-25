@@ -37,6 +37,17 @@ Setup()
         echo "Certificates already exist in certs/"
     fi
 
+    if [ ! -f certs/pong.pem ] || [ ! -f certs/pong-key.pem ]; then
+        echo "Generating SSL certificates for pong with mkcert"
+        if ! mkcert -cert-file certs/pong.pem -key-file certs/key.pem localhost 127.0.0.1 ::1; then
+            echo "Error: Failed to generate pong certificates"
+            return 1
+        fi
+        echo "Pong certificates generated successfully!"
+    else
+        echo "Pong certificates already exist in certs/"
+    fi
+
     echo "Setup complete!"
     return 0
 }

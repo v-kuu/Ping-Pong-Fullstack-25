@@ -3,7 +3,7 @@ import {
 	Scene,
 } from "@babylonjs/core"
 import { Sides } from "./babylon_serverentities.ts"
-import { GameState, Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
 import {
 	setState,
 } from "./babylon_serverstates.ts"
@@ -13,11 +13,29 @@ function bounceOffPlayer(
 {
 	const bbox = player.mesh.getBoundingInfo().boundingBox;
 	const paddleHeight = bbox.maximum.z - bbox.minimum.z;
+	const paddleWidth = bbox.maximum.x - bbox.minimum.x;
 	const paddleCenter = player.mesh.position.z;
+	
+	const dx = ball.position.x - player.mesh.position.x;
+	const dz = ball.position.z - player.mesh.position.z;
+
+	const halfWidth = paddleWidth / 2;
+	const halfHeight = paddleHeight / 2;
+	const ballRadius = 0.25;
+
+	const overlapX = halfWidth + ballRadius - Math.abs(dx);
+	const overlapZ = halfHeight + ballRadius - Math.abs(dz);
+
+	//side hit
+	if (overlapZ < overlapX)
+	{
+		ballVel.z *= -1;
+		return ballVel;
+	}
 
 	const relativeIntersectZ = ball.position.z - paddleCenter;
 	const normalizedRelativeIntersectionZ =
-		relativeIntersectZ / (paddleHeight / 2);
+		relativeIntersectZ / halfHeight;
 
 	const maxAngle = Math.PI / 3;
 	const angle = normalizedRelativeIntersectionZ * maxAngle;
@@ -59,10 +77,10 @@ export function setupCollisions(player1: any, player2: any, wallMeshes: any, bal
 				ball.position.y = 0.25;
 				ball.position.z = 0;
 				if (dir > 0)
-					Globals.score1++;
+					ServerVars.score1++;
 				else
-					Globals.score2++;
-				if (Globals.score1 >= Globals.maxScore || Globals.score2 >= Globals.maxScore)
+					ServerVars.score2++;
+				if (ServerVars.score1 >= Globals.maxScore || ServerVars.score2 >= Globals.maxScore)
 					setState(GameState.GameOver, scene);
 				else
 					setState(GameState.Countdown, scene);

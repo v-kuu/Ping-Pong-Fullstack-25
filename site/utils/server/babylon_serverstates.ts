@@ -1,13 +1,14 @@
-import { GameState, Globals } from "../shared/babylon_globals.ts"
+import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
 import { Scene, Tools } from "@babylonjs/core"
 
 export function setState(newState: GameState, scene: Scene)
 {
-	Globals.currentState = newState;
+	ServerVars.currentState = newState;
 
 	switch (newState)
 	{
 		case GameState.WaitingPlayers:
+			resetGame();
 			Globals.playing = false;
 			break;
 
@@ -15,7 +16,8 @@ export function setState(newState: GameState, scene: Scene)
 			Globals.playing = false;
 			Tools.DelayAsync(3000).then(() =>
 			{
-				setState(GameState.Playing, scene);
+				if (ServerVars.currentState === GameState.Countdown)
+					setState(GameState.Playing, scene);
 			});
 			break ;
 
@@ -25,6 +27,19 @@ export function setState(newState: GameState, scene: Scene)
 
 		case GameState.GameOver:
 			Globals.playing = false;
+			Tools.DelayAsync(5000).then(() =>
+			{
+				if (ServerVars.currentState === GameState.GameOver)
+					setState(GameState.WaitingPlayers, scene);
+			});
 			break ;
 	}
+}
+
+function resetGame()
+{
+	ServerVars.p1Pos.z = 0;
+	ServerVars.p2Pos.z = 0;
+	ServerVars.score1 = 0;
+	ServerVars.score2 = 0;
 }

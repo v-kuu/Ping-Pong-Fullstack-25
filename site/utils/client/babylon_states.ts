@@ -1,15 +1,16 @@
-import { GameState, Globals } from "../shared/babylon_globals.ts"
-import { startCountdown, messageGameOver } from "./babylon_ui.ts"
-import { Scene } from "@babylonjs/core"
+import { GameState, Globals, ServerVars } from "../shared/babylon_globals.ts"
+import { startCountdown, messageGameOver, messageReady } from "./babylon_ui.ts"
+import { Scene, Tools } from "@babylonjs/core"
 
 export function setState(newState: GameState, scene: Scene)
 {
-	Globals.currentState = newState;
+	ServerVars.currentState = newState;
 
 	switch (newState)
 	{
 		case GameState.WaitingPlayers:
 			Globals.playing = false;
+			messageReady(scene);
 			break;
 
 		case GameState.Countdown:
@@ -24,6 +25,11 @@ export function setState(newState: GameState, scene: Scene)
 		case GameState.GameOver:
 			messageGameOver(scene);
 			Globals.playing = false;
+			Tools.DelayAsync(5000).then(() =>
+			{
+				let gameOver = scene.getMeshByName("GameOver");
+				gameOver?.dispose();
+			});
 			break ;
 	}
 }

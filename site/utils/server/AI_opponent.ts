@@ -28,3 +28,29 @@ export function AI_moves(scene: Scene) {
 			Globals.player2KeyDown = true;
 	}
 }
+
+export function AI_moves_one(scene: Scene) {
+  const ballMesh = scene.getMeshByName("ball");
+	const p1Mesh = scene.getMeshByName("player1");
+
+	Globals.player1KeyDown = false;
+	Globals.player1KeyUp = false;
+
+	if (Math.abs(p1Mesh?.position.z - ballMesh?.position.z) < 0.2)
+		return ;
+
+	// Ball moving away from AI
+	if (Globals.ballVel.x > 0)
+	{
+		if (p1Mesh?.position.z < -0.1)
+			Globals.player1KeyUp = true;
+		else if (p1Mesh?.position.z > 0.1)
+			Globals.player1KeyDown = true;
+	}
+	else {
+		if (p1Mesh?.position.z < ballMesh?.position.z)
+			Globals.player1KeyUp = true;
+		else
+			Globals.player1KeyDown = true;
+	}
+}

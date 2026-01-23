@@ -9,17 +9,11 @@ import {
 } from "@babylonjs/core"
 import { Inspector } from "@babylonjs/inspector"
 import { setupEntities } from "./babylon_entities.ts"
-import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic"
-import { GameState, Globals } from "../shared/babylon_globals.ts"
-import {
-	setState
-} from "./babylon_states.ts"
 import { initUI } from "./babylon_ui.ts"
 import { enablePostProcess } from "./babylon_postprocess.ts"
 
 export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 {
-	//registerBuiltInLoaders();
 	let scene = new Scene(engine);
 	const envTexture = new CubeTexture("/clouds.env", scene);
 	let helper = scene.createDefaultEnvironment({
@@ -33,7 +27,6 @@ export function createScene(engine: Engine, canvas: HTMLCanvasElement): Scene
 
 	//camera setup
 	let camera = new ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 6, 15, new Vector3(0, 0, 0), scene);
-	camera.attachControl(canvas, true);
 	camera.lowerBetaLimit = camera.upperBetaLimit = camera.beta;
 	camera.lowerAlphaLimit = camera.upperAlphaLimit = camera.alpha;
 	camera.panningAxis = new Vector3(1, 1, 0);

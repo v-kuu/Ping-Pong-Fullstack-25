@@ -3,11 +3,13 @@
 // Open websocket with "bun run server/websocket.ts"
 
 import type { ServerWebSocket } from "bun";
-// import { recordMatch } from "../utils/recordMatch.ts";
-import { NullEngine, Scene } from "@babylonjs/core";
+import { recordMatch } from "../utils/recordMatch.ts";
+import { NullEngine, Tools, Scene } from "@babylonjs/core";
 import { createSession } from "../utils/server/babylon_createsession.ts";
-import { Globals } from "../utils/shared/babylon_globals.ts";
-import { AI_moves } from "../utils/server/AI_opponent.ts";
+import { setState } from "@/utils/server/babylon_serverstates.ts"
+import { GameState, Globals, ServerVars } from "../utils/shared/babylon_globals.ts";
+import { AI_moves, AI_moves_one } from "../utils/server/AI_opponent.ts";
+import { unauthorized } from "@/utils/site/apiHelpers.ts";
 
 interface PlayerData {
     playerId: string;
@@ -15,118 +17,203 @@ interface PlayerData {
     room?: string;
 }
 
+const TICK_RATE = 60;
+const TICK_INTERVAL = 1000 / TICK_RATE;
+let lastTick = Date.now();
+let newMatch, ai = true;
 const clients = new Set<ServerWebSocket<unknown>>();
-
+let names = new Map<number, string>();
+let playerQueue = [];
 var engine = new NullEngine();
-var scene = createSession(engine);
+var scene: Scene = createSession(engine);
+let playerOne, playerTwo, disconnectedPlayer = 0;
+
 engine.runRenderLoop(function () {
-    scene.render();
+      scene.render();
 });
+
+setInterval(gameTick, TICK_INTERVAL);
 
 Bun.serve({
     port: 3001,
+    // process.env.PRODUCTION === "true" ?
+    //   tls: {
+    //     key: Bun.file(process.env.PONG_KEY_PATH),
+    //     cert: Bun.file(process.env.PONG_CERT_PATH),
+    //   },
+    // :
     fetch(req, server) {
         const url = new URL(req.url)
-
-        if (url.pathname === "/ws") {
-            const playerId = crypto.randomUUID();
+        const playerId = +url.searchParams.get("id");
+        const username = url.searchParams.get("username");
+        if (url.pathname === "/ws" && playerId) {
             server.upgrade(req, {
                 data: {
                     playerId,
+                    username,
                 }
             })
             return;
         }
-        return new Response("WebSocket server");
+        return unauthorized();
     },
     websocket: {
         message(ws, msg) {
             const data = JSON.parse(msg);
-            const playerIdx = ws.data.index;
+            const playerIdx = ws.data.playerId;
 
             if (data.type === "move") {
-                if (playerIdx === 0) {
+                if (playerIdx === playerOne) {
                     Globals.player1KeyUp = data.keys.includes("w");
                     Globals.player1KeyDown = data.keys.includes("s");
                 }
-                else if (playerIdx === 1) {
+                else if (playerIdx === playerTwo) {
                     Globals.player2KeyUp = data.keys.includes("w");
                     Globals.player2KeyDown = data.keys.includes("s");
                 }
             }
         },
         open(ws) {
+            ws.data.index = clients.size;
             clients.add(ws)
-            if (clients.size === 1)
-                ws.data.index = 0;
-            else if (clients.size === 2)
-                ws.data.index = 1;
-            else
-                ws.data.index = 99;
-
-            console.log("Client connected. Total:", clients.size);
+            if (ws.data.playerId === disconnectedPlayer) {
+              disconnectedPlayer = 0;
+              playerOne ? playerTwo = ws.data.playerId : playerOne = ws.data.playerId;
+              newMatch = true;
+              console.log(`Client ${ws.data.playerId} reconnected. Total:`, clients.size);
+            } else {
+              playerQueue.push(ws.data.playerId);
+              names.set(ws.data.playerId, ws.data.username);
+              console.log(`Client ${ws.data.playerId} connected. Total:`, clients.size);
+            }
         },
         close(ws) {
+            if (playerOne === ws.data.playerId) {
+              playerOne = 0;
+              disconnectedPlayer = ws.data.playerId;
+            } else if (playerTwo === ws.data.playerId) {
+              playerTwo = 0;
+              disconnectedPlayer = ws.data.playerId;
+            } else {
+              playerQueue = playerQueue.filter(id => id !== ws.data.playerId);
+            }
             clients.delete(ws)
-            console.log("Client disconnected. Total:", clients.size);
+            console.log(`Client ${ws.data.playerId} disconnected. Total:`, clients.size);
         },
     },
 });
 
-const TICK_RATE = 60;
-const TICK_INTERVAL = 1000 / TICK_RATE;
-let lastTick = Date.now();
+console.log("WebSocket server running on http://localhost:3001/ws");
 
 function gameTick() {
-    const now = Date.now();
-    lastTick = now;
+  const now = Date.now();
+  lastTick = now;
 
-    const ballMesh = scene.getMeshByName("ball");
-    const p1Mesh = scene.getMeshByName("player1");
-    const p2Mesh = scene.getMeshByName("player2");
+  if (!handleState()) return;
 
-    if (clients.size < 2)
-        AI_moves(scene);
+  const ballMesh = scene.getMeshByName("ball");
+  const p1Mesh = scene.getMeshByName("player1");
+  const p2Mesh = scene.getMeshByName("player2");
+  ServerVars.player1 = names.get(playerOne);
+  ServerVars.player2 = names.get(playerTwo);
 
-    const posSyncData = JSON.stringify({
-        type: "physics_sync",
-        ballVel: ballMesh?.position,
-        ballDelta: Globals.ballDelta,
-        vel1: p1Mesh?.position,
-        vel2: p2Mesh?.position,
-        score1: Globals.score1,
-        score2: Globals.score2,
-        currentState: Globals.currentState,
-    });
+  ServerVars.ballPos.copyFrom(ballMesh.position);
+  ServerVars.p1Pos.copyFrom(p1Mesh.position);
+  ServerVars.p2Pos.copyFrom(p2Mesh.position);
 
-    for (const ws of clients) {
-        try {
-            ws.send(posSyncData);
-        } catch (e) {
-            console.error("Failed to send message:", e)
-        }
-    }
+  const posSyncData = JSON.stringify({
+      type: "physics_sync",
+      ServerState: ServerVars,
+  });
 
-    // if (Globals.score1 >= 11 || Globals.score2 >= 11) {
-    //     // const p1Token = Array.from(clients).find(c => c.data.index === 0)?.data.playerId;
-    //     // const p2Token = Array.from(clients).find(c => c.data.index === 1)?.data.playerId;
-    //     
-    //     // // TODO: Map session tokens to User IDs through DB/Session lookups
-    //     // // await recordMatch({
-    //     // //    game: "pong",
-    //     // //    playerIds: [p1Token, p2Token], 
-    //     // //    scores: [Globals.score1, Globals.score2],
-    //     // //    winnerId: Globals.score1 > Globals.score2 ? p1Token : p2Token
-    //     // // });
-    //     
-    //     // Globals.score1 = 0; 
-    //     // Globals.score2 = 0;
-    //     // Globals.ballDelta.setAll(0);
-    // }
-
-    setTimeout(gameTick, TICK_INTERVAL)
+  for (const ws of clients) {
+      try {
+          ws.send(posSyncData);
+      } catch (e) {
+          console.error("Failed to send message:", e)
+      }
+  }
 }
 
-gameTick();
+function freshMatch() {
+  disconnectedPlayer = 0;
+  setState(GameState.WaitingPlayers, scene);
+  Tools.DelayAsync(5000).then(() => {
+	setState(GameState.Countdown, scene);
+  });
+}
 
-console.log("WebSocket server running on http://localhost:3001/ws");
+async function winnerTakesItAll() {
+  if (!playerDisconnected()) {
+    await recordMatch({
+        game: "pong",
+        playerIds: [playerOne, playerTwo],
+        scores: [ServerVars.score1, ServerVars.score2],
+    });
+  }
+
+  if (playerDisconnected() && playerQueue.length) {
+    playerOne
+    ? playerTwo = playerQueue.shift()
+    : playerOne = playerQueue.shift();
+  } else if (ServerVars.score1 > ServerVars.score2) {
+    playerQueue.push(playerTwo);
+    playerTwo = playerQueue.shift();
+  } else {
+    playerQueue.push(playerOne);
+    playerOne = playerQueue.shift();
+  }
+
+}
+
+function playerDisconnected() {
+  return !(playerOne && playerTwo);
+}
+
+function handleState() : boolean {
+    if (ServerVars.currentState === GameState.GameOver
+      && newMatch
+      && !playerDisconnected()) {
+    winnerTakesItAll();
+    newMatch = false;
+    ai = false;
+  } else if (clients.size === 0) {
+    newMatch = true;
+	setState(GameState.WaitingPlayers, scene);
+    return false;
+  } else if (clients.size === 1 && !disconnectedPlayer) {
+    playerOne
+    ? AI_moves(scene)
+    : AI_moves_one(scene);
+    ai = true;
+  	if (newMatch) {
+  	  playerOne
+      ? playerTwo = playerQueue.shift()
+      : playerOne = playerQueue.shift();
+      newMatch = false;
+  	}
+	if (ServerVars.currentState === GameState.WaitingPlayers)
+	  setState(GameState.Countdown, scene);
+  } else if (clients.size >= 2 && !newMatch && (ServerVars.currentState === GameState.WaitingPlayers || ai)) {
+    newMatch = true;
+    if (ai) {
+      playerTwo
+      ? playerOne = playerQueue.shift()
+      : playerTwo = playerQueue.shift();
+      ai = false;
+    }
+    freshMatch();
+  } else if (playerDisconnected()) {
+    playerOne
+    ? AI_moves(scene)
+    : playerTwo
+    ? AI_moves_one(scene)
+    : AI_moves_both();
+  }
+  return true;
+}
+
+function AI_moves_both() {
+    AI_moves(scene);
+    AI_moves_one(scene);
+}
