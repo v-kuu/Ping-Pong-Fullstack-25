@@ -48,10 +48,7 @@ Bun.serve({
         key: Bun.file(keyPath),
     },
     fetch(req, server) {
-        console.log("Incoming request:", req.url);
-        console.log(`Request to: ${server.hostname}`);
         const url = new URL(req.url)
-        if (url.pathname === "/wss") {
         const playerId = +url.searchParams.get("id");
         const username = url.searchParams.get("username");
         if (url.pathname === "/wss" && playerId) {
@@ -64,7 +61,7 @@ Bun.serve({
             return;
         }
         return unauthorized();
-    }},
+    },
     websocket: {
         message(ws, msg) {
             const data = JSON.parse(msg);
