@@ -39,11 +39,10 @@ export function Game({user}: {user: { id: number; username: string } | null})
 		};
 
 		ws.onerror = (event: Event): void => {
-			console.log("Connection closed due to error");
+			console.error("Connection closed due to error", event);
 		};
 
-		ws.onmessage = (e) =>
-		{
+		ws.onmessage = (e) => {
 			const data = JSON.parse(e.data);
 			if (data.type === "physics_sync")
 			{

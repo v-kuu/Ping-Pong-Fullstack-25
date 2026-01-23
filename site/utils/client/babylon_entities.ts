@@ -2,13 +2,13 @@ import {
 	Scene,
 	LoadAssetContainerAsync,
 	MeshBuilder,
-	PBRMaterial,
 	Mesh,
 	Vector3,
 	DirectionalLight,
 	CascadedShadowGenerator,
 	Space,
 } from "@babylonjs/core"
+import type { PBRMaterial } from "@babylonjs/core"
 import { Globals, ServerVars } from "../shared/babylon_globals.ts"
 
 export enum Sides

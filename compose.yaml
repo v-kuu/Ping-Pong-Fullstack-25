@@ -5,6 +5,7 @@ services:
     ports:
       - "3000:3000"
       - "3001:3001"
+      - "3002:3002"
     restart: always
     env_file:
       - .env

@@ -14,6 +14,8 @@ enum MessageType {
 
 // Server configuration.
 const PORT = 3002; // Port used for the server.
+const KEY = `${import.meta.dir}/../../certs/key.pem`;
+const CERT = `${import.meta.dir}/../../certs/cert.pem`;
 const MATCH_COUNTDOWN = 5; // Length of countdown for a match, in seconds.
 const MAX_GEMS = 50n; // Gems to collect per match.
 const ALL_GEMS = (1n << MAX_GEMS) - 1n; // Bit mask for all gems.
@@ -132,7 +134,10 @@ function handleCollectMessage(client: ServerWebSocket, message: Float64Array) {
 // Start the WebSocket server.
 const server = Bun.serve({
     port: PORT,
-
+    tls: {
+        cert: Bun.file(CERT),
+        key: Bun.file(KEY),
+    },
     // Handle connections to the WebSocket endpoint.
     fetch(request: Request, server) {
         if (new URL(request.url).pathname === "/web3d") {
