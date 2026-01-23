@@ -95,7 +95,7 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
         isFromMe: m.fromId === user.id,
       })),
       hasMore,
-      odUsername: od.username,
+      odUsername: od.username || "Unknown User",
     });
   } catch (error) {
     console.error("Failed to get messages:", error);

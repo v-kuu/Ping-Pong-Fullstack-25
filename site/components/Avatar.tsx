@@ -8,6 +8,15 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ username, class: className, cacheKey }: UserAvatarProps) {
+  // Don't make API request if username is null or undefined
+  if (!username) {
+    return (
+      <div class={clsx("w-12 h-12 rounded-full overflow-hidden bg-base-300 flex items-center justify-center", className)}>
+        <span class="text-xs opacity-50">?</span>
+      </div>
+    );
+  }
+
   const handleError = (e: Event) => {
     const img = e.currentTarget as HTMLImageElement;
     if (!img.src.endsWith("/avatar.png")) {
